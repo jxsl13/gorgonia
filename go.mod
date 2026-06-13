@@ -9,6 +9,7 @@ require (
 	github.com/chewxy/hm v1.0.0
 	github.com/chewxy/math32 v1.11.2
 	github.com/go-gota/gota v0.12.0
+	github.com/gomlx/go-coreml v0.0.0-20260301010621-8fdf6ad8655e
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.11.1

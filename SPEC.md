@@ -48,7 +48,7 @@ Phase 2 — Apple Silicon perf backends:
   target ANE. COMMITTED path (Phase 3): translate a gorgonia `*ExprGraph` ->
   CoreML MIL program -> compile `.mlpackage` -> infer via `gomlx/go-coreml`
   (`ComputeAll` = ANE+GPU+CPU). Model-level, not a tensor.Engine. go-coreml is
-  alpha — pin version, isolate behind our own interface. Needs macOS 12+, Xcode. BLOCKED on CLT-only machines (coremlcompiler absent) — see B5; build/verify on a full-Xcode env.
+  alpha — pin version, isolate behind our own interface. Needs macOS 12+, Xcode. RESOLVED (B6): coremlcompiler (Xcode-only) NOT required — link CoreML.framework directly via cgo and compile at runtime with [MLModel compileModelAtURL:error:] (present with CLT). Compute units via MLModelConfiguration.computeUnits (MLComputeUnitsAll = ANE+GPU+CPU). Drop hard dep on gomlx/go-coreml's coremlcompiler step; may still reuse its MIL protobuf types.
 - C10: low-level vector asm (axpy etc.) lives in EXTERNAL `gorgonia.org/vecf32`
   /`vecf64`. To add ARM64 NEON there, VENDOR them per C12 (internal copy + our
   asm on top via `replace`) instead of an upstream PR. See T20. In-repo asm
@@ -60,6 +60,7 @@ Phase 2 — Apple Silicon perf backends:
   go.mod `replace <upstream> => ./internal/vendor/<name>` so transitive
   importers also resolve to our copy. Preserve upstream LICENSE verbatim; record
   provenance (module path + exact version/commit) so our diff stays re-syncable.
+- C13: CoreML path = our own `coreml/` cgo pkg linking `-framework CoreML -framework Foundation`, build tag `coreml && darwin && arm64`. Build a `.mlmodel`/`.mlpackage` on disk, compile at RUNTIME via `[MLModel compileModelAtURL:error:]` (no coremlcompiler/Xcode), load, predict. Compute units selectable (All/CPUAndGPU/CPUOnly). Verified linkable with CLT 26.5 (B6).
 - C11: research refs — Metal: mikecvet/go-mm, tsawler/go-metal (MPSGraph).
   ARM64 NEON: jairad26/go-simd, axiomhq/simd-go, pehringer/simd. ANE: 
   gomlx/go-coreml, fredyshox/ANECompat. See §R.
@@ -182,7 +183,7 @@ T11|x|impl metal ops: elementwise (MSL kernels) + matmul (MPSMatrixMultiplicatio
 T12|x|example examples/metal (GPU elementwise + matmul, runs on M2 Pro). VM auto-dispatch wiring split to T22|V13,I.metal-vm
 T22|.|VM wiring: tensor.Engine impl + *_metal.go mirror *_cuda.go so TapeMachine ops auto-dispatch to GPU (large; mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go)|V13,V14,I.metal-vm
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
-T14|.|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
+T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|.|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
 T16|.|Phase3: graph->CoreML MIL translator for supported op subset (matmul, conv, activations, pooling, add/mul); unsupported op -> clear error|V18,I.coreml
 T17|.|Phase3: parity tests Model.Predict vs CPU graph within tol; ANECompat advisory report; example examples/*_coreml|V18,I.coreml
@@ -201,6 +202,7 @@ B2|2026-06-13|go1.26 vet promotes non-constant format string to build-fail; 8 Wr
 B3|2026-06-13|Example_linearRegression flaky after dep bump: used global math/rand.Float*; a bumped dep spawns goroutine consuming global rand -> dataset nondeterministic -> Output mismatch (old deps masked it)|xy()/random() use local rand.New(rand.NewSource(seed)); seed1 reproduces prior sequence, Output unchanged; V10
 B4|2026-06-13|T8 assumed in-repo mathutils had SIMD-able hot ops; mathutils = only divmod (scalar int div, cold: shape-infer/bitmap/ctc). Not a NEON candidate; arm64 Go already emits UDIV+MSUB|redirect T8 to profile-driven targets; divmod stays generic Go; V24
 B5|2026-06-13|T14-T18 (CoreML/ANE) blocked on dev machine: gomlx/go-coreml needs coremlcompiler = FULL Xcode; only Command Line Tools present (xcrun cannot find coremlcompiler). CoreML code cannot be built/verified here|defer T14-T18 to a full-Xcode env; tasks stay . (blocked), not faked; C9 amended
+B6|2026-06-13|B5 reassessed: coremlcompiler only needed for OFFLINE .mlpackage compile. CoreML.framework runtime API [MLModel compileModelAtURL:error:] works with CLT-only (probe confirmed) -> Xcode NOT required|unblock T14-T18 via direct cgo CoreML.framework + runtime compile; C9 amended; C13 added
 ```
 
 ## §R refs
