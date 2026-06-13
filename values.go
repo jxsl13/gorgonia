@@ -124,55 +124,12 @@ func makeValue(t hm.Type, s tensor.Shape) (retVal Value, err error) {
 	}
 }
 
-// makeValueFromMem builds a Value backed by external/device memory.
-func makeValueFromMem(t hm.Type, s tensor.Shape, mem tensor.Memory) (retVal Value, err error) {
-	var dt tensor.Dtype
-	if dt, err = dtypeOf(t); err != nil {
-		return
-	}
-	if s.IsScalar() {
-		return makeScalarFromMem(dt, mem)
-	}
-
-	switch tt := t.(type) {
-	case TensorType:
-		memsize := calcMemSize(dt, s)
-		return tensor.New(tensor.Of(dt), tensor.WithShape(s...), tensor.FromMemory(mem.Uintptr(), uintptr(memsize))), nil
-	case tensor.Dtype:
-		return makeScalarFromMem(tt, mem)
-	default:
-		err = fmt.Errorf(nyiTypeFail, "MakeValue", tt)
-		return
-	}
-}
-
-// makeScalarFromMem reinterprets mem's address as a scalar Value of dtype dt.
-//
-// It uses tensor.Memory.Pointer() (an unsafe.Pointer) directly, NOT
-// unsafe.Pointer(mem.Uintptr()), so there is no uintptr round-trip and go vet's
-// unsafeptr analyzer is satisfied on every build. The caller keeps the backing
-// Memory alive for the lifetime of the returned Value.
-func makeScalarFromMem(dt tensor.Dtype, mem tensor.Memory) (retVal Value, err error) {
-	switch dt {
-	case tensor.Float64:
-		retVal = (*F64)(mem.Pointer())
-	case tensor.Float32:
-		retVal = (*F32)(mem.Pointer())
-	case tensor.Int:
-		retVal = (*I)(mem.Pointer())
-	case tensor.Int64:
-		retVal = (*I64)(mem.Pointer())
-	case tensor.Int32:
-		retVal = (*I32)(mem.Pointer())
-	case tensor.Byte:
-		retVal = (*U8)(mem.Pointer())
-	case tensor.Bool:
-		retVal = (*B)(mem.Pointer())
-	default:
-		err = fmt.Errorf(nyiTypeFail, "makeScalarFromMem", dt)
-	}
-	return
-}
+// makeValueFromMem builds a Value backed by external/device memory. It is only
+// reachable when an external engine is active (CUDA); the non-cuda build's
+// ExternMetadata.Get always errors before this is called. The real, unsafe
+// implementation lives in values_extern_cuda.go (build tag `cuda`); the non-cuda
+// build uses the stub in noextern.go. This keeps the uintptr->unsafe.Pointer
+// reconstruction out of the default build entirely.
 
 func logicalSize(s tensor.Shape) int {
 	if s.IsScalar() {
