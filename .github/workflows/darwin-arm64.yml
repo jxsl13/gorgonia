@@ -9,11 +9,11 @@ on:
 jobs:
   build-test:
     # macos-14 is the GitHub-hosted Apple Silicon (arm64) runner.
-    runs-on: macos-14
+    runs-on: macos-latest
     env:
       GOFLAGS: -mod=mod
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: actions/setup-go@v5
         with:
