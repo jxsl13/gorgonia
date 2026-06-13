@@ -184,7 +184,7 @@ T12|x|example examples/metal (GPU elementwise + matmul, runs on M2 Pro). VM auto
 T22|.|VM wiring: tensor.Engine impl + *_metal.go mirror *_cuda.go so TapeMachine ops auto-dispatch to GPU (large; mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go)|V13,V14,I.metal-vm
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
-T15|.|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
+T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
 T16|.|Phase3: graph->CoreML MIL translator for supported op subset (matmul, conv, activations, pooling, add/mul); unsupported op -> clear error|V18,I.coreml
 T17|.|Phase3: parity tests Model.Predict vs CPU graph within tol; ANECompat advisory report; example examples/*_coreml|V18,I.coreml
 T18|.|Phase3: extend CI macos-14 to build+test coreml tag (device tests skip when no ANE)|V17,I.ci-darwin

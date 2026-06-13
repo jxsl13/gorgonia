@@ -46,3 +46,5 @@ require (
 replace gorgonia.org/vecf32 => ./internal/vendor/vecf32
 
 replace gorgonia.org/vecf64 => ./internal/vendor/vecf64
+
+replace github.com/gomlx/go-coreml => ./internal/vendor/go-coreml
