@@ -207,7 +207,7 @@ T29|x|add static linux.yaml (ubuntu-latest: cross-build arm/amd64/darwin + go te
 T30|x|rename all .yml -> .yaml (pre-check, darwin-arm64, coverage, .github/dependabot); verify grep -r self-hosted .github empty|V30,C15,I.ci
 T31|.|proper fix for B8 unsafeptr: vendor gorgonia.org/tensor (C12) + add Memory.Pointer() unsafe.Pointer; rewrite makeScalarFromMem to use mem.Pointer() instead of unsafe.Pointer(mem.Uintptr()) -> no uintptr round-trip, vet-clean on ALL builds, drop the cuda-gating workaround (values_extern_cuda.go) + noextern stub|C12,B8,I.vendor
 T32|.|migrate library github.com/pkg/errors -> stdlib errors + fmt.Errorf(%w); keep public error behavior; build+test green; zero pkg/errors in lib|V31,I.imports
-T33|.|benchmarks: for i:=0;i<b.N;i++ -> b.Loop() (go1.24); verify benches run|V32
+T33|x|benchmarks: for i:=0;i<b.N;i++ -> b.Loop() (go1.24); verify benches run|V32
 T34|.|remaining interface{} -> any in library + staticcheck S1039 (unnecessary fmt.Sprintf) fixes|V32
 T35|.|Metal engine: implement tensor.Adder/Suber/Multiplier (float32) GPU dispatch; parity vs CPU; NewTapeMachine(WithEngine) runs elementwise on GPU|V33,I.metal,I.metal-vm
 T36|.|NEON: add vecf32/vecf64 Scale (s*a) in vendored copies + scalar fallback + bit-exact parity (asmcheck)|V34,V11,I.vendor,I.asm

@@ -16,7 +16,7 @@ func BenchmarkVecf32Add_NEON(b *testing.B) {
 	rng := rand.New(rand.NewSource(1))
 	x, y := randSlice(rng, benchN), randSlice(rng, benchN)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		vecf32.Add(x, y)
 	}
 }
@@ -25,7 +25,7 @@ func BenchmarkVecf32Add_Scalar(b *testing.B) {
 	rng := rand.New(rand.NewSource(1))
 	x, y := randSlice(rng, benchN), randSlice(rng, benchN)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for j := range x {
 			x[j] += y[j]
 		}
@@ -36,7 +36,7 @@ func BenchmarkVecf64Mul_NEON(b *testing.B) {
 	rng := rand.New(rand.NewSource(1))
 	x, y := randSlice64(rng, benchN), randSlice64(rng, benchN)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		vecf64.Mul(x, y)
 	}
 }
@@ -45,7 +45,7 @@ func BenchmarkVecf64Mul_Scalar(b *testing.B) {
 	rng := rand.New(rand.NewSource(1))
 	x, y := randSlice64(rng, benchN), randSlice64(rng, benchN)
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for j := range x {
 			x[j] *= y[j]
 		}
