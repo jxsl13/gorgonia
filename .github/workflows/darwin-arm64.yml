@@ -1,0 +1,47 @@
+name: darwin-arm64 (Apple Silicon)
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    # macos-14 is the GitHub-hosted Apple Silicon (arm64) runner.
+    runs-on: macos-14
+    env:
+      GOFLAGS: -mod=mod
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+
+      # cuda / cmd-cudagen / cuda examples need the CUDA+cuDNN headers (SPEC §C3)
+      # which are absent on a stock macOS runner — exclude them from the default
+      # build/vet/test. They are gated by the `cuda` build tag separately.
+      - name: Default build (no tags)
+        run: go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$|/asmcheck$' | xargs go build
+
+      - name: Vet
+        run: go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$' | xargs go vet
+
+      - name: ARM64 NEON parity (vendored vecf32/vecf64)
+        run: go test ./internal/asmcheck/...
+
+      - name: Core test suite
+        run: go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$' | xargs go test
+
+      - name: Metal backend build (tag=metal)
+        env:
+          CGO_ENABLED: '1'
+        run: go build -tags metal ./metal/...
+
+      - name: Metal GPU parity tests
+        # Hosted runners may lack a usable GPU; New() returns an error and the
+        # tests t.Skip rather than fail (SPEC §V17).
+        env:
+          CGO_ENABLED: '1'
+        run: go test -tags metal ./metal/...
