@@ -45,3 +45,17 @@ jobs:
         env:
           CGO_ENABLED: '1'
         run: go test -tags metal ./metal/...
+
+      - name: CoreML backend build (tag=coreml)
+        # Runtime compile via CoreML.framework — needs only Command Line Tools,
+        # not full Xcode/coremlcompiler (SPEC §C13, B6).
+        env:
+          CGO_ENABLED: '1'
+        run: go build -tags coreml ./coreml/... ./examples/coreml/...
+
+      - name: CoreML parity tests
+        # Device-bound: compile/predict t.Skip when CoreML is unavailable on the
+        # runner rather than fail (SPEC §V17/§V18).
+        env:
+          CGO_ENABLED: '1'
+        run: go test -tags coreml ./coreml/...
