@@ -165,6 +165,7 @@ Phase 2 — Apple Silicon perf backends:
   commit, never batch multiple tasks. A split task (e.g. T11->T21) commits at
   the consistent boundary it actually reached.
 - V26: a host-accessible GPU tensor.Engine (embeds tensor.StdEng) integrates end-to-end via gorgonia NewTapeMachine(g, WithEngine(e)) — NO cuda-style device-transfer machinery. TapeMachine sets every value's engine to m.Engine (vm_tape.go), so pass the engine to the MACHINE, not only to let-bound values. Non-overridden ops fall back to StdEng on CPU. B7.
+- V27: CI pre-check gate enforces, with `git diff --exit-code` after each mutating cmd: `gofmt -l` (exclude internal/vendor — V20 verbatim), `go mod tidy`, `go generate` (exclude `cuda` pkg — only generator is CUDA cudagen needing the toolchain), and `govulncheck` (latest, scoped to non-cgo-lib pkgs). Repo MUST stay gofmt-clean + tidy-clean + vuln-free.
 
 ## §T tasks
 
@@ -184,6 +185,7 @@ T11|x|impl metal ops: elementwise (MSL kernels) + matmul (MPSMatrixMultiplicatio
 T12|x|example examples/metal (GPU elementwise + matmul, runs on M2 Pro). VM auto-dispatch wiring split to T22|V13,I.metal-vm
 T22|x|Metal tensor.Engine (embed StdEng + GPU MatMul via MatMuler); tensors WithEngine(metal.Engine) auto-dispatch MatMul to GPU; parity vs CPU|V14,I.metal-vm
 T23|x|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go so a gorgonia graph runs end-to-end on GPU (large)|V13,V14,I.metal-vm
+T24|x|CI pre-check job: gofmt + go mod tidy + go generate + govulncheck, fail on any git diff (V27)|V27,I.ci
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
