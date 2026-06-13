@@ -1,5 +1,5 @@
-//go:build !native
-// +build !native
+//go:build blas
+// +build blas
 
 package main
 

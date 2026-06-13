@@ -19,20 +19,20 @@ jobs:
         with:
           go-version: '1.26.x'
 
-      # cuda / cmd-cudagen / cuda examples need the CUDA+cuDNN headers (SPEC §C3)
-      # which are absent on a stock macOS runner — exclude them from the default
-      # build/vet/test. They are gated by the `cuda` build tag separately.
+      # CUDA + BLAS code is `cuda`/`blas` build-tag gated (SPEC §C14), so the
+      # default `./...` build needs no exclusions on a stock runner. vet/test are
+      # scoped to library packages (examples are demos, cmd are tools).
       - name: Default build (no tags)
-        run: go list ./... | grep -vE '/examples/|/cmd/|/blase$|/asmcheck$' | xargs go build
+        run: go build ./...
 
       - name: Vet
-        run: go list ./... | grep -vE '/examples/|/cmd/|/blase$' | xargs go vet
+        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go vet
 
       - name: ARM64 NEON parity (vendored vecf32/vecf64)
         run: go test ./internal/asmcheck/...
 
       - name: Core test suite
-        run: go list ./... | grep -vE '/examples/|/cmd/|/blase$' | xargs go test
+        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go test
 
       - name: Metal backend build (tag=metal)
         env:

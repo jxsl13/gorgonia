@@ -13,8 +13,8 @@ export GOFLAGS := -mod=mod
 
 # Go files excluding vendored copies (kept verbatim, SPEC §V20).
 GOFILES := $(shell find . -name '*.go' -not -path './internal/vendor/*')
-# Packages buildable without CUDA / BLAS / cgo-only frameworks.
-PKGS := $(shell go list ./... | grep -vE '/examples/|/cmd/|/blase$$')
+# Library packages (CUDA/BLAS code is build-tag gated; examples/cmd skipped).
+PKGS := $(shell go list ./... | grep -vE '/examples/|/cmd/')
 
 .PHONY: tools fmt tidy vet lint vuln test pre-check check
 

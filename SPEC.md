@@ -192,7 +192,7 @@ T23|x|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/
 T24|x|CI pre-check job: gofmt + go mod tidy + go generate + govulncheck, fail on any git diff (V27)|V27,I.ci
 T25|x|add staticcheck: root Makefile (fmt/tidy/vet/lint/vuln/test/pre-check/check) + advisory staticcheck step in pre-check.yml (excl vendored); keep our pkgs clean|V28,I.makefile,I.ci
 T26|x|//go:build cuda on cuda/ package + cmd/cudagen + examples/convnet_cuda; drop /cuda$ grep-excludes; verify go build ./... clean without excludes on non-CUDA host|V29,C14,I.ci
-T27|.|//go:build blas on blase/ + examples/stacked_autoencoder; drop /blase$ grep-excludes; verify go build ./... clean without excludes on non-BLAS host|V29,C14,I.ci
+T27|x|//go:build blas on blase/ + examples/stacked_autoencoder; drop /blase$ grep-excludes; verify go build ./... clean without excludes on non-BLAS host|V29,C14,I.ci
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml

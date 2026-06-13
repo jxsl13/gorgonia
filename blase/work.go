@@ -1,3 +1,6 @@
+//go:build blas
+// +build blas
+
 package blase
 
 /*
