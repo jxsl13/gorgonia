@@ -62,6 +62,7 @@ Phase 2 — Apple Silicon perf backends:
   provenance (module path + exact version/commit) so our diff stays re-syncable.
 - C13: CoreML path = our own `coreml/` cgo pkg linking `-framework CoreML -framework Foundation`, build tag `coreml && darwin && arm64`. Build a `.mlmodel`/`.mlpackage` on disk, compile at RUNTIME via `[MLModel compileModelAtURL:error:]` (no coremlcompiler/Xcode), load, predict. Compute units selectable (All/CPUAndGPU/CPUOnly). Verified linkable with CLT 26.5 (B6).
 - C14: CUDA + BLAS code is build-tag-gated so default tooling on a machine WITHOUT those toolchains never compiles it. CUDA (`//go:build cuda`): whole `cuda/` package, `cmd/cudagen`, `examples/convnet_cuda` (root `*_cuda.go` + `ops/nn/*_cuda.go` already tagged). BLAS (`//go:build blas`): `blase/` package, `examples/stacked_autoencoder`. After this, `go build/vet/generate/staticcheck/govulncheck ./...` need NO `/cuda$` `/blase$` grep-excludes. CUDA/BLAS only build with `-tags cuda`/`-tags blas` on hosts with the toolchain (cannot verify the positive here, C3).
+- C15: CI runs ONLY on GitHub-hosted runners (no self-hosted) using the `*-latest` labels (`ubuntu-latest`, `macos-latest`); actions pinned to latest major (`actions/checkout@v5`, `actions/setup-go@v5`, `codecov/codecov-action@v5`), kept fresh by dependabot (T4). NO in-repo workflow generator — static hand-written workflows only. Every workflow + config YAML uses the `.yaml` extension (not `.yml`).
 - C11: research refs — Metal: mikecvet/go-mm, tsawler/go-metal (MPSGraph).
   ARM64 NEON: jairad26/go-simd, axiomhq/simd-go, pehringer/simd. ANE: 
   gomlx/go-coreml, fredyshox/ANECompat. See §R.
@@ -170,6 +171,7 @@ Phase 2 — Apple Silicon perf backends:
 - V27: CI pre-check gate enforces, with `git diff --exit-code` after each mutating cmd: `gofmt -l` (exclude internal/vendor — V20 verbatim), `go mod tidy`, `go generate` (exclude `cuda` pkg — only generator is CUDA cudagen needing the toolchain), and `govulncheck` (latest, scoped to non-cgo-lib pkgs). Repo MUST stay gofmt-clean + tidy-clean + vuln-free.
 - V28: staticcheck is available via `make lint` (local, exclude internal/vendor) and runs in the CI pre-check as ADVISORY (continue-on-error) — the gorgonia lib carries ~267 pre-existing issues, so it surfaces but does NOT fail CI. Our new packages (coreml/metal/ asmcheck) stay staticcheck-clean. Tighten to blocking once legacy is cleaned. ?
 - V29: on a host WITHOUT CUDA/BLAS, `go build ./...` (no tags, no grep-excludes) succeeds — every `gorgonia.org/cu` / CBLAS-importing file is gated by `cuda` / `blas`. CI/Makefile drop the `/cuda$` `/blase$` excludes. `-tags cuda` / `-tags blas` compile the gated code (needs the toolchain).
+- V30: `.github/workflows/` holds ONLY static `.yaml` workflows on GitHub-hosted runners — no `runs-on: self-hosted`, no `*.go` generator, no `*.yml`. Final set: `pre-check.yaml`, `linux.yaml`, `darwin-arm64.yaml`, `coverage.yaml`. `.github/dependabot.yml` -> `.yaml`. `grep -r self-hosted .github` empty.
 
 ## §T tasks
 
@@ -193,6 +195,9 @@ T24|x|CI pre-check job: gofmt + go mod tidy + go generate + govulncheck, fail on
 T25|x|add staticcheck: root Makefile (fmt/tidy/vet/lint/vuln/test/pre-check/check) + advisory staticcheck step in pre-check.yml (excl vendored); keep our pkgs clean|V28,I.makefile,I.ci
 T26|x|//go:build cuda on cuda/ package + cmd/cudagen + examples/convnet_cuda; drop /cuda$ grep-excludes; verify go build ./... clean without excludes on non-CUDA host|V29,C14,I.ci
 T27|x|//go:build blas on blase/ + examples/stacked_autoencoder; drop /blase$ grep-excludes; verify go build ./... clean without excludes on non-BLAS host|V29,C14,I.ci
+T28|x|delete workflow generator (.github/workflows/main.go + job-template.go) + runner-self-hosted.yml + runner-github-{macos,ubuntu}-amd64.yml|V30,C15,I.ci
+T29|.|add static linux.yaml (ubuntu-latest: cross-build arm/amd64/darwin + go test -race + avx/sse tag builds); modernize coverage->coverage.yaml (ubuntu-latest, checkout@v5/setup-go@v5/codecov@v5); darwin on macos-latest; all actions @latest|V30,C15,I.ci
+T30|.|rename all .yml -> .yaml (pre-check, darwin-arm64, coverage, .github/dependabot); verify grep -r self-hosted .github empty|V30,C15,I.ci
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
