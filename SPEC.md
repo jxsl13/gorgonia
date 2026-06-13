@@ -181,7 +181,8 @@ T9|x|extend NEON to nn hot ops (activations, conv inner) per T7 profile; parity 
 T10|x|scaffold metal/ subpkg mirroring cuda/: Engine skeleton, build tag metal&&darwin&&arm64, cgo+ObjC+MPSGraph preamble, buffer alloc/free + pool|V13,V15,C8,I.metal
 T11|x|impl metal ops: elementwise (MSL kernels) + matmul (MPSMatrixMultiplication); parity vs CPU. Conv split to T21|V14,V15,I.metal
 T12|x|example examples/metal (GPU elementwise + matmul, runs on M2 Pro). VM auto-dispatch wiring split to T22|V13,I.metal-vm
-T22|.|VM wiring: tensor.Engine impl + *_metal.go mirror *_cuda.go so TapeMachine ops auto-dispatch to GPU (large; mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go)|V13,V14,I.metal-vm
+T22|x|Metal tensor.Engine (embed StdEng + GPU MatMul via MatMuler); tensors WithEngine(metal.Engine) auto-dispatch MatMul to GPU; parity vs CPU|V14,I.metal-vm
+T23|.|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go so a gorgonia graph runs end-to-end on GPU (large)|V13,V14,I.metal-vm
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
