@@ -173,6 +173,13 @@ Phase 2 — Apple Silicon perf backends:
 - V29: on a host WITHOUT CUDA/BLAS, `go build ./...` (no tags, no grep-excludes) succeeds — every `gorgonia.org/cu` / CBLAS-importing file is gated by `cuda` / `blas`. CI/Makefile drop the `/cuda$` `/blase$` excludes. `-tags cuda` / `-tags blas` compile the gated code (needs the toolchain).
 - V30: `.github/workflows/` holds ONLY static `.yaml` workflows on GitHub-hosted runners — no `runs-on: self-hosted`, no `*.go` generator, no `*.yml`. Final set: `pre-check.yaml`, `linux.yaml`, `darwin-arm64.yaml`, `coverage.yaml`. `.github/dependabot.yml` -> `.yaml`. `grep -r self-hosted .github` empty.
 
+### Phase 4 invariants (modernize / perf)
+
+- V31: the library (non-vendored, non-example/cmd) imports ZERO `github.com/pkg/errors`; wrapping uses `fmt.Errorf("...: %w", err)`, `errors.New` is stdlib. Public error behavior unchanged; build + tests green.
+- V32: library has no `interface{}` (use `any`); benchmarks use `b.Loop()` not `for i:=0;i<b.N;i++`; staticcheck `S1039` (unnecessary fmt.Sprintf) clear.
+- V33: the Metal engine implements `tensor.Adder`/`Suber`/`Multiplier` (float32) so gorgonia elementwise ops dispatch to the GPU; results match the CPU engine within documented tol (extends V14). Default build (no metal tag) unaffected.
+- V34: each extended NEON op (e.g. Scale) has a pure-Go scalar fallback + bit-exact parity test (extends V11); non-arm64 builds compile + agree.
+
 ## §T tasks
 
 ```
@@ -199,6 +206,11 @@ T28|x|delete workflow generator (.github/workflows/main.go + job-template.go) + 
 T29|x|add static linux.yaml (ubuntu-latest: cross-build arm/amd64/darwin + go test -race + avx/sse tag builds); modernize coverage->coverage.yaml (ubuntu-latest, checkout@v5/setup-go@v5/codecov@v5); darwin on macos-latest; all actions @latest|V30,C15,I.ci
 T30|x|rename all .yml -> .yaml (pre-check, darwin-arm64, coverage, .github/dependabot); verify grep -r self-hosted .github empty|V30,C15,I.ci
 T31|.|proper fix for B8 unsafeptr: vendor gorgonia.org/tensor (C12) + add Memory.Pointer() unsafe.Pointer; rewrite makeScalarFromMem to use mem.Pointer() instead of unsafe.Pointer(mem.Uintptr()) -> no uintptr round-trip, vet-clean on ALL builds, drop the cuda-gating workaround (values_extern_cuda.go) + noextern stub|C12,B8,I.vendor
+T32|.|migrate library github.com/pkg/errors -> stdlib errors + fmt.Errorf(%w); keep public error behavior; build+test green; zero pkg/errors in lib|V31,I.imports
+T33|.|benchmarks: for i:=0;i<b.N;i++ -> b.Loop() (go1.24); verify benches run|V32
+T34|.|remaining interface{} -> any in library + staticcheck S1039 (unnecessary fmt.Sprintf) fixes|V32
+T35|.|Metal engine: implement tensor.Adder/Suber/Multiplier (float32) GPU dispatch; parity vs CPU; NewTapeMachine(WithEngine) runs elementwise on GPU|V33,I.metal,I.metal-vm
+T36|.|NEON: add vecf32/vecf64 Scale (s*a) in vendored copies + scalar fallback + bit-exact parity (asmcheck)|V34,V11,I.vendor,I.asm
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
