@@ -1,0 +1,32 @@
+name: windows
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    runs-on: windows-latest
+    env:
+      GOFLAGS: -mod=mod
+    defaults:
+      run:
+        shell: bash # git-bash ships on the runner; gives grep/xargs
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.x'
+
+      # The core library is pure Go and cross-platform. metal/coreml are
+      # darwin&&arm64-gated, cuda/blas are tag-gated (SPEC §C8/§C14) — none appear
+      # in a default windows package list. examples/cmd are skipped (some use cgo
+      # which needs a C toolchain not set up here).
+      - name: Build (library)
+        run: go list ./... | grep -vE '/examples/|/cmd/|/asmcheck$' | xargs go build
+
+      - name: Test (library)
+        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go test

@@ -171,7 +171,7 @@ Phase 2 — Apple Silicon perf backends:
 - V27: CI pre-check gate enforces, with `git diff --exit-code` after each mutating cmd: `gofmt -l` (exclude internal/vendor — V20 verbatim), `go mod tidy`, `go generate` (exclude `cuda` pkg — only generator is CUDA cudagen needing the toolchain), and `govulncheck` (latest, scoped to non-cgo-lib pkgs). Repo MUST stay gofmt-clean + tidy-clean + vuln-free.
 - V28: staticcheck is available via `make lint` (local, exclude internal/vendor) and runs in the CI pre-check as ADVISORY (continue-on-error) — the gorgonia lib carries ~267 pre-existing issues, so it surfaces but does NOT fail CI. Our new packages (coreml/metal/ asmcheck) stay staticcheck-clean. Tighten to blocking once legacy is cleaned. ?
 - V29: on a host WITHOUT CUDA/BLAS, `go build ./...` (no tags, no grep-excludes) succeeds — every `gorgonia.org/cu` / CBLAS-importing file is gated by `cuda` / `blas`. CI/Makefile drop the `/cuda$` `/blase$` excludes. `-tags cuda` / `-tags blas` compile the gated code (needs the toolchain).
-- V30: `.github/workflows/` holds ONLY static `.yaml` workflows on GitHub-hosted runners — no `runs-on: self-hosted`, no `*.go` generator, no `*.yml`. Final set: `pre-check.yaml`, `linux.yaml`, `darwin-arm64.yaml`, `coverage.yaml`. `.github/dependabot.yml` -> `.yaml`. `grep -r self-hosted .github` empty.
+- V30: `.github/workflows/` holds ONLY static `.yaml` workflows on GitHub-hosted runners — no `runs-on: self-hosted`, no `*.go` generator, no `*.yml`. Final set: `pre-check.yaml`, `linux.yaml`, `windows.yaml`, `darwin-arm64.yaml`, `coverage.yaml`. `.github/dependabot.yml` -> `.yaml`. `grep -r self-hosted .github` empty.
 
 ### Phase 4 invariants (modernize / perf)
 
