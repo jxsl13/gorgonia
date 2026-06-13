@@ -50,7 +50,7 @@ func (op *sparsemaxOp) WriteHash(h hash.Hash) {
 func (op *sparsemaxOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op *sparsemaxOp) String() string {
-	return fmt.Sprintf("Sparsemax{}()")
+	return "Sparsemax{}()"
 }
 
 func (op *sparsemaxOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
@@ -385,7 +385,7 @@ func (op *sparsemaxDiffOp) WriteHash(h hash.Hash) {
 func (op *sparsemaxDiffOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op *sparsemaxDiffOp) String() string {
-	return fmt.Sprintf("SparsemaxDiff{}()")
+	return "SparsemaxDiff{}()"
 }
 
 func (op *sparsemaxDiffOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {

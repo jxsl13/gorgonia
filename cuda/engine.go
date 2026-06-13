@@ -93,7 +93,7 @@ func (e *Engine) Free(mem tensor.Memory, size int64) error {
 	return nil
 }
 
-func (e *Engine) Memset(mem tensor.Memory, val interface{}) error {
+func (e *Engine) Memset(mem tensor.Memory, val any) error {
 	panic("not implemented")
 }
 

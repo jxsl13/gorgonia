@@ -87,7 +87,7 @@ type CopierFrom interface {
 
 // Setter is a any value that can Memset itself to the provided value
 // type Setter interface {
-// 	SetAll(interface{}) error
+// 	SetAll(any) error
 // }
 
 // makeValue creates a value given a type and shape. The default value is the zero value of the type.

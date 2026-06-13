@@ -17,6 +17,6 @@ func enterLogScope() {}
 
 func leaveLogScope() {}
 
-func logf(format string, others ...interface{}) {}
+func logf(format string, others ...any) {}
 
-func allocatorLogf(format string, attrs ...interface{}) {}
+func allocatorLogf(format string, attrs ...any) {}

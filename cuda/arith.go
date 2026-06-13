@@ -67,7 +67,7 @@ func (e *Engine) Add(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // AddScalar implements tensor.Adder. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) AddScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) AddScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "add")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform AddScalar(). The tensor engine does not have the function %q", name)
@@ -182,7 +182,7 @@ func (e *Engine) Sub(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // SubScalar implements tensor.Suber. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) SubScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) SubScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "sub")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform SubScalar(). The tensor engine does not have the function %q", name)
@@ -297,7 +297,7 @@ func (e *Engine) Mul(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // MulScalar implements tensor.Muler. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) MulScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) MulScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "mul")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform MulScalar(). The tensor engine does not have the function %q", name)
@@ -412,7 +412,7 @@ func (e *Engine) Div(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // DivScalar implements tensor.Diver. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) DivScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) DivScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "div")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform DivScalar(). The tensor engine does not have the function %q", name)
@@ -527,7 +527,7 @@ func (e *Engine) Pow(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // PowScalar implements tensor.Power. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) PowScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) PowScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "pow")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform PowScalar(). The tensor engine does not have the function %q", name)
@@ -642,7 +642,7 @@ func (e *Engine) Mod(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // ModScalar implements tensor.Moder. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) ModScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) ModScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "mod")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform ModScalar(). The tensor engine does not have the function %q", name)

@@ -63,7 +63,7 @@ func (op *ctcLossOp) WriteHash(h hash.Hash) {
 func (op *ctcLossOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op *ctcLossOp) String() string {
-	return fmt.Sprintf("CTCLoss{}()")
+	return "CTCLoss{}()"
 }
 
 func (op *ctcLossOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
@@ -526,7 +526,7 @@ func (op *ctcLossDiffOp) WriteHash(h hash.Hash) {
 func (op *ctcLossDiffOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op *ctcLossDiffOp) String() string {
-	return fmt.Sprintf("ctcLossDiff{}()")
+	return "ctcLossDiff{}()"
 }
 
 func (op *ctcLossDiffOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {

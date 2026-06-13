@@ -25,7 +25,7 @@ var (
 	// Bool ...
 	Bool = tensor.Bool
 
-	// Ptr is equivalent to interface{}. Ugh Ugh Ugh
+	// Ptr is equivalent to any. Ugh Ugh Ugh
 	Ptr = tensor.UnsafePointer
 
 	vecF64  = &TensorType{Dims: 1, Of: tensor.Float64}

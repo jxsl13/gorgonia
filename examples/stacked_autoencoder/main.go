@@ -73,7 +73,7 @@ func makeTargets(targets tensor.Tensor) []int {
 	return ys
 }
 
-func verboseLog(format string, attrs ...interface{}) {
+func verboseLog(format string, attrs ...any) {
 	if *verbose {
 		log.Printf(format, attrs...)
 	}

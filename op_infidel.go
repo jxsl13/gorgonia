@@ -41,7 +41,7 @@ func (op letOp) isStmt() bool { return true }
 
 // readOp reads a value off the input. This op ensures that a value used, and hence codegen'd out
 type readOp struct {
-	into *Value // no, it's not a mistake. It's a pointer to a Value (which is an interface{} type)
+	into *Value // no, it's not a mistake. It's a pointer to a Value (which is an any type)
 }
 
 func (op readOp) Arity() int                                                      { return 0 }

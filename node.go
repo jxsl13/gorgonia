@@ -130,7 +130,7 @@ func WithName(name string) NodeConsOpt {
 }
 
 // WithValue is a node construction option that binds the value to the *Node. This function may panic if:
-//   - Gorgonia was unable to convert interface{} into a Value.
+//   - Gorgonia was unable to convert any into a Value.
 //   - The type of the Value does not match the type of the nodes.
 func WithValue(any any) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
