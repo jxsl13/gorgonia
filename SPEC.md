@@ -48,7 +48,7 @@ Phase 2 — Apple Silicon perf backends:
   target ANE. COMMITTED path (Phase 3): translate a gorgonia `*ExprGraph` ->
   CoreML MIL program -> compile `.mlpackage` -> infer via `gomlx/go-coreml`
   (`ComputeAll` = ANE+GPU+CPU). Model-level, not a tensor.Engine. go-coreml is
-  alpha — pin version, isolate behind our own interface. Needs macOS 12+, Xcode.
+  alpha — pin version, isolate behind our own interface. Needs macOS 12+, Xcode. BLOCKED on CLT-only machines (coremlcompiler absent) — see B5; build/verify on a full-Xcode env.
 - C10: low-level vector asm (axpy etc.) lives in EXTERNAL `gorgonia.org/vecf32`
   /`vecf64`. To add ARM64 NEON there, VENDOR them per C12 (internal copy + our
   asm on top via `replace`) instead of an upstream PR. See T20. In-repo asm
@@ -200,6 +200,7 @@ B1|2026-06-13|after rename go.mod regained gorgonia.org/gorgonia // indirect —
 B2|2026-06-13|go1.26 vet promotes non-constant format string to build-fail; 8 WriteHash sites fmt.Fprintf(h, op.String()) blocked go test|fixed -> fmt.Fprintf(h, "%s", op.String()); V9
 B3|2026-06-13|Example_linearRegression flaky after dep bump: used global math/rand.Float*; a bumped dep spawns goroutine consuming global rand -> dataset nondeterministic -> Output mismatch (old deps masked it)|xy()/random() use local rand.New(rand.NewSource(seed)); seed1 reproduces prior sequence, Output unchanged; V10
 B4|2026-06-13|T8 assumed in-repo mathutils had SIMD-able hot ops; mathutils = only divmod (scalar int div, cold: shape-infer/bitmap/ctc). Not a NEON candidate; arm64 Go already emits UDIV+MSUB|redirect T8 to profile-driven targets; divmod stays generic Go; V24
+B5|2026-06-13|T14-T18 (CoreML/ANE) blocked on dev machine: gomlx/go-coreml needs coremlcompiler = FULL Xcode; only Command Line Tools present (xcrun cannot find coremlcompiler). CoreML code cannot be built/verified here|defer T14-T18 to a full-Xcode env; tasks stay . (blocked), not faked; C9 amended
 ```
 
 ## §R refs
