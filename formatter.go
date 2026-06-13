@@ -92,7 +92,6 @@ func (mf mapFmt) format(s fmt.State, c rune) string {
 
 func (mf mapFmt) Format(s fmt.State, c rune) {
 	refVal := mf.m
-	var n *Node
 	t := refVal.Type()
 	keyType := t.Key()
 	if keyType != reflect.TypeFor[*Node]() {

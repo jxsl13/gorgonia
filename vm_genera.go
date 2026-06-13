@@ -3,7 +3,6 @@ package gorgonia
 import (
 	"bytes"
 	"fmt"
-	"io/fs"
 	"os"
 	"slices"
 

@@ -2,7 +2,6 @@ package gorgonia
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 
 	"runtime"

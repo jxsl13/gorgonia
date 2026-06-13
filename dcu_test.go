@@ -1,7 +1,6 @@
 package gorgonia
 
 import (
-	"io/fs"
 	"os"
 
 	"testing"

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"hash"
 	"hash/fnv"
-	"io/fs"
 	"os"
 
 	"github.com/chewxy/hm"
