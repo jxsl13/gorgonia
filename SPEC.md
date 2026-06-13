@@ -164,6 +164,7 @@ Phase 2 — Apple Silicon perf backends:
   commit it (`T<n>: <goal>` + §V cites) BEFORE the next task — one task per
   commit, never batch multiple tasks. A split task (e.g. T11->T21) commits at
   the consistent boundary it actually reached.
+- V26: a host-accessible GPU tensor.Engine (embeds tensor.StdEng) integrates end-to-end via gorgonia NewTapeMachine(g, WithEngine(e)) — NO cuda-style device-transfer machinery. TapeMachine sets every value's engine to m.Engine (vm_tape.go), so pass the engine to the MACHINE, not only to let-bound values. Non-overridden ops fall back to StdEng on CPU. B7.
 
 ## §T tasks
 
@@ -182,7 +183,7 @@ T10|x|scaffold metal/ subpkg mirroring cuda/: Engine skeleton, build tag metal&&
 T11|x|impl metal ops: elementwise (MSL kernels) + matmul (MPSMatrixMultiplication); parity vs CPU. Conv split to T21|V14,V15,I.metal
 T12|x|example examples/metal (GPU elementwise + matmul, runs on M2 Pro). VM auto-dispatch wiring split to T22|V13,I.metal-vm
 T22|x|Metal tensor.Engine (embed StdEng + GPU MatMul via MatMuler); tensors WithEngine(metal.Engine) auto-dispatch MatMul to GPU; parity vs CPU|V14,I.metal-vm
-T23|.|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go so a gorgonia graph runs end-to-end on GPU (large)|V13,V14,I.metal-vm
+T23|x|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go so a gorgonia graph runs end-to-end on GPU (large)|V13,V14,I.metal-vm
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
@@ -204,6 +205,7 @@ B3|2026-06-13|Example_linearRegression flaky after dep bump: used global math/ra
 B4|2026-06-13|T8 assumed in-repo mathutils had SIMD-able hot ops; mathutils = only divmod (scalar int div, cold: shape-infer/bitmap/ctc). Not a NEON candidate; arm64 Go already emits UDIV+MSUB|redirect T8 to profile-driven targets; divmod stays generic Go; V24
 B5|2026-06-13|T14-T18 (CoreML/ANE) blocked on dev machine: gomlx/go-coreml needs coremlcompiler = FULL Xcode; only Command Line Tools present (xcrun cannot find coremlcompiler). CoreML code cannot be built/verified here|defer T14-T18 to a full-Xcode env; tasks stay . (blocked), not faked; C9 amended
 B6|2026-06-13|B5 reassessed: coremlcompiler only needed for OFFLINE .mlpackage compile. CoreML.framework runtime API [MLModel compileModelAtURL:error:] works with CLT-only (probe confirmed) -> Xcode NOT required|unblock T14-T18 via direct cgo CoreML.framework + runtime compile; C9 amended; C13 added
+B7|2026-06-13|T23 assumed a ~4000-line mirror of cuda device-transfer machinery. WRONG: cuda needs that only because CUDA memory is NOT host-accessible. Metal engine embeds StdEng (host-accessible) -> plugs into gorgonia NewTapeMachine(g, WithEngine(e)). First test got 0 GPU dispatches: machine overrides value engines with m.Engine (default StandardEngine)|pass metal engine via WithEngine; no new VM files; V26
 ```
 
 ## §R refs

@@ -21,8 +21,13 @@ import (
 // run, and copy back. Not safe for concurrent use.
 type Engine struct {
 	tensor.StdEng
-	dev *Device
+	dev        *Device
+	matmulOnGPU int // count of MatMul ops dispatched to the GPU (for tests/metrics)
 }
+
+// MatMulsOnGPU reports how many MatMul ops this engine ran on the GPU. Lets
+// callers/tests confirm a gorgonia graph actually dispatched to Metal.
+func (e *Engine) MatMulsOnGPU() int { return e.matmulOnGPU }
 
 // NewEngine creates a Metal-backed tensor engine.
 func NewEngine() (*Engine, error) {
@@ -72,5 +77,6 @@ func (e *Engine) MatMul(a, b, prealloc tensor.Tensor) error {
 		return err
 	}
 	copy(pd, out)
+	e.matmulOnGPU++
 	return nil
 }
