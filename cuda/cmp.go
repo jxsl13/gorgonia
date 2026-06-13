@@ -4,9 +4,11 @@
 package cuda
 
 import (
+	"fmt"
 	"unsafe"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"gorgonia.org/cu"
 	"gorgonia.org/tensor"
 )
@@ -18,17 +20,17 @@ func (e *Engine) Lt(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (r
 	name := constructName2(a, b, "lt")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Lt(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Lt(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Lt")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Lt", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -70,23 +72,23 @@ func (e *Engine) Lt(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (r
 func (e *Engine) LtScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "lt")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform LtScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform LtScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for LtScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for LtScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -133,17 +135,17 @@ func (e *Engine) Lte(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "lte")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Lte(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Lte(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Lte")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Lte", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -185,23 +187,23 @@ func (e *Engine) Lte(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 func (e *Engine) LteScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "lte")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform LteScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform LteScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for LteScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for LteScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -248,17 +250,17 @@ func (e *Engine) Gt(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (r
 	name := constructName2(a, b, "gt")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Gt(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Gt(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Gt")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Gt", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -300,23 +302,23 @@ func (e *Engine) Gt(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (r
 func (e *Engine) GtScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "gt")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform GtScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform GtScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for GtScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for GtScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -363,17 +365,17 @@ func (e *Engine) Gte(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "gte")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Gte(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Gte(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Gte")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Gte", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -415,23 +417,23 @@ func (e *Engine) Gte(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 func (e *Engine) GteScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "gte")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform GteScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform GteScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for GteScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for GteScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -478,17 +480,17 @@ func (e *Engine) ElEq(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) 
 	name := constructName2(a, b, "eq")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform ElEq(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform ElEq(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for ElEq")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for ElEq", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -530,23 +532,23 @@ func (e *Engine) ElEq(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) 
 func (e *Engine) EqScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "eq")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform EqScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform EqScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for EqScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for EqScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -593,17 +595,17 @@ func (e *Engine) ElNe(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) 
 	name := constructName2(a, b, "ne")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform ElNe(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform ElNe(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for ElNe")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for ElNe", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -645,23 +647,23 @@ func (e *Engine) ElNe(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) 
 func (e *Engine) NeScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "ne")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform NeScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform NeScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for NeScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for NeScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr

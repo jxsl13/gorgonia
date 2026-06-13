@@ -1,6 +1,6 @@
 package gorgonia
 
-import "github.com/pkg/errors"
+import "fmt"
 
 var unaryOpStabilizationFns = make(map[ʘUnaryOperatorType][]func(*Node) (*Node, error))
 var binOpStabilizationFns = make(map[ʘBinaryOperatorType][]func(*Node, *Node) (*Node, error))
@@ -81,7 +81,7 @@ func logStabilization(a *Node) (retVal *Node, err error) {
 		if retVal, err = Neg(x); err == nil {
 			return Log1p(retVal)
 		}
-		return nil, errors.Wrap(err, negFail)
+		return nil, fmt.Errorf("%s: %w", negFail, err)
 	}
 	return Log1p(x)
 }
@@ -124,7 +124,7 @@ func oneMinusSigmoidStabilization(a, b *Node) (retVal *Node, err error) {
 	if retVal, err = Neg(x); err == nil {
 		return Sigmoid(retVal)
 	}
-	return nil, errors.Wrap(err, negFail)
+	return nil, fmt.Errorf("%s: %w", negFail, err)
 }
 
 // logSigmoidStabilization stabilizes log(sigmoid(x)) by replacing it with -softplus(-x)
@@ -145,13 +145,13 @@ func logSigmoidStabilization(a *Node) (retVal *Node, err error) {
 		if retVal, err = Softplus(retVal); err == nil {
 			retVal, err = Neg(retVal)
 			if err != nil {
-				return nil, errors.Wrap(err, negFail)
+				return nil, fmt.Errorf("%s: %w", negFail, err)
 			}
 			return retVal, nil
 		}
-		return nil, errors.Wrap(err, softplusFail)
+		return nil, fmt.Errorf("%s: %w", softplusFail, err)
 	}
-	return nil, errors.Wrap(err, negFail)
+	return nil, fmt.Errorf("%s: %w", negFail, err)
 }
 
 // log1pExpStabilization stabilizes log1p(exp(x)) by substituting it with softplus(x)
@@ -193,11 +193,11 @@ func log1pNegSigmoidStabilization(a *Node) (retVal *Node, err error) {
 	if retVal, err = Softplus(x); err == nil {
 		retVal, err = Neg(retVal)
 		if err != nil {
-			return nil, errors.Wrap(err, negFail)
+			return nil, fmt.Errorf("%s: %w", negFail, err)
 		}
 		return retVal, nil
 	}
-	return nil, errors.Wrap(err, softplusFail)
+	return nil, fmt.Errorf("%s: %w", softplusFail, err)
 }
 
 // logSoftmaxStabilization converts

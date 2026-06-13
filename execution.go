@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"gorgonia.org/tensor"
 )
 
@@ -66,12 +67,12 @@ func (op *ExternalOp) DetermineDevice(inputs Nodes, output *Node) error {
 			continue
 		}
 		if in.dataOn != inDev && in.dataOn != dev {
-			return errors.Errorf("Cannot automatically determine device.")
+			return fmt.Errorf("Cannot automatically determine device.")
 		}
 	}
 
 	if !allSame {
-		return errors.Errorf("Not all the same devices")
+		return fmt.Errorf("Not all the same devices")
 	}
 	op.Device = dev
 	return nil

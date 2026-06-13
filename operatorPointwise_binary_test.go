@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/tensor"
 )
@@ -25,7 +24,7 @@ func ssBinOpTest(t *testing.T, op ʘBinaryOperatorType, dt tensor.Dtype) (err er
 		randX = float32(rand.ExpFloat64())
 		randY = float32(rand.ExpFloat64())
 	default:
-		return errors.Errorf("op %v Test not yet implemented for %v ", op, dt)
+		return fmt.Errorf("op %v Test not yet implemented for %v ", op, dt)
 	}
 
 	binOp := newEBOByType(op, dt, dt)

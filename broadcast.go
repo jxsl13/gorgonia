@@ -3,7 +3,6 @@ package gorgonia
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -84,49 +83,49 @@ func Broadcast(a, b *Node, pattern BroadcastPattern) (*Node, *Node, error) {
 
 		for _, a := range broadcastOn[0] {
 			if a >= yshape.Dims() {
-				return nil, nil, errors.Errorf("Attempting to broadcast a on axis %d of b. But b has shape %v", a, yshape)
+				return nil, nil, fmt.Errorf("Attempting to broadcast a on axis %d of b. But b has shape %v", a, yshape)
 			}
 		}
 		newShape = calcBroadcastShape(x, yshape.Dims(), broadcastOn[0])
 		if x, err = Reshape(x, newShape); err != nil {
-			return nil, nil, errors.Wrapf(err, "Cannot reshape x to %v for broadcasting", newShape)
+			return nil, nil, fmt.Errorf("Cannot reshape x to %v for broadcasting: %w", newShape, err)
 		}
 		children := Nodes{x}
 		for _, a := range broadcastOn[0] {
 			var size *Node
 			if size, err = SizeOf(a, y); err != nil {
-				return nil, nil, errors.Wrap(err, operationError)
+				return nil, nil, fmt.Errorf("%s: %w", operationError, err)
 			}
 			children = append(children, size)
 		}
 		if x, err = repeatedApply(broadcastOn[0], children); err != nil {
-			return nil, nil, errors.Wrap(err, operationError)
+			return nil, nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 	}
 
 	if len(broadcastOn[1]) > 0 {
 		for _, a := range broadcastOn[1] {
 			if a >= xshape.Dims() {
-				return nil, nil, errors.Errorf("Attempting to broadcast b on axis %d of a. But a has shape %v", a, xshape)
+				return nil, nil, fmt.Errorf("Attempting to broadcast b on axis %d of a. But a has shape %v", a, xshape)
 			}
 		}
 
 		newShape = calcBroadcastShape(y, xshape.Dims(), broadcastOn[1])
 
 		if y, err = Reshape(y, newShape); err != nil {
-			return nil, nil, errors.Wrapf(err, "Cannot reshape y to %v for broadcast", newShape)
+			return nil, nil, fmt.Errorf("Cannot reshape y to %v for broadcast: %w", newShape, err)
 		}
 		children := Nodes{y}
 		for _, a := range broadcastOn[1] {
 			var size *Node
 			if size, err = SizeOf(a, x); err != nil {
-				return nil, nil, errors.Wrap(err, operationError)
+				return nil, nil, fmt.Errorf("%s: %w", operationError, err)
 			}
 			children = append(children, size)
 		}
 
 		if y, err = repeatedApply(broadcastOn[1], children); err != nil {
-			return nil, nil, errors.Wrap(err, operationError)
+			return nil, nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 	}
 	return x, y, nil

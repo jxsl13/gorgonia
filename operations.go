@@ -3,7 +3,8 @@ package gorgonia
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"gorgonia.org/tensor"
 )
 
@@ -69,7 +70,7 @@ func Mul(a, b *Node) (retVal *Node, err error) {
 		op = linAlgBinOp{āBinaryOperator: matMulOperator}
 		return binOpNode(op, a, b)
 	default:
-		return nil, errors.Errorf(nyiFail, "Mul", fmt.Sprintf("a %v b %v", a.shape, b.shape))
+		return nil, fmt.Errorf(nyiFail, "Mul", fmt.Sprintf("a %v b %v", a.shape, b.shape))
 	}
 }
 
@@ -100,7 +101,7 @@ func BatchedMatMul(a, b *Node, transes ...bool) (retVal *Node, err error) {
 // OuterProd returns a Node representing the outer product of two vectors. This function will return an error if both input nodes are not vectors
 func OuterProd(a, b *Node) (retVal *Node, err error) {
 	if !a.IsVector() || !b.IsVector() {
-		return nil, errors.Errorf("Expected only vectors to be able to do OuterProd. %v is %v. %v is %v", a, a.Shape(), b, b.Shape()) //for now
+		return nil, fmt.Errorf("Expected only vectors to be able to do OuterProd. %v is %v. %v is %v", a, a.Shape(), b, b.Shape()) //for now
 	}
 
 	// TODO: maybe align shapes?
@@ -124,7 +125,7 @@ func Div(a, b *Node) (retVal *Node, err error) {
 func Auto(op func(a, b *Node, leftPattern, rightPattern []byte) (*Node, error), a, b *Node) (*Node, error) {
 	leftPattern, rightPattern, err := autoBroadcastPattern(a.Shape(), b.Shape())
 	if err != nil {
-		return nil, errors.Wrap(err, "Auto failed to find broadcastable pattern")
+		return nil, fmt.Errorf("%s: %w", "Auto failed to find broadcastable pattern", err)
 	}
 
 	return op(a, b, rightPattern, leftPattern)
@@ -169,7 +170,7 @@ func unaryOpNode(op Op, a *Node) (retVal *Node, err error) {
 func LogSumExp(a *Node, axis int) (retVal *Node, err error) {
 	var max, exp, sum, logSum *Node
 	if max, err = Max(a, axis); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	if retVal, err = Sub(a, max); err == nil {
 		if exp, err = Exp(retVal); err == nil {
@@ -182,7 +183,7 @@ func LogSumExp(a *Node, axis int) (retVal *Node, err error) {
 			}
 		}
 	}
-	return nil, errors.Wrap(err, operationError)
+	return nil, fmt.Errorf("%s: %w", operationError, err)
 }
 
 /* Aggregate Functions */
@@ -193,7 +194,7 @@ func At(a *Node, coords ...int) (retVal *Node, err error) {
 	if a.IsScalar() {
 		for _, c := range coords {
 			if c != 0 {
-				return nil, errors.Errorf("At() only works with scalars when the coordinates are (0...0). Got %v instead", coords)
+				return nil, fmt.Errorf("At() only works with scalars when the coordinates are (0...0). Got %v instead", coords)
 			}
 		}
 		return a, nil
@@ -240,13 +241,13 @@ func Mean(a *Node, along ...int) (retVal *Node, err error) {
 
 	var s *Node
 	if s, err = Sum(a, along...); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	sizes := make(Nodes, len(along))
 	for i, axis := range along {
 		if sizes[i], err = SizeOf(axis, a); err != nil {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 	}
 
@@ -254,7 +255,7 @@ func Mean(a *Node, along ...int) (retVal *Node, err error) {
 	if counts, err = ReduceMul(sizes); err == nil {
 		return HadamardDiv(s, counts)
 	}
-	return nil, errors.Wrap(err, operationError)
+	return nil, fmt.Errorf("%s: %w", operationError, err)
 }
 
 // Sum performs a sum() on the input and the provided axes.
@@ -282,20 +283,20 @@ func Norm(a *Node, axis, p int) (retVal *Node, err error) {
 		if retVal, err = Square(a); err == nil {
 			if retVal, err = Sum(retVal, axis); err == nil {
 				if retVal, err = Sqrt(retVal); err != nil {
-					return nil, errors.Wrap(err, operationError)
+					return nil, fmt.Errorf("%s: %w", operationError, err)
 				}
 			} else {
-				return nil, errors.Wrap(err, operationError)
+				return nil, fmt.Errorf("%s: %w", operationError, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 		return
 	}
 
 	var dt tensor.Dtype
 	if dt, err = dtypeOf(a.t); err != nil {
-		return nil, errors.Wrapf(err, "Failed to determine the dtype of %T", a.t)
+		return nil, fmt.Errorf("Failed to determine the dtype of %T: %w", a.t, err)
 	}
 
 	var b, inv *Node
@@ -313,13 +314,13 @@ func Norm(a *Node, axis, p int) (retVal *Node, err error) {
 	if retVal, err = Pow(a, b); err == nil {
 		if retVal, err = Sum(retVal, axis); err == nil {
 			if retVal, err = Pow(retVal, inv); err != nil {
-				return nil, errors.Wrap(err, operationError)
+				return nil, fmt.Errorf("%s: %w", operationError, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	return
 }
@@ -339,7 +340,7 @@ func ReduceAdd(nodes Nodes, opts ...NodeConsOpt) (retVal *Node, err error) {
 				opt(retVal)
 			}
 		} else {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 		return
 	}
@@ -351,7 +352,7 @@ func ReduceAdd(nodes Nodes, opts ...NodeConsOpt) (retVal *Node, err error) {
 		}
 
 		if retVal, err = Add(retVal, n); err != nil {
-			err = errors.Wrap(err, operationError)
+			err = fmt.Errorf("%s: %w", operationError, err)
 			return
 		}
 		for _, opt := range opts {
@@ -374,7 +375,7 @@ func ReduceMul(nodes Nodes, opts ...NodeConsOpt) (retVal *Node, err error) {
 				opt(retVal)
 			}
 		} else {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 		return
 	}
@@ -386,7 +387,7 @@ func ReduceMul(nodes Nodes, opts ...NodeConsOpt) (retVal *Node, err error) {
 		}
 
 		if retVal, err = Mul(retVal, n); err != nil {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 		for _, opt := range opts {
 			opt(retVal)
@@ -415,11 +416,11 @@ func SizeOf(axis int, x *Node) (retVal *Node, err error) {
 // Slice slices a *Node. For T[:] slices, pass in nil. Will error out if node's type is not a Tensor
 func Slice(n *Node, slices ...tensor.Slice) (retVal *Node, err error) {
 	if _, ok := n.t.(TensorType); !ok {
-		return nil, errors.Errorf("Cannot slice on non Tensor tensor. Got %T", n.t)
+		return nil, fmt.Errorf("Cannot slice on non Tensor tensor. Got %T", n.t)
 	}
 
 	if len(slices) > n.shape.Dims() {
-		return nil, errors.Errorf("Cannot slice %v. Shape: %v. Slices: %d", n, n.shape, len(slices))
+		return nil, fmt.Errorf("Cannot slice %v. Shape: %v. Slices: %d", n, n.shape, len(slices))
 	}
 
 	retVal = n
@@ -447,7 +448,7 @@ func Slice(n *Node, slices ...tensor.Slice) (retVal *Node, err error) {
 func Transpose(n *Node, axes ...int) (retVal *Node, err error) {
 	// prep axes
 	if len(axes) > 0 && len(axes) != n.Dims() {
-		return nil, errors.Errorf("n has %d dims, while requested transposes is %d", n.Dims(), len(axes))
+		return nil, fmt.Errorf("n has %d dims, while requested transposes is %d", n.Dims(), len(axes))
 	}
 	dims := len(n.shape)
 	if len(axes) == 0 || axes == nil {
@@ -481,18 +482,18 @@ func Concat(axis int, ns ...*Node) (retVal *Node, err error) {
 		}
 
 		if n.shape.Dims() != d {
-			err = errors.Errorf("Dimension mismatch. Expected all the nodes to be concatenated to have %d dimensions. Got %d instead", d, n.shape.Dims())
+			err = fmt.Errorf("Dimension mismatch. Expected all the nodes to be concatenated to have %d dimensions. Got %d instead", d, n.shape.Dims())
 			return
 		}
 	}
 
 	if d == 0 {
-		err = errors.Errorf("Concat only works on Tensor nodes")
+		err = fmt.Errorf("Concat only works on Tensor nodes")
 		return
 	}
 
 	if axis >= d {
-		err = errors.Errorf("Invalid axis. Nodes have %d dimensions. Axis is %d", d, axis)
+		err = fmt.Errorf("Invalid axis. Nodes have %d dimensions. Axis is %d", d, axis)
 		return
 	}
 
@@ -505,11 +506,11 @@ func Concat(axis int, ns ...*Node) (retVal *Node, err error) {
 func Unconcat(a *Node, along int, n int) (Nodes, error) {
 	aShape := a.Shape()
 	if along < 0 || along > aShape.Dims() {
-		return nil, errors.Errorf("Unable to Unconcat a of shape %v along axis %d", aShape, along)
+		return nil, fmt.Errorf("Unable to Unconcat a of shape %v along axis %d", aShape, along)
 	}
 
 	if aShape[along]%n != 0 {
-		return nil, errors.Errorf("Axis %d of %v cannot be nicely split into %d parts", along, aShape, n)
+		return nil, fmt.Errorf("Axis %d of %v cannot be nicely split into %d parts", along, aShape, n)
 	}
 
 	newShapeAlong := aShape[along] / n
@@ -529,7 +530,7 @@ func Unconcat(a *Node, along int, n int) (Nodes, error) {
 
 		a2, err := Slice(a, ss...)
 		if err != nil {
-			return nil, errors.Wrapf(err, "Unable to slice a of shape %v along %d on batch %d. Slices were: %v", aShape, along, i, ss)
+			return nil, fmt.Errorf("Unable to slice a of shape %v along %d on batch %d. Slices were: %v: %w", aShape, along, i, ss, err)
 		}
 		retVal = append(retVal, a2)
 		start += newShapeAlong
@@ -549,7 +550,7 @@ func Reshape(n *Node, to tensor.Shape) (retVal *Node, err error) {
 		}
 	}
 	if negs > 1 {
-		return nil, errors.Errorf("Unfortunately, inference of reshape parameters only allow for one variable (a negative number). Got %v instead", to)
+		return nil, fmt.Errorf("Unfortunately, inference of reshape parameters only allow for one variable (a negative number). Got %v instead", to)
 	}
 
 	if negs == 1 {
@@ -562,14 +563,14 @@ func Reshape(n *Node, to tensor.Shape) (retVal *Node, err error) {
 		}
 		inferred, rem := divmod(n.Shape().TotalSize(), prod)
 		if rem != 0 {
-			return nil, errors.Errorf("Cannot reshape %v to %v", n.Shape(), to)
+			return nil, fmt.Errorf("Cannot reshape %v to %v", n.Shape(), to)
 		}
 		to[infer] = inferred
 	}
 
 	// the Node n might not have shape at this point, in that case we skip the check
 	if n.Shape().Dims() > 0 && n.Shape().TotalSize() != to.TotalSize() {
-		return nil, errors.Errorf("shape size doesn't not match. Expected %v, got %v", n.Shape().TotalSize(), to.TotalSize())
+		return nil, fmt.Errorf("shape size doesn't not match. Expected %v, got %v", n.Shape().TotalSize(), to.TotalSize())
 	}
 
 	op := reshapeOp{
@@ -639,10 +640,10 @@ func Tensordot(aAxes []int, bAxes []int, a, b *Node) (retVal *Node, err error) {
 func Mish(a *Node) (retVal *Node, err error) {
 	var sp, tsp *Node
 	if sp, err = Softplus(a); err != nil {
-		return nil, errors.Wrap(err, "Mish() - SoftPlus failed")
+		return nil, fmt.Errorf("%s: %w", "Mish() - SoftPlus failed", err)
 	}
 	if tsp, err = Tanh(sp); err != nil {
-		return nil, errors.Wrap(err, "Mish() - Tanh failed")
+		return nil, fmt.Errorf("%s: %w", "Mish() - Tanh failed", err)
 	}
 	return HadamardProd(a, tsp)
 }

@@ -3,10 +3,10 @@
 package gorgonia
 
 import (
+	"fmt"
 	"unsafe"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -28,7 +28,7 @@ func makeValueFromMem(t hm.Type, s tensor.Shape, mem tensor.Memory) (retVal Valu
 	case tensor.Dtype:
 		return makeScalarFromMem(tt, mem)
 	default:
-		err = errors.Errorf(nyiTypeFail, "MakeValue", tt)
+		err = fmt.Errorf(nyiTypeFail, "MakeValue", tt)
 		return
 	}
 }
@@ -70,7 +70,7 @@ func makeScalarFromMem(dt tensor.Dtype, mem tensor.Memory) (retVal Value, err er
 	case tensor.Bool:
 		retVal = (*B)(unsafe.Pointer(mem.Uintptr()))
 	default:
-		err = errors.Errorf(nyiTypeFail, "makeScalarFromMem", dt)
+		err = fmt.Errorf(nyiTypeFail, "makeScalarFromMem", dt)
 	}
 	return
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/chewxy/hm"
 	"github.com/chewxy/math32"
 	rng "github.com/leesper/go_rng"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -106,7 +105,7 @@ func (op randomOp) Do(...Value) (retVal Value, err error) {
 				v = float32(rand.Binomial(int64(op.a), op.b))
 			}
 		default:
-			return nil, errors.Errorf(nyiFail, "randomOp.do()", op.dt)
+			return nil, fmt.Errorf(nyiFail, "randomOp.do()", op.dt)
 		}
 
 		retVal, _ = anyToScalar(v)
@@ -141,7 +140,7 @@ func (op randomOp) Do(...Value) (retVal Value, err error) {
 		}
 		return
 	default:
-		return nil, errors.Errorf(nyiFail, "randomOp.do() for non-scalar", op.dt)
+		return nil, fmt.Errorf(nyiFail, "randomOp.do() for non-scalar", op.dt)
 	}
 }
 
@@ -194,7 +193,7 @@ func (op im2colOp) InferShape(shapes ...DimSizer) (retVal tensor.Shape, err erro
 	if s, ok := shapes[0].(tensor.Shape); ok {
 		return op.calcShape(s), nil
 	}
-	return nil, errors.Errorf("expected tensor.Shape. got %T instead", shapes[0])
+	return nil, fmt.Errorf("expected tensor.Shape. got %T instead", shapes[0])
 }
 
 func (op im2colOp) Do(inputs ...Value) (retVal Value, err error) {
@@ -243,7 +242,7 @@ func (op im2colOp) SymDiff(inputs Nodes, output, grad *Node) (retVal Nodes, err 
 	im := inputs[0]
 	s := im.Shape()
 	if s.Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have a shape with 4 dims")
+		return nil, fmt.Errorf("Expected input to have a shape with 4 dims")
 	}
 	var unpaddedB, unpaddedC, unpaddedH, unpaddedW int
 	unpaddedB, unpaddedC, unpaddedH, unpaddedW = s[0], s[1], s[2], s[3]
@@ -285,7 +284,7 @@ func (op im2colOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 	}
 
 	if _, err = diffOp.UsePreallocDo(imv.d, colv.d); err != nil {
-		return errors.Wrapf(err, doFail, diffOp)
+		return fmt.Errorf(doFail+": %w", diffOp, err)
 	}
 	return
 }
@@ -375,7 +374,7 @@ func (op im2colOp) do(prealloc, input Value) (retVal Value, err error) {
 			go op.f32s(c, h, w, chanStride, inRowStride, retHeight, retWidth, imData[imStart:imEnd], colData[colStart:colEnd], &wg, workers)
 		}
 	default:
-		return nil, errors.Errorf(nyiFail, "im2col", input.Dtype())
+		return nil, fmt.Errorf(nyiFail, "im2col", input.Dtype())
 	}
 	wg.Wait()
 	return prealloc, nil
@@ -562,7 +561,7 @@ func (op col2imOp) do(prealloc, input Value) (retVal Value, err error) {
 			}
 		}
 	default:
-		return nil, errors.Errorf(nyiFail, "col2im", input.Dtype())
+		return nil, fmt.Errorf(nyiFail, "col2im", input.Dtype())
 	}
 	wg.Wait()
 	return prealloc, nil
@@ -708,7 +707,7 @@ func (op *maxPoolOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
 	if s, ok := inputs[0].(tensor.Shape); ok {
 		return op.calcShape(s), nil
 	}
-	return nil, errors.Errorf("Expected a shape")
+	return nil, fmt.Errorf("Expected a shape")
 }
 
 func (op *maxPoolOp) Do(inputs ...Value) (retVal Value, err error) {
@@ -751,7 +750,7 @@ func (op *maxPoolOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, erro
 		op.do(p, in)
 		return p, nil
 	}
-	return nil, errors.Errorf("Expected prealloc to be a tensor")
+	return nil, fmt.Errorf("Expected prealloc to be a tensor")
 }
 
 func (op *maxPoolOp) DiffWRT(inputs int) []bool { return []bool{true} }
@@ -785,7 +784,7 @@ func (op *maxPoolOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (e
 	diff := &maxPoolDiffOp{op2}
 
 	if _, err = diff.UsePreallocDo(inputDV.d, inputDV.Value, outDV.Value, outDV.d); err != nil {
-		return errors.Wrapf(err, doFail, diff)
+		return fmt.Errorf(doFail+": %w", diff, err)
 	}
 	return
 }
@@ -798,11 +797,11 @@ func (op *maxPoolOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	var in tensor.Tensor
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Expected input to be a tensor")
+		return nil, fmt.Errorf("Expected input to be a tensor")
 	}
 
 	if in.Shape().Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have 4 dimensions")
+		return nil, fmt.Errorf("Expected input to have 4 dimensions")
 	}
 	return in, nil
 }
@@ -1011,7 +1010,7 @@ func (op *maxPoolDiffOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, 
 		op.do(p, in, pooled, pooledGrad)
 		return prealloc, nil
 	}
-	return nil, errors.Errorf("Cannot do with PreallocDo - expected PreAlloc to be tensor")
+	return nil, fmt.Errorf("Cannot do with PreallocDo - expected PreAlloc to be tensor")
 }
 
 func (op *maxPoolDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad tensor.Tensor, err error) {
@@ -1021,20 +1020,20 @@ func (op *maxPoolDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad ten
 
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected input to be a tensor")
+		err = fmt.Errorf("Expected input to be a tensor")
 		return
 	}
 	if in.Shape().Dims() != 4 {
-		err = errors.Errorf("Expected input to have 4 dimensions")
+		err = fmt.Errorf("Expected input to have 4 dimensions")
 		return
 	}
 
 	if pooled, ok = inputs[1].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooled to be a tensor")
+		err = fmt.Errorf("Expected pooled to be a tensor")
 		return
 	}
 	if pooledGrad, ok = inputs[2].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooledGrad to be a tensor")
+		err = fmt.Errorf("Expected pooledGrad to be a tensor")
 		return
 	}
 	return
@@ -1191,7 +1190,7 @@ func (op *BatchNormOp) Type() hm.Type {
 // InferShape from the input values
 func (op *BatchNormOp) InferShape(ns ...DimSizer) (tensor.Shape, error) {
 	if err := checkArity(op, len(ns)); err != nil {
-		return nil, errors.Wrapf(err, "batchNorm")
+		return nil, fmt.Errorf("batchNorm: %w", err)
 	}
 
 	return ns[0].(tensor.Shape).Clone(), nil
@@ -1200,7 +1199,7 @@ func (op *BatchNormOp) InferShape(ns ...DimSizer) (tensor.Shape, error) {
 // Do performs the batchnorm computation on the values
 func (op *BatchNormOp) Do(values ...Value) (retVal Value, err error) {
 	if err := checkArity(op, len(values)); err != nil {
-		return nil, errors.Wrapf(err, "batchNorm Do")
+		return nil, fmt.Errorf("batchNorm Do: %w", err)
 	}
 
 	var v, out Value
@@ -1653,7 +1652,7 @@ func (op *batchnormDiffOp) Type() hm.Type {
 
 func (op *batchnormDiffOp) InferShape(ns ...DimSizer) (tensor.Shape, error) {
 	if err := checkArity(op, len(ns)); err != nil {
-		return nil, errors.Wrapf(err, "batchNorm")
+		return nil, fmt.Errorf("batchNorm: %w", err)
 	}
 
 	originalShape := ns[0].(tensor.Shape).Clone()

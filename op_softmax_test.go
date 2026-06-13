@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/tensor"
 )
@@ -245,17 +244,17 @@ func oldsoftmax(a *Node, axes ...int) (retVal *Node, err error) {
 
 	if len(axes) > 0 {
 		if axes[0] >= axis+1 || axes[0] < 0 {
-			return nil, errors.Errorf("Cannot perform SoftMax on axis %d. Input has shape %v", axes[0], a.Shape())
+			return nil, fmt.Errorf("Cannot perform SoftMax on axis %d. Input has shape %v", axes[0], a.Shape())
 		}
 		axis = axes[0]
 	}
 
 	var exp, sum *Node
 	if exp, err = Exp(a); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	if sum, err = Sum(exp, axis); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if sum.IsScalar() {
@@ -274,7 +273,7 @@ func oldsoftmax(a *Node, axes ...int) (retVal *Node, err error) {
 		newShape[axis] = 1
 
 		if sum, err = Reshape(sum, newShape); err != nil {
-			return nil, errors.Wrap(err, "Failed to reshape")
+			return nil, fmt.Errorf("%s: %w", "Failed to reshape", err)
 		}
 	}
 

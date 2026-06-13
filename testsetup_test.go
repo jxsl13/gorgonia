@@ -8,7 +8,6 @@ import (
 	"runtime"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/dawson"
 	"gorgonia.org/tensor"
@@ -140,7 +139,7 @@ func (t malformed) FreeTypeVar() hm.TypeVarSet     { return nil }
 func (t malformed) Eq(hm.Type) bool                { return false }
 func (t malformed) Types() hm.Types                { return nil }
 func (t malformed) Normalize(a, b hm.TypeVarSet) (hm.Type, error) {
-	return nil, errors.Errorf("cannot normalize malformed")
+	return nil, fmt.Errorf("cannot normalize malformed")
 }
 
 type assertState struct {

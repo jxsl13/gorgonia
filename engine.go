@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"gorgonia.org/tensor"
 )
 
@@ -13,7 +14,7 @@ type StandardEngine struct {
 // Transpose tensor a according to expStrides
 func (e StandardEngine) Transpose(a tensor.Tensor, expStrides []int) error {
 	if !a.IsNativelyAccessible() {
-		return errors.Errorf("Cannot Transpose() on non-natively accessible tensor")
+		return fmt.Errorf("Cannot Transpose() on non-natively accessible tensor")
 	}
 
 	size := a.DataSize()

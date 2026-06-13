@@ -7,7 +7,6 @@ import (
 	"unsafe"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -346,7 +345,7 @@ func anyToValue(any any) (val Value, t hm.Type, dt tensor.Dtype, err error) {
 		dt = a.Dtype()
 		return
 	default:
-		err = errors.Errorf("value %v of %T not yet handled", any, any)
+		err = fmt.Errorf("value %v of %T not yet handled", any, any)
 		return
 	}
 }

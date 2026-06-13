@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -120,7 +119,7 @@ func makeValue(t hm.Type, s tensor.Shape) (retVal Value, err error) {
 	case TensorType:
 		return tensor.New(tensor.Of(dt), tensor.WithShape(s...)), nil
 	default:
-		err = errors.Errorf(nyiTypeFail, "MakeValue", tt)
+		err = fmt.Errorf(nyiTypeFail, "MakeValue", tt)
 		return
 	}
 }

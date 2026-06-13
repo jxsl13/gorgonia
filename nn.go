@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"time"
 
+	"errors"
+
 	"github.com/jxsl13/gorgonia/internal/encoding"
 	rng "github.com/leesper/go_rng"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -21,7 +22,7 @@ func BinaryXent(output, target *Node) (retVal *Node, err error) {
 	// which constant one to use?
 	var dt tensor.Dtype
 	if dt, err = dtypeOf(output.t); err != nil {
-		return nil, errors.Wrapf(err, dtypeExtractionFail, output.t)
+		return nil, fmt.Errorf(dtypeExtractionFail+": %w", output.t, err)
 	}
 
 	switch dt {
@@ -32,35 +33,35 @@ func BinaryXent(output, target *Node) (retVal *Node, err error) {
 		one = onef32
 		oneMore = oneMoref32
 	default:
-		return nil, errors.Errorf(nyiFail, "BinaryXEnt", dt)
+		return nil, fmt.Errorf(nyiFail, "BinaryXEnt", dt)
 	}
 
 	if logO, err = Log(output); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if omt, err = Sub(one, target); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if omo, err = Sub(oneMore, output); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if tLogO, err = HadamardProd(target, logO); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if retVal, err = Log(omo); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if retVal, err = HadamardProd(omt, retVal); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if retVal, err = Add(tLogO, retVal); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	return Neg(retVal)
@@ -91,7 +92,7 @@ func LeakyRelu(x *Node, alpha float64) (*Node, error) {
 
 	// which zero to use?
 	if dt, err = dtypeOf(x.t); err != nil {
-		return nil, errors.Wrap(err, dtypeOfFail)
+		return nil, fmt.Errorf("%s: %w", dtypeOfFail, err)
 	}
 	switch dt {
 	case Float64:
@@ -101,7 +102,7 @@ func LeakyRelu(x *Node, alpha float64) (*Node, error) {
 		zero = zerof32
 		alphaN = NewConstant(float32(alpha))
 	default:
-		return nil, errors.Errorf(nyiFail, "ReLu", dt)
+		return nil, fmt.Errorf(nyiFail, "ReLu", dt)
 	}
 
 	gteZeroOp := newElemBinOp(gteOpType, x, zero)
@@ -109,26 +110,26 @@ func LeakyRelu(x *Node, alpha float64) (*Node, error) {
 
 	xGteZeroCmp, err := ApplyOp(gteZeroOp, x, zero)
 	if err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	ltZeroOp := newElemBinOp(ltOpType, x, zero)
 	ltZeroOp.retSame = true
 
 	xLtZeroCmp, err := ApplyOp(ltZeroOp, x, zero)
 	if err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	xGteZero, err := HadamardProd(x, xGteZeroCmp)
 	if err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	xLtZero, err := HadamardProd(x, xLtZeroCmp)
 	if err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	xLtZeroAlpha, err := HadamardProd(xLtZero, alphaN)
 	if err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	return Add(xGteZero, xLtZeroAlpha)
 }
@@ -143,7 +144,7 @@ func Rectify(x *Node) (retVal *Node, err error) {
 
 	// which zero to use?
 	if dt, err = dtypeOf(x.t); err != nil {
-		return nil, errors.Wrap(err, dtypeOfFail)
+		return nil, fmt.Errorf("%s: %w", dtypeOfFail, err)
 	}
 	switch dt {
 	case Float64:
@@ -151,14 +152,14 @@ func Rectify(x *Node) (retVal *Node, err error) {
 	case Float32:
 		zero = zerof32
 	default:
-		return nil, errors.Errorf(nyiFail, "ReLu", dt)
+		return nil, fmt.Errorf(nyiFail, "ReLu", dt)
 	}
 
 	cmp := newElemBinOp(gteOpType, x, zero)
 	cmp.retSame = true
 
 	if retVal, err = ApplyOp(cmp, x, zero); err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	retVal.groups = retVal.groups.Upsert(group)
 
@@ -169,32 +170,32 @@ func Rectify(x *Node) (retVal *Node, err error) {
 // This poor naming scheme clearly comes from matlab
 func Im2Col(n *Node, kernel, pad, stride, dilation tensor.Shape) (retVal *Node, err error) {
 	if kernel.Dims() != 2 {
-		return nil, errors.Errorf("kernel shape is supposed to have a dim of 2")
+		return nil, fmt.Errorf("kernel shape is supposed to have a dim of 2")
 	}
 	if pad.Dims() != 2 {
-		return nil, errors.Errorf("pad is supposed to have a dim of 2")
+		return nil, fmt.Errorf("pad is supposed to have a dim of 2")
 	}
 	if stride.Dims() != 2 {
-		return nil, errors.Errorf("strides is supposed to have a dim of 2")
+		return nil, fmt.Errorf("strides is supposed to have a dim of 2")
 	}
 	if dilation.Dims() != 2 {
-		return nil, errors.Errorf("dilation is supposed to have a dim of 2")
+		return nil, fmt.Errorf("dilation is supposed to have a dim of 2")
 	}
 
 	if kernel[0] <= 0 || kernel[1] <= 0 {
-		return nil, errors.Errorf("cannot have negative or 0 in kernel shape")
+		return nil, fmt.Errorf("cannot have negative or 0 in kernel shape")
 	}
 
 	if stride[0] <= 0 || stride[1] <= 0 {
-		return nil, errors.Errorf("cannot have negative or 0 in stride: %v", stride)
+		return nil, fmt.Errorf("cannot have negative or 0 in stride: %v", stride)
 	}
 
 	if pad[0] < 0 || pad[1] < 0 {
-		return nil, errors.Errorf("cannot have negative padding")
+		return nil, fmt.Errorf("cannot have negative padding")
 	}
 
 	if dilation[0] <= 0 || dilation[1] <= 0 {
-		return nil, errors.Errorf("cannot have negative or 0 in dilation. %v", dilation)
+		return nil, fmt.Errorf("cannot have negative or 0 in dilation. %v", dilation)
 	}
 
 	op := makeIm2ColOp(kernel[0], kernel[1], pad[0], pad[1], stride[0], stride[1], dilation[0], dilation[1])
@@ -232,19 +233,19 @@ func Conv2d(im, filter *Node, kernelShape tensor.Shape, pad, stride, dilation []
 	// checks
 	for _, s := range stride {
 		if s <= 0 {
-			return nil, errors.Errorf("Cannot use strides of less than or equal 0: %v", stride)
+			return nil, fmt.Errorf("Cannot use strides of less than or equal 0: %v", stride)
 		}
 	}
 
 	for _, p := range pad {
 		if p < 0 {
-			return nil, errors.Errorf("Cannot use padding of less than 0: %v", pad)
+			return nil, fmt.Errorf("Cannot use padding of less than 0: %v", pad)
 		}
 	}
 
 	for _, d := range dilation {
 		if d <= 0 {
-			return nil, errors.Errorf("Cannot use dilation less than or eq 0 %v", dilation)
+			return nil, fmt.Errorf("Cannot use dilation less than or eq 0 %v", dilation)
 		}
 	}
 
@@ -328,22 +329,22 @@ func MaxPool2D(x *Node, kernel tensor.Shape, pad, stride []int) (*Node, error) {
 
 	// check shape
 	if xShape.Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have a shape with dimension 4")
+		return nil, fmt.Errorf("Expected input to have a shape with dimension 4")
 	}
 	if kernel.Dims() != 2 {
-		return nil, errors.Errorf("Expected kernel to have a shape of dimension 2")
+		return nil, fmt.Errorf("Expected kernel to have a shape of dimension 2")
 	}
 
 	// checks
 	for _, s := range stride {
 		if s <= 0 {
-			return nil, errors.Errorf("Cannot use strides of less than or equal 0: %v", stride)
+			return nil, fmt.Errorf("Cannot use strides of less than or equal 0: %v", stride)
 		}
 	}
 
 	for _, p := range pad {
 		if p < 0 {
-			return nil, errors.Errorf("Cannot use padding of less than 0: %v", pad)
+			return nil, fmt.Errorf("Cannot use padding of less than 0: %v", pad)
 		}
 	}
 

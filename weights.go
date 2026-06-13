@@ -7,7 +7,6 @@ import (
 	"time"
 
 	rng "github.com/leesper/go_rng"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -160,7 +159,7 @@ func ValuesOf(val any) InitWFn {
 			}
 			return retVal
 		default:
-			err := errors.Errorf(nyiTypeFail, "Zeroes", dt)
+			err := fmt.Errorf(nyiTypeFail, "Zeroes", dt)
 			panic(err)
 		}
 	}
@@ -181,7 +180,7 @@ func Gaussian(mean, stdev float64) InitWFn {
 		case tensor.Float32:
 			return Gaussian32(mean, stdev, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "Gaussian init", dt)
+			err := fmt.Errorf(nyiTypeFail, "Gaussian init", dt)
 			panic(err)
 		}
 	}
@@ -202,7 +201,7 @@ func Uniform(low, high float64) InitWFn {
 		case tensor.Float32:
 			return Uniform32(low, high, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "Uniform init", dt)
+			err := fmt.Errorf(nyiTypeFail, "Uniform init", dt)
 			panic(err)
 		}
 	}
@@ -218,7 +217,7 @@ func GlorotN(gain float64) InitWFn {
 		case tensor.Float32:
 			return GlorotEtAlN32(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "GlorotN", dt)
+			err := fmt.Errorf(nyiTypeFail, "GlorotN", dt)
 			panic(err)
 		}
 	}
@@ -234,7 +233,7 @@ func GlorotU(gain float64) InitWFn {
 		case tensor.Float32:
 			return GlorotEtAlU32(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "GlorotU", dt)
+			err := fmt.Errorf(nyiTypeFail, "GlorotU", dt)
 			panic(err)
 		}
 	}
@@ -247,7 +246,7 @@ func HeN(gain float64) InitWFn {
 		case tensor.Float64:
 			return HeEtAlN64(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "HeNormal", dt)
+			err := fmt.Errorf(nyiTypeFail, "HeNormal", dt)
 			panic(err)
 		}
 	}
@@ -260,7 +259,7 @@ func HeU(gain float64) InitWFn {
 		case tensor.Float64:
 			return HeEtAlU64(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "HeUniform", dt)
+			err := fmt.Errorf(nyiTypeFail, "HeUniform", dt)
 			panic(err)
 		}
 	}

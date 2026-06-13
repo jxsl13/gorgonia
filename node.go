@@ -10,7 +10,6 @@ import (
 	"github.com/awalterschulze/gographviz"
 	"github.com/chewxy/hm"
 	"github.com/jxsl13/gorgonia/internal/encoding"
-	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gorgonia.org/tensor"
 )
@@ -451,7 +450,7 @@ func (n *Node) Grad() (Value, error) {
 		return n.deriv.Value(), nil
 	}
 
-	return nil, errors.Errorf("No Gradient node/value found for %T", n)
+	return nil, fmt.Errorf("No Gradient node/value found for %T", n)
 }
 
 // Dims indicates how many dimensions the node's result has
@@ -703,16 +702,16 @@ func (n *Node) bindCopy(v Value) (err error) {
 				return nil
 			}
 
-			return errors.Errorf("Cannot yet handle bindCopy() of *dualValue into *dualValue") // TODO FIX
+			return fmt.Errorf("Cannot yet handle bindCopy() of *dualValue into *dualValue") // TODO FIX
 		}
 		if copied, err = Copy(dv.Value, v); err != nil {
-			return errors.Wrapf(err, "Failed to copy while binding to node with *dualValue")
+			return fmt.Errorf("Failed to copy while binding to node with *dualValue: %w", err)
 		}
 		dv.Value = copied // in case they're scalars
 		return nil
 	}
 	if copied, err = Copy(n.boundTo, v); err != nil {
-		return errors.Wrapf(err, "Failed to copy while binding to node")
+		return fmt.Errorf("Failed to copy while binding to node: %w", err)
 	}
 	n.boundTo = copied // in case it's a scalar
 	return nil

@@ -5,7 +5,6 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -152,7 +151,7 @@ func (op *dtConvOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, error
 			)
 		}
 	default:
-		return nil, errors.Errorf("Cannot do conversion %v", op.Type())
+		return nil, fmt.Errorf("Cannot do conversion %v", op.Type())
 		// TODO: other types
 	}
 

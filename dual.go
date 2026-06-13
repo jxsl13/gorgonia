@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -30,12 +29,12 @@ func (dv *dualValue) SetValue(v Value) error {
 func (dv *dualValue) Clone() (retVal any, err error) {
 	var v, d Value
 	if v, err = CloneValue(dv.Value); err != nil {
-		return nil, errors.Wrap(err, cloneFail)
+		return nil, fmt.Errorf("%s: %w", cloneFail, err)
 	}
 
 	if dv.d != nil {
 		if d, err = CloneValue(dv.d); err != nil {
-			return nil, errors.Wrap(err, cloneFail)
+			return nil, fmt.Errorf("%s: %w", cloneFail, err)
 		}
 	}
 
@@ -89,11 +88,11 @@ func (dv *dualValue) sanity() error {
 func (dv *dualValue) clone0() (retVal *dualValue, err error) {
 	var v, d Value
 	if v, err = CloneValue(dv.Value); err != nil {
-		return nil, errors.Wrap(err, cloneFail)
+		return nil, fmt.Errorf("%s: %w", cloneFail, err)
 	}
 
 	if d, err = CloneValue(dv.d); err != nil {
-		return nil, errors.Wrap(err, cloneFail)
+		return nil, fmt.Errorf("%s: %w", cloneFail, err)
 	}
 
 	v = ZeroValue(v)
@@ -227,7 +226,7 @@ func dvUnitVarManaged(v Value, op *ExternalOp) (*dualValue, error) {
 		case tensor.Bool:
 			d.Memset(true)
 		default:
-			return dv, errors.Errorf("Unhandled dtype: %v", dt)
+			return dv, fmt.Errorf("Unhandled dtype: %v", dt)
 		}
 	case *F64:
 		*d = F64(1)
@@ -244,7 +243,7 @@ func dvUnitVarManaged(v Value, op *ExternalOp) (*dualValue, error) {
 	case *B:
 		*d = B(true)
 	default:
-		return dv, errors.Errorf("Unhandeled type: %T", d)
+		return dv, fmt.Errorf("Unhandeled type: %T", d)
 	}
 	return dv, nil
 }
@@ -267,7 +266,7 @@ func dvBind(op Op, inputs []*dualValue) (retVal *dualValue, err error) {
 
 	var ret Value
 	if ret, err = op.Do(vals...); err != nil {
-		return nil, errors.Wrap(err, opDoFail)
+		return nil, fmt.Errorf("%s: %w", opDoFail, err)
 	}
 	if o, ok := op.(*ExternalOp); ok {
 		return dvUnitManaged(ret, o)
@@ -282,7 +281,7 @@ func dvBindVar(op Op, inputs []*dualValue) (retVal *dualValue, err error) {
 
 	var ret Value
 	if ret, err = op.Do(vals...); err != nil {
-		return nil, errors.Wrap(err, opDoFail)
+		return nil, fmt.Errorf("%s: %w", opDoFail, err)
 	}
 	if o, ok := op.(*ExternalOp); ok {
 		return dvUnitVarManaged(ret, o)
@@ -304,7 +303,7 @@ func dvBind0(op Op, retVal *dualValue, inputs []*dualValue) (err error) {
 		}
 	}
 	if ret, err = op.Do(vals...); err != nil {
-		return errors.Wrap(err, opDoFail)
+		return fmt.Errorf("%s: %w", opDoFail, err)
 	}
 
 next:
@@ -330,16 +329,16 @@ func dvBindVar0(op Op, retVal *dualValue, inputs []*dualValue) (err error) {
 		ret, err = pd.UsePreallocDo(prealloc, vals...)
 	} else {
 		if ret, err = op.Do(vals...); err != nil {
-			return errors.Wrap(err, opDoFail)
+			return fmt.Errorf("%s: %w", opDoFail, err)
 		}
 	}
 
 	if err != nil {
-		return errors.Wrapf(err, opDoFail)
+		return fmt.Errorf(opDoFail+": %w", err)
 	}
 
 	if err = retVal.SetValue(ret); err != nil {
-		return errors.Wrap(err, "Failed at setting the value")
+		return fmt.Errorf("%s: %w", "Failed at setting the value", err)
 	}
 
 	switch v := retVal.d.(type) {
@@ -354,7 +353,7 @@ func dvBindVar0(op Op, retVal *dualValue, inputs []*dualValue) (err error) {
 		}
 		retVal.d = v
 	default:
-		err = errors.Errorf(nyiTypeFail, "dvBindVar0", retVal.d)
+		err = fmt.Errorf(nyiTypeFail, "dvBindVar0", retVal.d)
 	}
 	return
 }

@@ -3,12 +3,12 @@
 package gorgonia
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"runtime"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/tensor"
 )
@@ -92,7 +92,7 @@ func testOneCUDABasicArithmetic(t *testing.T, bot binOpTest, i int) error {
 	as.Equal(bot.correctDerivB.Data(), grads[1].Value().Data(), "Test %v ygrad. Expected %v. Got %v", i, bot.correctDerivB, grads[1].Value())
 	if !as.cont {
 		prog := m1.Prog()
-		return errors.Errorf("Failed. Prog %v", prog)
+		return fmt.Errorf("Failed. Prog %v", prog)
 	}
 	return nil
 

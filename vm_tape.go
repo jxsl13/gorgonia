@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -148,7 +147,7 @@ func (m *tapeMachine) LocMap() map[*Node]register { return m.locMap }
 // Let wraps the Let() function of the package, with additional checks that n is in the machine
 func (m *tapeMachine) Let(n *Node, be any) (err error) {
 	if !m.p.g.Has(n.ID()) {
-		return errors.Errorf("Node %v does not exist in this graph", n)
+		return fmt.Errorf("Node %v does not exist in this graph", n)
 	}
 
 	return Let(n, be)
@@ -157,10 +156,10 @@ func (m *tapeMachine) Let(n *Node, be any) (err error) {
 // Set wraps the Set() function of this package, with additional checks that both a and b are in the machine
 func (m *tapeMachine) Set(a, b *Node) (err error) {
 	if !m.p.g.Has(a.ID()) {
-		return errors.Errorf("Node %v does not exist in this graph", a)
+		return fmt.Errorf("Node %v does not exist in this graph", a)
 	}
 	if !m.p.g.Has(b.ID()) {
-		return errors.Errorf("Node %v does not exist in this graph", b)
+		return fmt.Errorf("Node %v does not exist in this graph", b)
 	}
 
 	if b.Value() != nil {
@@ -188,7 +187,7 @@ func (m *tapeMachine) Run(frag fragment) (err error) {
 
 	for _, instr := range frag {
 		if err = instr.exec(m); err != nil {
-			return errors.Wrap(err, "Failed to carry exec()")
+			return fmt.Errorf("%s: %w", "Failed to carry exec()", err)
 		}
 	}
 	machineLogf("Binding values based on final output")
@@ -204,7 +203,7 @@ func (m *tapeMachine) Run(frag fragment) (err error) {
 		}
 
 		if err = n.bind(m.cpumem[r.id]); err != nil {
-			return errors.Wrap(err, bindFail)
+			return fmt.Errorf("%s: %w", bindFail, err)
 		}
 	}
 	leaveLogScope()
@@ -263,7 +262,7 @@ func (m *tapeMachine) runall(errChan chan error, doneChan chan struct{}) {
 		if err := instr.exec(m); err != nil {
 			errNode := m.nodeFromInstr(instr)
 			err = vmContextualError{
-				error: errors.Wrapf(err, "PC %d. Failed to execute instruction %v", m.pc, instr),
+				error: fmt.Errorf("PC %d. Failed to execute instruction %v: %w", m.pc, instr, err),
 				instr: m.pc,
 				node:  errNode,
 			}
@@ -281,14 +280,14 @@ func (m *tapeMachine) runall(errChan chan error, doneChan chan struct{}) {
 			if writeTo > 0 && id > 0 {
 				v := m.getValue(instr.writes())
 				if v == nil {
-					err := errors.Errorf(nyiFail, "converting tensor.Memory to Value", "watchNaN")
+					err := fmt.Errorf(nyiFail, "converting tensor.Memory to Value", "watchNaN")
 					errChan <- err
 					return
 				}
 
 				if hasNaN(v, CPU) {
 					n := m.p.g.Node(id).(*Node)
-					err := errors.Errorf("NaN found in value. Node: %v(%x)", n, n.ID())
+					err := fmt.Errorf("NaN found in value. Node: %v(%x)", n, n.ID())
 					errChan <- err
 					return
 				}
@@ -301,14 +300,14 @@ func (m *tapeMachine) runall(errChan chan error, doneChan chan struct{}) {
 			if writeTo > 0 && id > 0 {
 				v := m.getValue(instr.writes())
 				if v == nil {
-					err := errors.Errorf(nyiFail, "converting tensor.Memory to Value", "watchInf")
+					err := fmt.Errorf(nyiFail, "converting tensor.Memory to Value", "watchInf")
 					errChan <- err
 					return
 				}
 
 				if hasInf(v, CPU) {
 					n := m.p.g.Node(id).(*Node)
-					err := errors.Errorf("Inf found in value. Node: %v(%x)", n, n.ID())
+					err := fmt.Errorf("Inf found in value. Node: %v(%x)", n, n.ID())
 					errChan <- err
 					return
 				}
@@ -321,7 +320,7 @@ func (m *tapeMachine) runall(errChan chan error, doneChan chan struct{}) {
 			if writeTo > 0 && id > 0 {
 				v := m.getValue(instr.writes())
 				if v == nil {
-					err := errors.Errorf(nyiFail, "converting tensor.Memory to Value", "watchPointer")
+					err := fmt.Errorf(nyiFail, "converting tensor.Memory to Value", "watchPointer")
 					errChan <- err
 					return
 				}
@@ -334,7 +333,7 @@ func (m *tapeMachine) runall(errChan chan error, doneChan chan struct{}) {
 						n := m.p.g.Node(id).(*Node)
 						c := m.p.g.Node(cID).(*Node)
 
-						err := errors.Errorf("Pointer clash found in value. Node: %v(%x) %s clashed with %v(%x) %s", n, n.ID(), pointerID, c, c.ID(), pointer)
+						err := fmt.Errorf("Pointer clash found in value. Node: %v(%x) %s clashed with %v(%x) %s", n, n.ID(), pointerID, c, c.ID(), pointer)
 						errChan <- err
 						return
 					}
@@ -581,7 +580,7 @@ func (instr alloc) exec(m *tapeMachine) (err error) {
 
 	var dt tensor.Dtype
 	if dt, err = dtypeOf(instr.t); err != nil {
-		return errors.Wrapf(err, dtypeExtractionFail, instr.t)
+		return fmt.Errorf(dtypeExtractionFail+": %w", instr.t, err)
 	}
 
 	reg := m.getValue(instr.writeTo)
@@ -600,7 +599,7 @@ func (instr alloc) exec(m *tapeMachine) (err error) {
 		var mem tensor.Memory
 		memsize := calcMemSize(dt, instr.s)
 		if mem, err = m.ExternMetadata.Get(dev, memsize); err != nil {
-			return errors.Wrapf(err, "Unable to allocate %v bytes from %v | %T", memsize, dev, err)
+			return fmt.Errorf("Unable to allocate %v bytes from %v | %T: %w", memsize, dev, err, err)
 		}
 		v, err = makeValueFromMem(instr.t, instr.s, mem)
 	}
@@ -665,7 +664,7 @@ func (instr loadArg) exec(m *tapeMachine) error {
 	m.logf("node %v", node)
 
 	if node.boundTo == nil {
-		return errors.Errorf("No value bound to node %v (%x)", node, node.ID())
+		return fmt.Errorf("No value bound to node %v (%x)", node, node.ID())
 	}
 
 	var v Value
@@ -778,7 +777,7 @@ func (instr *readInstr) exec(m *tapeMachine) (err error) {
 
 	v2, err := CloneValue(v)
 	if err != nil {
-		return errors.Wrap(err, cloneFail)
+		return fmt.Errorf("%s: %w", cloneFail, err)
 	}
 
 	*instr.into = v2

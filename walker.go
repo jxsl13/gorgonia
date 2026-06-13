@@ -1,9 +1,9 @@
 package gorgonia
 
 import (
+	"fmt"
 	"sort"
 
-	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/iterator"
 	"gonum.org/v1/gonum/graph/topo"
@@ -45,7 +45,7 @@ func Sort(g *ExprGraph) (sorted Nodes, err error) {
 	var sortedNodes []graph.Node
 	// if sortedNodes, err = topo.Sort(g); err != nil {
 	if sortedNodes, err = topo.SortStabilized(g, reverseLexical); err != nil {
-		return nil, errors.Wrap(err, sortFail)
+		return nil, fmt.Errorf("%s: %w", sortFail, err)
 	}
 
 	sorted = graphNodeToNode(iterator.NewOrderedNodes(sortedNodes))
@@ -60,7 +60,7 @@ func Sort(g *ExprGraph) (sorted Nodes, err error) {
 func UnstableSort(g *ExprGraph) (sorted Nodes, err error) {
 	var sortedNodes []graph.Node
 	if sortedNodes, err = topo.Sort(g); err != nil {
-		return nil, errors.Wrap(err, sortFail)
+		return nil, fmt.Errorf("%s: %w", sortFail, err)
 	}
 
 	sorted = graphNodeToNode(iterator.NewOrderedNodes(sortedNodes))

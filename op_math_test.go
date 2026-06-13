@@ -1,11 +1,13 @@
 package gorgonia
 
 import (
+	"fmt"
 	"log"
 	"runtime"
 	"testing"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/tensor"
 )
@@ -386,7 +388,7 @@ func testOneArithLisp(t *testing.T, bot binOpTest, i int) error {
 	var retVal Value
 	var err error
 	if ret, err = bot.binOp(x, y); err != nil {
-		return errors.Wrapf(err, "do binop failure")
+		return fmt.Errorf("do binop failure: %w", err)
 	}
 	Read(ret, &retVal)
 
@@ -396,7 +398,7 @@ func testOneArithLisp(t *testing.T, bot binOpTest, i int) error {
 	m1 := NewLispMachine(g)
 	defer m1.Close()
 	if err = m1.RunAll(); err != nil {
-		return errors.Wrapf(err, "Error while running")
+		return fmt.Errorf("Error while running: %w", err)
 	}
 
 	as := newAssertState(assert.New(t))
@@ -405,11 +407,11 @@ func testOneArithLisp(t *testing.T, bot binOpTest, i int) error {
 
 	var xG, yG Value
 	if xG, err = x.Grad(); err != nil {
-		return errors.Wrapf(err, "Failed to get the grad of x")
+		return fmt.Errorf("Failed to get the grad of x: %w", err)
 	}
 
 	if yG, err = y.Grad(); err != nil {
-		return errors.Wrapf(err, "Failed to get the grad of y")
+		return fmt.Errorf("Failed to get the grad of y: %w", err)
 	}
 
 	as.Equal(bot.correctDerivA.Data(), xG.Data(), "Test %v xgrad", i)
@@ -435,21 +437,21 @@ func testOneArithTape(t *testing.T, bot binOpTest, i int) error {
 	var retVal Value
 	var err error
 	if ret, err = bot.binOp(x, y); err != nil {
-		return errors.Wrapf(err, "binOp() failed")
+		return fmt.Errorf("binOp() failed: %w", err)
 	}
 	Read(ret, &retVal)
 
 	cost := Must(Sum(ret))
 	var grads Nodes
 	if grads, err = Grad(cost, x, y); err != nil {
-		return errors.Wrapf(err, "Grad failed")
+		return fmt.Errorf("Grad failed: %w", err)
 	}
 
 	m1 := NewTapeMachine(g)
 	defer m1.Close()
 	if err = m1.RunAll(); err != nil {
 		t.Logf("%v", m1.Prog())
-		return errors.Wrapf(err, "Error while running")
+		return fmt.Errorf("Error while running: %w", err)
 	}
 
 	as := newAssertState(assert.New(t))
@@ -462,11 +464,11 @@ func testOneArithTape(t *testing.T, bot binOpTest, i int) error {
 	as.Equal(bot.correctDerivB.Data(), grads[1].Value().Data(), "Test %v ygrad. Expected %v. Got %v", i, bot.correctDerivB, grads[1].Value())
 	if !as.cont {
 		prog := m1.Prog()
-		return errors.Errorf("Failed. Prog %v", prog)
+		return fmt.Errorf("Failed. Prog %v", prog)
 	}
 
 	if assertGraphEngine(t, g, stdengType); t.Failed() {
-		return errors.Errorf("BasicArithmetic. Engine of Graph is not stdengType.")
+		return fmt.Errorf("BasicArithmetic. Engine of Graph is not stdengType.")
 	}
 	return nil
 }

@@ -1,7 +1,9 @@
 package gorgonia
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
+
 	"gonum.org/v1/gonum/graph"
 )
 
@@ -97,7 +99,7 @@ func backwardDiffAnalysis(wrt, sortedNodes Nodes) (retVal NodeSet, err error) {
 				parents := graph.NodesOf(g.To(child.ID()))
 				if len(parents) == 1 && len(child.children) > 0 {
 					leaveLogScope()
-					return nil, errors.Errorf("Being unable to differentiate %v would leave a portion of the graph unreachable. Unable to continue", n)
+					return nil, fmt.Errorf("Being unable to differentiate %v would leave a portion of the graph unreachable. Unable to continue", n)
 				}
 			}
 			symdiffLogf("SKIPPING... Non differentiable!")
@@ -159,7 +161,7 @@ func Backpropagate(outputs, gradOutputs, wrt Nodes) (retVal Nodes, err error) {
 
 	var sortedNodes Nodes
 	if sortedNodes, err = Sort(g); err != nil {
-		return nil, errors.Wrap(err, sortFail)
+		return nil, fmt.Errorf("%s: %w", sortFail, err)
 	}
 	symdiffLogf("sorted nodes: %v", sortedNodes)
 	symdiffLogf("sorted nodes: %d", sortedNodes)
@@ -167,11 +169,11 @@ func Backpropagate(outputs, gradOutputs, wrt Nodes) (retVal Nodes, err error) {
 	var affectsOutput NodeSet
 	var affectedByOutput NodeSet
 	if affectsOutput, err = forwardDiffAnalysis(outputs, sortedNodes); err != nil {
-		return nil, errors.Wrap(err, "Failed during forward differentiation analysis")
+		return nil, fmt.Errorf("%s: %w", "Failed during forward differentiation analysis", err)
 	}
 
 	if affectedByOutput, err = backwardDiffAnalysis(wrt, sortedNodes); err != nil {
-		return nil, errors.Wrap(err, "Failed during forward differentiation analysis")
+		return nil, fmt.Errorf("%s: %w", "Failed during forward differentiation analysis", err)
 	}
 
 	symdiffLogf("affects output: %v", affectsOutput)
@@ -180,14 +182,14 @@ func Backpropagate(outputs, gradOutputs, wrt Nodes) (retVal Nodes, err error) {
 	wrtSet := wrt.mapSet()
 	badWRTs := wrtSet.Difference(affectsOutput)
 	if len(badWRTs) > 0 {
-		return nil, SymDiffError{nodes: badWRTs.ToSlice(), err: errors.Errorf("Non Differentiable WRTs: %v", badWRTs)}
+		return nil, SymDiffError{nodes: badWRTs.ToSlice(), err: fmt.Errorf("Non Differentiable WRTs: %v", badWRTs)}
 	}
 
 	outputSet := outputs.mapSet()
 	badOutputs := outputSet.Difference(affectedByOutput)
 	if len(badOutputs) > 0 {
 		symdiffLogf("badOutputs: %#v", badOutputs)
-		return nil, SymDiffError{nodes: badOutputs.ToSlice(), err: errors.Errorf("Non-Differentable Outputs: %v", badOutputs)}
+		return nil, SymDiffError{nodes: badOutputs.ToSlice(), err: fmt.Errorf("Non-Differentable Outputs: %v", badOutputs)}
 	}
 
 	// map a node to a list of gradient terms
@@ -247,7 +249,7 @@ func Backpropagate(outputs, gradOutputs, wrt Nodes) (retVal Nodes, err error) {
 					single:  node,
 					nodes:   nodeGradMap[node],
 					gradMap: nodeGradMap,
-					err:     errors.Wrap(err, "ReduceAdd failed during differentiation"),
+					err:     fmt.Errorf("%s: %w", "ReduceAdd failed during differentiation", err),
 				}
 
 			}
@@ -286,7 +288,7 @@ func Backpropagate(outputs, gradOutputs, wrt Nodes) (retVal Nodes, err error) {
 					single:  node,
 					grad:    gradNode,
 					gradMap: nodeGradMap,
-					err:     errors.Wrapf(err, ".SymDiff() failed"),
+					err:     fmt.Errorf(".SymDiff() failed: %w", err),
 				}
 			}
 

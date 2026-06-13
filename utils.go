@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/chewxy/math32"
-	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/iterator"
 	"gorgonia.org/tensor"
@@ -75,7 +74,7 @@ func valueToInt(v Value) (int, error) {
 	case *U8:
 		intV = int(byte(*sv))
 	default:
-		return -1, errors.Errorf("Expected values to be all Scalar Value. Got %v of %T instead", v, v)
+		return -1, fmt.Errorf("Expected values to be all Scalar Value. Got %v of %T instead", v, v)
 	}
 	return intV, nil
 }
@@ -99,9 +98,9 @@ func valuesToInts(values []Value) (retVal []int, err error) {
 		case *U8:
 			intV = int(byte(*sv))
 		case Scalar:
-			return nil, errors.Errorf(nyiTypeFail, "valueToInts", v)
+			return nil, fmt.Errorf(nyiTypeFail, "valueToInts", v)
 		default:
-			return nil, errors.Errorf("Expected values to be all Scalar Value. Got %v of %T instead", v, v)
+			return nil, fmt.Errorf("Expected values to be all Scalar Value. Got %v of %T instead", v, v)
 
 		}
 		retVal[i] = intV
@@ -116,7 +115,7 @@ func valuesToTensors(values []Value) (retVal []tensor.Tensor, err error) {
 			retVal[i] = vt
 			continue
 		}
-		return nil, errors.Errorf("Expected values to all be tensor.Tensor. Got %v of %T in %dth index of the slice", v, v, i)
+		return nil, fmt.Errorf("Expected values to all be tensor.Tensor. Got %v of %T in %dth index of the slice", v, v, i)
 	}
 	return
 }
@@ -246,7 +245,7 @@ func setZero(val Value) (retVal Value) {
 
 func checkArity(op arityer, inputs int) error {
 	if inputs != op.Arity() && op.Arity() >= 0 {
-		return errors.Errorf("%v has an arity of %d. Got %d instead", op, op.Arity(), inputs)
+		return fmt.Errorf("%v has an arity of %d. Got %d instead", op, op.Arity(), inputs)
 	}
 	return nil
 }
@@ -286,7 +285,7 @@ func getDV3(x, y, z *Node) (xdv, ydv, zdv *dualValue) {
 func getConst(x *Node, constant string) (retVal *Node, err error) {
 	var dt tensor.Dtype
 	if dt, err = dtypeOf(x.t); err != nil {
-		return nil, errors.Wrap(err, dtypeOfFail)
+		return nil, fmt.Errorf("%s: %w", dtypeOfFail, err)
 	}
 
 	if m, ok := constmap[constant]; ok {
@@ -294,7 +293,7 @@ func getConst(x *Node, constant string) (retVal *Node, err error) {
 			return n, nil
 		}
 	}
-	return nil, errors.Errorf("constant %v not provided for %v", constant, dt)
+	return nil, fmt.Errorf("constant %v not provided for %v", constant, dt)
 }
 
 func scalarEquiv(s tensor.Shape) bool {

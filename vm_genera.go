@@ -10,7 +10,8 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"gorgonia.org/tensor"
 )
 
@@ -125,7 +126,7 @@ func (m *lispMachine) RunAll() (err error) {
 	defer runtime.UnlockOSThread()
 
 	if err = m.checkRoots(); err != nil {
-		return errors.Wrap(err, "Could not checkRoots()")
+		return fmt.Errorf("%s: %w", "Could not checkRoots()", err)
 	}
 
 	if m.runBwd() {
@@ -162,7 +163,7 @@ func (m *lispMachine) RunAll() (err error) {
 				}
 
 				err = vmContextualError{
-					error: errors.Wrapf(err, "DoWork failed"),
+					error: fmt.Errorf("DoWork failed: %w", err),
 					node:  node,
 					instr: m.fwd,
 				}
@@ -174,13 +175,13 @@ func (m *lispMachine) RunAll() (err error) {
 		case err = <-errChan:
 			if m.fwd < len(m.sorted) {
 				err = vmContextualError{
-					error: errors.Wrapf(err, "Running Node: %v", m.sorted[m.fwd]),
+					error: fmt.Errorf("Running Node: %v: %w", m.sorted[m.fwd], err),
 					node:  m.sorted[m.fwd],
 					instr: m.fwd,
 				}
 				return
 			}
-			return errors.Wrap(err, "RunAll")
+			return fmt.Errorf("%s: %w", "RunAll", err)
 		case <-doneChan:
 			err := m.ExternMetadata.DoWork()
 			if err != nil {
@@ -239,7 +240,7 @@ func (m *lispMachine) checkRoots() (err error) {
 				// 	return
 				// }
 			case !m.setRootGrad() && !root.IsScalar() && !root.isStmt:
-				err = errors.Errorf("Expected cost to be a scalar. Got %v with shape %v instead", root, root.Shape())
+				err = fmt.Errorf("Expected cost to be a scalar. Got %v with shape %v instead", root, root.Shape())
 				os.WriteFile("err.dot", []byte(root.RestrictedToDot(2, 10)), 0644)
 				return
 			}
@@ -251,7 +252,7 @@ func (m *lispMachine) checkRoots() (err error) {
 func (m *lispMachine) prepGraph() (err error) {
 	if m.sorted == nil {
 		if m.sorted, err = Sort(m.g); err != nil {
-			return errors.Wrap(err, sortFail)
+			return fmt.Errorf("%s: %w", sortFail, err)
 		}
 		reverseNodes(m.sorted)
 		m.fwd = 0
@@ -312,19 +313,19 @@ func (m *lispMachine) forward() (err error) {
 		case n.isArg():
 			machineLogf("Unit() on input node")
 			if err = n.bind(dvUnit(n.boundTo)); err != nil {
-				return errors.Wrap(err, bindFail)
+				return fmt.Errorf("%s: %w", bindFail, err)
 			}
 			return
 		case n.isRandom():
 			machineLogf("binding value of random node")
 			var v Value
 			if v, err = n.op.Do(); err != nil {
-				return errors.Wrapf(err, execFail, n.op, n)
+				return fmt.Errorf(execFail+": %w", n.op, n, err)
 			}
 
 			// we wrap it in a dualValue, but we make it a constant
 			if err = n.bind(dvUnit(v)); err != nil {
-				return errors.Wrap(err, bindFail)
+				return fmt.Errorf("%s: %w", bindFail, err)
 			}
 
 			return
@@ -356,11 +357,11 @@ func (m *lispMachine) forward() (err error) {
 		var allocV, allocD bool
 		var v, d Value
 		if v, allocV, err = child.ValueOnDevice(dev, m); err != nil {
-			return errors.Wrapf(err, "Unable to get Value on Device %v", dev)
+			return fmt.Errorf("Unable to get Value on Device %v: %w", dev, err)
 		}
 		if d, allocD, err = child.GradOnDevice(dev, m); err != nil {
 			if !child.isRandom() {
-				return errors.Wrapf(err, "Unable to get Grad on Device %v", dev)
+				return fmt.Errorf("Unable to get Grad on Device %v: %w", dev, err)
 			}
 			err = nil
 		}
@@ -395,10 +396,10 @@ func (m *lispMachine) forward() (err error) {
 			machineLogf("dvBindVar")
 			m.logf("dvBindVar")
 			if output, err = dvBindVar(op, inputs); err != nil {
-				return errors.Wrap(err, "Failed to bindVar")
+				return fmt.Errorf("%s: %w", "Failed to bindVar", err)
 			}
 			if err = n.bind(output); err != nil {
-				return errors.Wrap(err, bindFail)
+				return fmt.Errorf("%s: %w", bindFail, err)
 			}
 		} else {
 			machineLogf("dvBindVar0")
@@ -410,7 +411,7 @@ func (m *lispMachine) forward() (err error) {
 				// panic(fmt.Sprintf("n not dual value %v", n))
 			}
 			if err = dvBindVar0(op, dv, inputs); err != nil {
-				return errors.Wrapf(err, execFail, op, n)
+				return fmt.Errorf(execFail+": %w", op, n, err)
 			}
 		}
 
@@ -443,29 +444,29 @@ func (m *lispMachine) forward() (err error) {
 		if dev != CPU {
 			var dt tensor.Dtype
 			if dt, err = dtypeOf(n.t); err != nil {
-				return errors.Wrapf(err, dtypeExtractionFail, n.t)
+				return fmt.Errorf(dtypeExtractionFail+": %w", n.t, err)
 			}
 
 			var mem tensor.Memory
 			memsize := calcMemSize(dt, n.shape)
 			if mem, err = m.Get(dev, memsize); err != nil {
-				return errors.Wrapf(err, allocFail, memsize, dev)
+				return fmt.Errorf(allocFail+": %w", memsize, dev, err)
 			}
 
 			var reuse Value
 			if reuse, err = makeValueFromMem(n.t, n.shape, mem); err != nil {
-				return errors.Wrapf(err, makeValueFail, n.t, n.shape)
+				return fmt.Errorf(makeValueFail+": %w", n.t, n.shape, err)
 			}
 
 			op.Prealloc = reuse
 		}
 
 		if output, err = dvBind(op, inputs); err != nil {
-			return errors.Wrapf(err, execFail, op, n)
+			return fmt.Errorf(execFail+": %w", op, n, err)
 		}
 
 		if err = n.bind(output); err != nil {
-			return errors.Wrap(err, bindFail)
+			return fmt.Errorf("%s: %w", bindFail, err)
 		}
 
 	default:
@@ -473,7 +474,7 @@ func (m *lispMachine) forward() (err error) {
 		// reuse as much as possible
 		output := dvUnit(n.boundTo)
 		if err = n.bind(output); err != nil {
-			return errors.Wrap(err, bindFail)
+			return fmt.Errorf("%s: %w", bindFail, err)
 		}
 
 		if dev != CPU {
@@ -481,10 +482,11 @@ func (m *lispMachine) forward() (err error) {
 		}
 
 		err = dvBind0(op, output, inputs)
-		if _, ok := errors.Cause(err).(AutoDiffError); ok {
+		var ade AutoDiffError
+		if errors.As(err, &ade) {
 			err = nil
 		} else if err != nil {
-			return errors.Wrapf(err, execFail, op, n)
+			return fmt.Errorf(execFail+": %w", op, n, err)
 		}
 	}
 	m.watchedLogf("After:")
@@ -533,7 +535,7 @@ func (m *lispMachine) backward() (err error) {
 
 	// actual differentiation
 	if err = instr.do(); err != nil {
-		return errors.Wrapf(err, autodiffFail, instr.ADOp)
+		return fmt.Errorf(autodiffFail+": %w", instr.ADOp, err)
 	}
 
 	// Make sure that all the engines of all the values are set to use the correct engine

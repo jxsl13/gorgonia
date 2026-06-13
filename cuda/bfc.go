@@ -6,8 +6,6 @@ package cuda
 import (
 	"bytes"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -359,7 +357,7 @@ func (b *bfc) alloc(size int64) (mem uintptr, err error) {
 	enterLogScope()
 	defer leaveLogScope()
 	if size <= 0 {
-		return 0, errors.Errorf("Cannot allocate memory with size 0 or less")
+		return 0, fmt.Errorf("Cannot allocate memory with size 0 or less")
 	}
 	aligned := b.align(size)
 	block := b.bestFit(aligned)

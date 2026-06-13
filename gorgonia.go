@@ -3,8 +3,9 @@ package gorgonia
 import (
 	"fmt"
 
+	"errors"
+
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -211,12 +212,12 @@ func OneHotVector(id, classes int, t tensor.Dtype, opts ...NodeConsOpt) *Node {
 func Grad(cost *Node, WRTs ...*Node) (retVal Nodes, err error) {
 	symdiffLogf("Cost:%v", cost)
 	if !cost.IsScalar() {
-		return nil, errors.Errorf("Expected Cost to be a scalar. Got %v instead", cost)
+		return nil, fmt.Errorf("Expected Cost to be a scalar. Got %v instead", cost)
 	}
 
 	for i, n := range WRTs {
 		if !n.isInput() {
-			err = errors.Errorf("Can only differentiate with regards to input nodes. %dth Node %v isn't an input", i, n)
+			err = fmt.Errorf("Can only differentiate with regards to input nodes. %dth Node %v isn't an input", i, n)
 			return nil, err
 		}
 	}
@@ -224,7 +225,7 @@ func Grad(cost *Node, WRTs ...*Node) (retVal Nodes, err error) {
 	var dt tensor.Dtype
 	var ok bool
 	if dt, ok = cost.t.(tensor.Dtype); !ok {
-		err = errors.Wrap(err, "Expected a scalar dtype for cost")
+		err = fmt.Errorf("%s: %w", "Expected a scalar dtype for cost", err)
 		return
 	}
 
@@ -235,7 +236,7 @@ func Grad(cost *Node, WRTs ...*Node) (retVal Nodes, err error) {
 	case Float32:
 		gradOut = onef32
 	default:
-		return nil, errors.Wrapf(err, "%s not yet implemented for %v of %T", dt.String(), "Grad()'s gradOut", gradOut)
+		return nil, fmt.Errorf("%s not yet implemented for %v of %T: %w", dt.String(), "Grad()'s gradOut", gradOut, err)
 	}
 
 	gradOut = cost.g.AddNode(gradOut)
@@ -268,7 +269,7 @@ func UnsafeLet(n *Node, be any) error {
 			so.Slice = v
 			n.op = so
 		default:
-			return errors.Errorf("Trying to Let() a node with a slice. Node's op is %v, not sliceOp", n.op)
+			return fmt.Errorf("Trying to Let() a node with a slice. Node's op is %v, not sliceOp", n.op)
 		}
 
 	case Value:
@@ -277,7 +278,7 @@ func UnsafeLet(n *Node, be any) error {
 		}
 
 		if !n.Dtype().Eq(v.Dtype()) {
-			return errors.Errorf("Unable to let %v be %v. Expected Dtype of %v. Got %v instead", n.name, be, n.Dtype(), v.Dtype())
+			return fmt.Errorf("Unable to let %v be %v. Expected Dtype of %v. Got %v instead", n.name, be, n.Dtype(), v.Dtype())
 		}
 		n.bind(v)
 	case *Node:
@@ -289,7 +290,7 @@ func UnsafeLet(n *Node, be any) error {
 		var val Value
 		var err error
 		if val, _, _, err = anyToValue(be); err != nil {
-			return errors.Wrapf(err, anyToValueFail, be, be)
+			return fmt.Errorf(anyToValueFail+": %w", be, be, err)
 		}
 
 		n.bind(val)

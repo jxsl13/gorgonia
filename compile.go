@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -20,17 +19,17 @@ func Compile(g *ExprGraph) (prog *program, locMap map[*Node]register, err error)
 
 	switch {
 	case len(g.AllNodes()) == 0:
-		err = errors.Errorf("Cannot compile an empty graph")
+		err = fmt.Errorf("Cannot compile an empty graph")
 		return
 	case g.Inputs().Len() == 0:
-		err = errors.Errorf("Cannot compile a graph that has no input nodes")
+		err = fmt.Errorf("Cannot compile a graph that has no input nodes")
 		return
 	}
 
 	compileLogf("sorting")
 	var sortedNodes Nodes
 	if sortedNodes, err = Sort(g); err != nil {
-		return nil, nil, errors.Wrap(err, sortFail)
+		return nil, nil, fmt.Errorf("%s: %w", sortFail, err)
 	}
 	reverseNodes(sortedNodes)
 
@@ -76,12 +75,12 @@ func CompileFunction(g *ExprGraph, inputs, outputs Nodes) (prog *program, locMap
 	}
 
 	if len(unused) > 0 {
-		return nil, nil, errors.Errorf("Not all the inputs are used: %v", unused)
+		return nil, nil, fmt.Errorf("Not all the inputs are used: %v", unused)
 	}
 
 	var sortedNodes Nodes
 	if sortedNodes, err = Sort(subgraph); err != nil {
-		return nil, nil, errors.Wrap(err, sortFail)
+		return nil, nil, fmt.Errorf("%s: %w", sortFail, err)
 	}
 	reverseNodes(sortedNodes)
 

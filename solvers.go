@@ -1,10 +1,12 @@
 package gorgonia
 
 import (
+	"fmt"
 	"math"
 
+	"errors"
+
 	"github.com/chewxy/math32"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -29,15 +31,15 @@ func newCachedDV(n ValueGrad, weights, grad Value, zero bool) (cached *dualValue
 	cached = new(dualValue)
 	if cached.Value, err = CloneValue(weights); err != nil {
 		if nm, ok := n.(Namer); ok {
-			return nil, errors.Wrapf(err, "Failed to clone weights of %v", nm.Name())
+			return nil, fmt.Errorf("Failed to clone weights of %v: %w", nm.Name(), err)
 		}
-		return nil, errors.Wrap(err, "Failed to clone weights")
+		return nil, fmt.Errorf("%s: %w", "Failed to clone weights", err)
 	}
 	if cached.d, err = CloneValue(grad); err != nil {
 		if nm, ok := n.(Namer); ok {
-			return nil, errors.Wrapf(err, "Failed to clone grad of %v", nm.Name())
+			return nil, fmt.Errorf("Failed to clone grad of %v: %w", nm.Name(), err)
 		}
-		return nil, errors.Wrap(err, "Failed to clone grad")
+		return nil, fmt.Errorf("%s: %w", "Failed to clone grad", err)
 	}
 	if zero {
 		cached.Value = ZeroValue(cached.Value)
@@ -50,9 +52,9 @@ func extractWeightGrad(n ValueGrad) (weights, grad Value, err error) {
 	weights = n.Value()
 	if grad, err = n.Grad(); err != nil {
 		if nm, ok := n.(Namer); ok {
-			return weights, nil, errors.Wrapf(err, "No Grad found for %v", nm.Name())
+			return weights, nil, fmt.Errorf("No Grad found for %v: %w", nm.Name(), err)
 		}
-		return weights, nil, errors.Wrap(err, "No Grad found")
+		return weights, nil, fmt.Errorf("%s: %w", "No Grad found", err)
 	}
 	return
 }
@@ -317,7 +319,7 @@ func (s *RMSPropSolver) Step(model []ValueGrad) (err error) {
 
 			gt = grad.(tensor.Tensor)
 			if gt2, err = tensor.Square(gt); err != nil {
-				return errors.Wrap(err, pointWiseSquareFail)
+				return fmt.Errorf("%s: %w", pointWiseSquareFail, err)
 			}
 			tensor.Mul(cw, decay, tensor.UseUnsafe())
 			tensor.Mul(gt2, omdecay, tensor.UseUnsafe())
@@ -326,40 +328,40 @@ func (s *RMSPropSolver) Step(model []ValueGrad) (err error) {
 
 			if s.useClip {
 				if _, err = tensor.Clamp(gt, negClip, clip, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, clampFail)
+					return fmt.Errorf("%s: %w", clampFail, err)
 				}
 			}
 
 			// regularize
 			var upd tensor.Tensor
 			if upd, err = tensor.Add(cw, eps); err != nil {
-				return errors.Wrap(err, "Failed to carry Add()")
+				return fmt.Errorf("%s: %w", "Failed to carry Add()", err)
 			}
 
 			if _, err = tensor.InvSqrt(upd, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, invSqrtFail)
+				return fmt.Errorf("%s: %w", invSqrtFail, err)
 			}
 			if _, err = tensor.Mul(gt, stepSize, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 			if _, err = tensor.Mul(upd, gt, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// update
 			w = weights.(*tensor.Dense)
 			if s.useL2Reg {
 				if regularized, err = tensor.Mul(w, l2reg); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 				if _, err = tensor.Sub(upd, regularized, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, subFail)
+					return fmt.Errorf("%s: %w", subFail, err)
 				}
 				defer returnTensor(regularized)
 			}
 
 			if _, err = tensor.Add(w, upd, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, addFail)
+				return fmt.Errorf("%s: %w", addFail, err)
 			}
 			defer returnTensor(upd)
 
@@ -529,13 +531,13 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			if s.useL1Reg {
 				var l1regs tensor.Tensor
 				if l1regs, err = tensor.Sign(w); err != nil {
-					errors.Wrap(err, signFail)
+					err = fmt.Errorf("%s: %w", signFail, err)
 				}
 				if l1regs, err = tensor.Mul(l1reg, l1regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 				if _, err = tensor.Add(g, l1regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, addFail)
+					return fmt.Errorf("%s: %w", addFail, err)
 				}
 				defer returnTensor(l1regs)
 			}
@@ -543,11 +545,11 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			if s.useL2Reg {
 				var l2regs tensor.Tensor
 				if l2regs, err = tensor.Mul(w, l2reg); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 
 				if _, err = tensor.Add(g, l2regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, addFail)
+					return fmt.Errorf("%s: %w", addFail, err)
 				}
 
 				defer returnTensor(l2regs)
@@ -555,13 +557,13 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 
 			if s.batch > 1 {
 				if _, err = tensor.Mul(g, onePerBatch, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 			}
 
 			if s.useClip && s.clip > 0 {
 				if _, err = tensor.Clamp(g, negClip, clip, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, clampFail)
+					return fmt.Errorf("%s: %w", clampFail, err)
 				}
 			}
 
@@ -573,25 +575,25 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			// equation(1): t1 = grad * (1 - β_1)
 			t1 := g.Clone().(*tensor.Dense)
 			if _, err = tensor.Mul(t1, omβ1, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// equation(2): g = grad**2 * (1 - β_2)
 			if _, err = tensor.Mul(g, g, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 			if _, err = tensor.Mul(g, omβ2, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// equation (1): cached = cached * beta1 + t1
 			if _, err = tensor.Mul(m, beta1, tensor.WithIncr(t1), tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// equation (2): v = v * beta2 + g
 			if _, err = tensor.Mul(v, beta2, tensor.WithIncr(g), tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			defer returnTensor(m)
@@ -604,11 +606,11 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			vHats := g.Clone().(*tensor.Dense)
 
 			if _, err = tensor.Mul(mHats, correctionV1, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			if _, err = tensor.Mul(vHats, correctionV2, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// update := -eta * mHat / (sqrt(vHat) + epsilon)
@@ -621,7 +623,7 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			}
 
 			if _, err = tensor.Mul(mHats, negEta, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			if _, err = tensor.Div(mHats, vHats, tensor.UseUnsafe()); err != nil {
@@ -632,7 +634,7 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			defer returnTensor(mHats)
 
 			if _, err = tensor.Add(w, mHats, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, addFail)
+				return fmt.Errorf("%s: %w", addFail, err)
 			}
 
 			g.Zero()
@@ -745,7 +747,7 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			*(grad.(*F64)) = F64(0.0)
 
 		default:
-			err = errors.Errorf(nyiTypeFail, "AdamSolver", cvm)
+			err = fmt.Errorf(nyiTypeFail, "AdamSolver", cvm)
 			return
 		}
 
@@ -811,15 +813,15 @@ func (s *VanillaSolver) Step(model []ValueGrad) (err error) {
 			var l1regs, l2regs tensor.Tensor
 			if s.useL1Reg {
 				if l1regs, err = tensor.Sign(w); err != nil {
-					return errors.Wrap(err, signFail)
+					return fmt.Errorf("%s: %w", signFail, err)
 				}
 
 				if l1regs, err = tensor.Mul(l1reg, l1regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 
 				if _, err = tensor.Add(g, l1regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, addFail)
+					return fmt.Errorf("%s: %w", addFail, err)
 				}
 
 				defer returnTensor(l1regs)
@@ -827,11 +829,11 @@ func (s *VanillaSolver) Step(model []ValueGrad) (err error) {
 
 			if s.useL2Reg {
 				if l2regs, err = tensor.Mul(w, l2reg); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 
 				if _, err = tensor.Add(g, l2regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, addFail)
+					return fmt.Errorf("%s: %w", addFail, err)
 				}
 
 				defer returnTensor(l2regs)
@@ -839,22 +841,22 @@ func (s *VanillaSolver) Step(model []ValueGrad) (err error) {
 
 			if s.batch > 1 {
 				if _, err = tensor.Mul(g, onePerBatch, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 			}
 
 			if s.useClip && s.clip > 0 {
 				if _, err = tensor.Clamp(g, negClip, clip, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, clampFail)
+					return fmt.Errorf("%s: %w", clampFail, err)
 				}
 			}
 
 			if _, err = tensor.Mul(g, eta, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			if _, err = tensor.Add(w, g, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, addFail)
+				return fmt.Errorf("%s: %w", addFail, err)
 			}
 
 			g.Zero()
@@ -938,7 +940,7 @@ func (s *VanillaSolver) Step(model []ValueGrad) (err error) {
 			*(weights.(*F64)) = F64(wv)
 			*(grad.(*F64)) = F64(0.0)
 		default:
-			return errors.Errorf(nyiFail, "VanillaSolver.step", w)
+			return fmt.Errorf(nyiFail, "VanillaSolver.step", w)
 		}
 	}
 	return
@@ -1025,15 +1027,15 @@ func (s *Momentum) Step(model []ValueGrad) (err error) {
 			var l1regs, l2regs tensor.Tensor
 			if s.useL1Reg {
 				if l1regs, err = tensor.Sign(cw); err != nil {
-					return errors.Wrap(err, signFail)
+					return fmt.Errorf("%s: %w", signFail, err)
 				}
 
 				if l1regs, err = tensor.Mul(l1reg, l1regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 
 				if _, err = tensor.Add(g, l1regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, addFail)
+					return fmt.Errorf("%s: %w", addFail, err)
 				}
 
 				defer returnTensor(l1regs)
@@ -1041,11 +1043,11 @@ func (s *Momentum) Step(model []ValueGrad) (err error) {
 
 			if s.useL2Reg {
 				if l2regs, err = tensor.Mul(cw, l2reg); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 
 				if _, err = tensor.Add(g, l2regs, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, addFail)
+					return fmt.Errorf("%s: %w", addFail, err)
 				}
 
 				defer returnTensor(l2regs)
@@ -1053,33 +1055,33 @@ func (s *Momentum) Step(model []ValueGrad) (err error) {
 
 			if s.batch > 1 {
 				if _, err = tensor.Mul(g, onePerBatch, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 			}
 
 			if s.useClip && s.clip > 0 {
 				if _, err = tensor.Clamp(g, negClip, clip, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, clampFail)
+					return fmt.Errorf("%s: %w", clampFail, err)
 				}
 			}
 
 			// momentum
 			if _, err = tensor.Mul(g, eta, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// cw * momentum
 			if _, err = tensor.Mul(cw, momentum, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			//  cw * momentum - eta * grad
 			if _, err = tensor.Add(cw, g, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			if _, err = tensor.Add(w, cw, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, addFail)
+				return fmt.Errorf("%s: %w", addFail, err)
 			}
 
 			g.Zero()
@@ -1167,7 +1169,7 @@ func (s *Momentum) Step(model []ValueGrad) (err error) {
 			*(weights.(*F64)) = F64(w)
 			*(grad.(*F64)) = F64(0.0)
 		default:
-			return errors.Errorf(nyiFail, "Momentum.step", cv)
+			return fmt.Errorf(nyiFail, "Momentum.step", cv)
 		}
 	}
 	return
@@ -1245,7 +1247,7 @@ func (s *AdaGradSolver) Step(model []ValueGrad) (err error) {
 
 			g = grad.(*tensor.Dense)
 			if g2, err = tensor.Square(g); err != nil {
-				return errors.Wrap(err, pointWiseSquareFail)
+				return fmt.Errorf("%s: %w", pointWiseSquareFail, err)
 			}
 
 			c = cw
@@ -1254,25 +1256,25 @@ func (s *AdaGradSolver) Step(model []ValueGrad) (err error) {
 
 			if s.useClip {
 				if _, err = tensor.Clamp(g, negClip, clip, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, clampFail)
+					return fmt.Errorf("%s: %w", clampFail, err)
 				}
 			}
 
 			// update
 			var upd tensor.Tensor
 			if upd, err = tensor.Add(c, eps); err != nil {
-				return errors.Wrap(err, addFail)
+				return fmt.Errorf("%s: %w", addFail, err)
 			}
 
 			if _, err = tensor.InvSqrt(upd, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, invSqrtFail)
+				return fmt.Errorf("%s: %w", invSqrtFail, err)
 			}
 			if _, err = tensor.Mul(g, eta, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			if _, err = tensor.Mul(upd, g, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			// regularize
@@ -1280,18 +1282,18 @@ func (s *AdaGradSolver) Step(model []ValueGrad) (err error) {
 
 			if s.useL2Reg {
 				if regularized, err = tensor.Mul(w, l2reg); err != nil {
-					return errors.Wrap(err, pointWiseMulFail)
+					return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 				}
 
 				if _, err = tensor.Sub(upd, regularized, tensor.UseUnsafe()); err != nil {
-					return errors.Wrap(err, subFail)
+					return fmt.Errorf("%s: %w", subFail, err)
 				}
 
 				defer returnTensor(regularized)
 			}
 
 			if _, err = tensor.Add(w, upd, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, addFail)
+				return fmt.Errorf("%s: %w", addFail, err)
 			}
 			defer returnTensor(upd)
 
@@ -1366,7 +1368,7 @@ func (s *AdaGradSolver) Step(model []ValueGrad) (err error) {
 			*(grad.(*F64)) = F64(0.0)
 
 		default:
-			return errors.Errorf(nyiFail, "Adagrad step", cv)
+			return fmt.Errorf(nyiFail, "Adagrad step", cv)
 		}
 
 	}
@@ -1434,29 +1436,29 @@ func (s *BarzilaiBorweinSolver) Step(model []ValueGrad) (err error) {
 			case *tensor.Dense:
 				g, ok := grad.(*tensor.Dense)
 				if !ok {
-					return errors.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, grad)
+					return fmt.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, grad)
 				}
 
 				wOld, ok := s.prevDV[nodeNr].Value.(*tensor.Dense)
 				if !ok {
-					return errors.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, s.prevDV[nodeNr].Value)
+					return fmt.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, s.prevDV[nodeNr].Value)
 				}
 
 				gOld, ok := s.prevDV[nodeNr].d.(*tensor.Dense)
 				if !ok {
-					return errors.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, s.prevDV[nodeNr].d)
+					return fmt.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, s.prevDV[nodeNr].d)
 				}
 
 				valueDiff, err := tensor.Sub(w, wOld)
 				defer returnTensor(valueDiff)
 				if err != nil {
-					return errors.Wrap(err, subFail)
+					return fmt.Errorf("%s: %w", subFail, err)
 				}
 
 				gradDiff, err := tensor.Sub(g, gOld)
 				defer returnTensor(gradDiff)
 				if err != nil {
-					return errors.Wrap(err, subFail)
+					return fmt.Errorf("%s: %w", subFail, err)
 				}
 
 				// <(xᵢ - xᵢ₋₁), (Grad(F)(xᵢ) - Grad(F)(xᵢ₋₁))>
@@ -1486,7 +1488,7 @@ func (s *BarzilaiBorweinSolver) Step(model []ValueGrad) (err error) {
 				denominator += gradDiffscalarProd.Data().([]float64)[0]
 
 			default:
-				return errors.Errorf(nyiFail, "Barizai-Borwein step", w)
+				return fmt.Errorf(nyiFail, "Barizai-Borwein step", w)
 			}
 		}
 
@@ -1530,24 +1532,24 @@ func (s *BarzilaiBorweinSolver) Step(model []ValueGrad) (err error) {
 		case *tensor.Dense:
 			g, ok := grad.(*tensor.Dense)
 			if !ok {
-				return errors.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, grad)
+				return fmt.Errorf("Expected a *tensor.Dense in %v. Got %T instead", node, grad)
 			}
 
 			upd, err := tensor.Mul(g, s.eta)
 			defer returnTensor(upd)
 
 			if err != nil {
-				return errors.Wrap(err, pointWiseMulFail)
+				return fmt.Errorf("%s: %w", pointWiseMulFail, err)
 			}
 
 			if _, err = tensor.Sub(w, upd, tensor.UseUnsafe()); err != nil {
-				return errors.Wrap(err, subFail)
+				return fmt.Errorf("%s: %w", subFail, err)
 			}
 
 			g.Zero()
 
 		default:
-			return errors.Errorf(nyiFail, "Barizai-Borwein step", w)
+			return fmt.Errorf(nyiFail, "Barizai-Borwein step", w)
 		}
 	}
 
@@ -1675,22 +1677,22 @@ func (a *AdamW) Step(model []ValueGrad) (err error) {
 
 		if a.useL1Reg {
 			if err = doL1Reg(w, g, l1reg); err != nil {
-				return errors.Wrapf(err, "Failed to perform L1 regularization on the gradients of %v", n)
+				return fmt.Errorf("Failed to perform L1 regularization on the gradients of %v: %w", n, err)
 			}
 		}
 		if a.useL2Reg {
 			if err = doL2Reg(w, g, l2reg); err != nil {
-				return errors.Wrapf(err, "Failed to perform L2 regularization on the gradients of %v", n)
+				return fmt.Errorf("Failed to perform L2 regularization on the gradients of %v: %w", n, err)
 			}
 		}
 		if a.batch > 1 {
 			if err = divBatch(g, a.batch); err != nil {
-				return errors.Wrapf(err, "Failed to divide gradients by batch count of %v", n)
+				return fmt.Errorf("Failed to divide gradients by batch count of %v: %w", n, err)
 			}
 		}
 		if a.useClip && a.clip > 0 {
 			if err = clipGrad(g, clip, negClip); err != nil {
-				return errors.Wrapf(err, "Failed to clip gradients of %v to between %v and %v", n, clip, negClip)
+				return fmt.Errorf("Failed to clip gradients of %v to between %v and %v: %w", n, clip, negClip, err)
 			}
 		}
 

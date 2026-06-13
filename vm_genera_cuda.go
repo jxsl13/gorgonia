@@ -3,9 +3,9 @@
 package gorgonia
 
 import (
+	"fmt"
 	"log"
 
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -73,7 +73,7 @@ func (m *lispMachine) calcMemSize() (err error) {
 			if n.isStmt {
 				continue
 			}
-			return errors.Wrapf(err, "Cannot calculate memsize of n(%v)", n)
+			return fmt.Errorf("Cannot calculate memsize of n(%v): %w", n, err)
 		}
 		switch {
 		case n.isArg():
@@ -119,7 +119,7 @@ func (m *lispMachine) execDevTrans(op devTrans, n *Node, children Nodes) (err er
 			cv = child.boundTo
 		}
 	} else {
-		err = errors.Errorf("Cannot execute transfer when there is no value in child")
+		err = fmt.Errorf("Cannot execute transfer when there is no value in child")
 		return
 	}
 

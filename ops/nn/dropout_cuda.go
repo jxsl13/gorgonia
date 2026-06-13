@@ -8,9 +8,10 @@ import (
 	"time"
 	"unsafe"
 
+	"errors"
+
 	"github.com/chewxy/hm"
 	"github.com/jxsl13/gorgonia"
-	"github.com/pkg/errors"
 	"gorgonia.org/cu"
 	cudnn "gorgonia.org/cu/dnn"
 	t2cudnn "gorgonia.org/cu/dnn/interop"
@@ -86,7 +87,7 @@ func (op *dropout) CUDADo(extern gorgonia.External, dev gorgonia.Device, preallo
 	var s cudnn.Memory
 	var memsize uintptr
 	if memsize, err = op.RequiredStateSize(ctx); err != nil {
-		return nil, errors.Wrap(err, "Unable to get required state size for Dropout")
+		return nil, fmt.Errorf("%s: %w", "Unable to get required state size for Dropout", err)
 	}
 	if !op.IsReady() {
 		// var x cu.DevicePtr
@@ -97,13 +98,13 @@ func (op *dropout) CUDADo(extern gorgonia.External, dev gorgonia.Device, preallo
 
 		x, err := machine.Engines()[int(dev)].Get(int64(memsize))
 		if err != nil {
-			return nil, errors.Wrapf(err, "Unable to allocate %v bytes of memory of scratch space for Dropout", memsize)
+			return nil, fmt.Errorf("Unable to allocate %v bytes of memory of scratch space for Dropout: %w", memsize, err)
 		}
 
 		s = tmpWrapper(x.(cu.DevicePtr))
 		// s = x.(cudnn.Memory)
 		if err = op.Use(ctx, s, memsize, op.seed); err != nil {
-			return nil, errors.Wrapf(err, "Unable to set dropout to use context %v", ctx)
+			return nil, fmt.Errorf("Unable to set dropout to use context %v: %w", ctx, err)
 		}
 	} else {
 		s = op.States()

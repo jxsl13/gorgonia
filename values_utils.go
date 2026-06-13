@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -120,13 +119,13 @@ func CloneValue(v Value) (Value, error) {
 		}
 		retVal, ok := ret.(Value)
 		if !ok {
-			return nil, errors.Errorf("Cloner is not a value: %v %T", v, v)
+			return nil, fmt.Errorf("Cloner is not a value: %v %T", v, v)
 		}
 		return retVal, nil
 	case Cloner:
 		return vt.Clone().(Value), nil
 	default:
-		return nil, errors.Errorf("Unable to clone value of type %T", v)
+		return nil, fmt.Errorf("Unable to clone value of type %T", v)
 	}
 }
 
@@ -171,56 +170,56 @@ func Copy(dest, src Value) (Value, error) {
 	case *F64:
 		var destS *F64
 		if destS, ok = dest.(*F64); !ok {
-			return nil, errors.Errorf("Expected dest to be *F64. Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *F64. Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case *F32:
 		var destS *F32
 		if destS, ok = dest.(*F32); !ok {
-			return nil, errors.Errorf("Expected dest to be *F32. Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *F32. Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case *I:
 		var destS *I
 		if destS, ok = dest.(*I); !ok {
-			return nil, errors.Errorf("Expected dest to be *I) . Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *I) . Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case *I64:
 		var destS *I64
 		if destS, ok = dest.(*I64); !ok {
-			return nil, errors.Errorf("Expected dest to be *I64. Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *I64. Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case *I32:
 		var destS *I32
 		if destS, ok = dest.(*I32); !ok {
-			return nil, errors.Errorf("Expected dest to be *I32. Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *I32. Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case *U8:
 		var destS *U8
 		if destS, ok = dest.(*U8); !ok {
-			return nil, errors.Errorf("Expected dest to be *U8). Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *U8). Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case *B:
 		var destS *B
 		if destS, ok = dest.(*B); !ok {
-			return nil, errors.Errorf("Expected dest to be *B) . Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be *B) . Got %T instead", dest)
 		}
 		*destS = *srcT
 		return destS, nil
 	case tensor.Tensor:
 		var destT tensor.Tensor
 		if destT, ok = dest.(tensor.Tensor); !ok {
-			return nil, errors.Errorf("Expected dest to be a tensor.Tensor. Got %T instead", dest)
+			return nil, fmt.Errorf("Expected dest to be a tensor.Tensor. Got %T instead", dest)
 		}
 		err := tensor.Copy(destT, srcT)
 		return dest, err
@@ -233,7 +232,7 @@ func Copy(dest, src Value) (Value, error) {
 			err := copyFrom.CopyFrom(src)
 			return dest, err
 		}
-		return nil, errors.Errorf("Unable to copy value of type %T into value of type %T", src, dest)
+		return nil, fmt.Errorf("Unable to copy value of type %T into value of type %T", src, dest)
 	}
 }
 

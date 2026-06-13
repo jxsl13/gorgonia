@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"gorgonia.org/tensor"
 )
 
@@ -109,7 +110,7 @@ All the functions here are expressed in terms of *Node and/or Nodes
 */
 
 func nondiffUnaryOpExpr(x, y, gradY *Node) (*Node, error) {
-	return nil, errors.Errorf("Nondifferentiable Function")
+	return nil, fmt.Errorf("Nondifferentiable Function")
 }
 func nondiffUnaryOp(x, y *Node) error {
 	return AutoDiffError{}
@@ -118,12 +119,12 @@ func nondiffUnaryOp(x, y *Node) error {
 // apparently abs is differentiable
 func absDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	if retVal, err = Sign(x); err != nil {
-		return nil, errors.Wrap(err, "Failed to call Sign()")
+		return nil, fmt.Errorf("%s: %w", "Failed to call Sign()", err)
 	}
 	WithGroupName(gradClust)(retVal)
 
 	if retVal, err = HadamardProd(gradY, retVal); err != nil {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	return
 }
@@ -141,7 +142,7 @@ func absDiff(x, y *Node) (err error) {
 		mul := newElemBinOp(mulOpType, y, x)
 		err = mul.IncrDo(xdv.d, d, ydv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 	}
 	return
@@ -154,10 +155,10 @@ func sinDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 		WithGroupName(gradClust)(retVal)
 		retVal, err = HadamardProd(retVal, gradY)
 		if err != nil {
-			return nil, errors.Wrap(err, hadamardProdFail)
+			return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, "Failed to carry Cos()")
+		return nil, fmt.Errorf("%s: %w", "Failed to carry Cos()", err)
 	}
 	return
 }
@@ -176,7 +177,7 @@ func sinDiff(x, y *Node) (err error) {
 		mul := newElemBinOp(mulOpType, x, y)
 		err = mul.IncrDo(xdv.d, d, ydv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 	}
 	return
@@ -191,13 +192,13 @@ func cosDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 			WithGroupName(gradClust)(retVal)
 			retVal, err = HadamardProd(retVal, gradY)
 			if err != nil {
-				return nil, errors.Wrap(err, hadamardProdFail)
+				return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, negFail)
+			return nil, fmt.Errorf("%s: %w", negFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, "Failed to call Sin()")
+		return nil, fmt.Errorf("%s: %w", "Failed to call Sin()", err)
 	}
 	return
 }
@@ -218,7 +219,7 @@ func cosDiff(x, y *Node) (err error) {
 			mul := newElemBinOp(mulOpType, x, y)
 			err = mul.IncrDo(xdv.d, d, ydv.d)
 			if err = checkErrSetDeriv(err, xdv); err != nil {
-				return errors.Wrapf(err, autodiffFail, x)
+				return fmt.Errorf(autodiffFail+": %w", x, err)
 			}
 
 		}
@@ -236,7 +237,7 @@ func expDiff(x, y *Node) (err error) {
 	mul := newElemBinOp(mulOpType, x, y)
 	err = mul.IncrDo(xdv.d, ydv.Value, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -254,7 +255,7 @@ func lnDiff(x, y *Node) (err error) {
 
 	err = div.IncrDo(xdv.d, ydv.d, xdv.Value)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 
 	return
@@ -264,15 +265,15 @@ func lnDiff(x, y *Node) (err error) {
 func log2DiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var log2 *Node
 	if log2, err = getConst(x, "log2"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	if retVal, err = HadamardDiv(x, log2); err != nil {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	WithGroupName(gradClust)(retVal)
 	if retVal, err = HadamardDiv(gradY, retVal); err != nil {
-		return nil, errors.Wrap(err, hadamardDivFail)
+		return nil, fmt.Errorf("%s: %w", hadamardDivFail, err)
 	}
 	return
 }
@@ -282,13 +283,13 @@ func log2Diff(x, y *Node) (err error) {
 
 	var log2 *Node
 	if log2, err = getConst(x, "log2"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	mul := newElemBinOp(mulOpType, x, log2)
 	var d Value
 	if d, err = mul.Do(xdv.Value, log2.boundTo); err != nil {
-		return errors.Wrapf(err, doFail, mul)
+		return fmt.Errorf(doFail+": %w", mul, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -298,7 +299,7 @@ func log2Diff(x, y *Node) (err error) {
 	div := newElemBinOp(divOpType, y, x)
 	err = div.IncrDo(xdv.d, ydv.d, d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 
 	return
@@ -317,13 +318,13 @@ func negDiff(x, y *Node) (err error) {
 
 	// first we check if what essentially is a noIncrError is called
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 
 	// then we set derivs, if d is a scalar
 	if _, ok := xdv.Value.(Scalar); ok {
 		if err = xdv.SetDeriv(d); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 	}
 
@@ -333,7 +334,7 @@ func negDiff(x, y *Node) (err error) {
 func squareDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var two *Node
 	if two, err = getConst(x, "two"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	// symdiffLogf("X %v and TWO %v", x.Shape(), two.Shape())
@@ -342,11 +343,11 @@ func squareDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 		WithGroupName(gradClust)(retVal)
 		retVal, err = HadamardProd(retVal, gradY)
 		if err != nil {
-			return nil, errors.Wrap(err, hadamardProdFail)
+			return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 		}
 		symdiffLogf("Spawned: %d", retVal.ID())
 	} else {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	return
 }
@@ -356,7 +357,7 @@ func squareDiff(x, y *Node) (err error) {
 
 	var two *Node
 	if two, err = getConst(x, "two"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	var d Value
@@ -368,7 +369,7 @@ func squareDiff(x, y *Node) (err error) {
 
 		err = mul.IncrDo(xdv.d, d, ydv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 	}
 	return
@@ -377,17 +378,17 @@ func squareDiff(x, y *Node) (err error) {
 func sqrtDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var two *Node
 	if two, err = getConst(x, "two"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	if retVal, err = HadamardProd(two, y); err == nil {
 		WithGroupName(gradClust)(retVal)
 		retVal, err = HadamardDiv(gradY, retVal)
 		if err != nil {
-			return nil, errors.Wrap(err, hadamardDivFail)
+			return nil, fmt.Errorf("%s: %w", hadamardDivFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	return
 }
@@ -397,7 +398,7 @@ func sqrtDiff(x, y *Node) (err error) {
 
 	var two *Node
 	if two, err = getConst(x, "two"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	mul := newElemBinOp(mulOpType, x, y)
@@ -411,7 +412,7 @@ func sqrtDiff(x, y *Node) (err error) {
 		div := newElemBinOp(divOpType, y, x)
 		err = div.IncrDo(xdv.d, ydv.d, d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 	}
 	return
@@ -424,13 +425,13 @@ func inverseDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 			WithGroupName(gradClust)(retVal)
 			retVal, err = HadamardProd(retVal, gradY)
 			if err != nil {
-				return nil, errors.Wrap(err, hadamardProdFail)
+				return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, negFail)
+			return nil, fmt.Errorf("%s: %w", negFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	return
 }
@@ -442,12 +443,12 @@ func inverseDiff(x, y *Node) (err error) {
 
 	var d Value
 	if d, err = sq.Do(ydv.Value); err != nil {
-		return errors.Wrapf(err, doFail, sq)
+		return fmt.Errorf(doFail+": %w", sq, err)
 	}
 
 	neg := newElemUnaryOp(negOpType, y)
 	if d, err = neg.Do(d); err != nil {
-		return errors.Wrapf(err, doFail, neg)
+		return fmt.Errorf(doFail+": %w", neg, err)
 	}
 	if dT, ok := d.(tensor.Tensor); ok {
 		defer returnTensor(dT)
@@ -456,7 +457,7 @@ func inverseDiff(x, y *Node) (err error) {
 	mul := newElemBinOp(mulOpType, y, y)
 	err = mul.IncrDo(xdv.d, d, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -464,16 +465,16 @@ func inverseDiff(x, y *Node) (err error) {
 func inverseSqrtDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var two *Node
 	if two, err = getConst(x, "two"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 	if retVal, err = Cube(y); err != nil {
-		return nil, errors.Wrapf(err, cubeFail)
+		return nil, fmt.Errorf(cubeFail+": %w", err)
 	}
 	if retVal, err = HadamardProd(two, retVal); err != nil {
-		return nil, errors.Wrapf(err, hadamardProdFail)
+		return nil, fmt.Errorf(hadamardProdFail+": %w", err)
 	}
 	if retVal, err = HadamardDiv(gradY, retVal); err != nil {
-		return nil, errors.Wrapf(err, hadamardDivFail)
+		return nil, fmt.Errorf(hadamardDivFail+": %w", err)
 	}
 	return Neg(retVal)
 }
@@ -482,28 +483,28 @@ func inverseSqrtDiff(x, y *Node) (err error) {
 	xdv, ydv := getDV(x, y)
 	var two *Node
 	if two, err = getConst(x, "two"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	cb := newElemUnaryOp(cubeOpType, y)
 	var d Value
 	if d, err = cb.Do(ydv.Value); err != nil {
-		return errors.Wrapf(err, doFail, cb)
+		return fmt.Errorf(doFail+": %w", cb, err)
 	}
 
 	mul := newElemBinOp(mulOpType, x, y)
 	if d, err = mul.Do(two.boundTo, d); err != nil {
-		return errors.Wrapf(err, doFail, mul)
+		return fmt.Errorf(doFail+": %w", mul, err)
 	}
 
 	div := newElemBinOp(divOpType, y, x)
 	if d, err = div.Do(ydv.d, d); err != nil {
-		return errors.Wrapf(err, doFail, div)
+		return fmt.Errorf(doFail+": %w", div, err)
 	}
 
 	sub := newElemBinOp(subOpType, x, y)
 	if _, err = sub.Do(xdv.d, d); err != nil {
-		return errors.Wrapf(err, doFail, sub)
+		return fmt.Errorf(doFail+": %w", sub, err)
 	}
 	return nil
 }
@@ -511,7 +512,7 @@ func inverseSqrtDiff(x, y *Node) (err error) {
 func cubeDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var three *Node
 	if three, err = getConst(x, "three"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	if retVal, err = HadamardProd(x, x); err == nil {
@@ -520,13 +521,13 @@ func cubeDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 			WithGroupName(gradClust)(retVal)
 			retVal, err = HadamardProd(retVal, gradY)
 			if err != nil {
-				return nil, errors.Wrap(err, hadamardProdFail)
+				return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, hadamardProdFail)
+			return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	return
 }
@@ -536,13 +537,13 @@ func cubeDiff(x, y *Node) (err error) {
 
 	var three *Node
 	if three, err = getConst(x, "three"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	mul := newElemBinOp(mulOpType, x, y)
 	var d Value
 	if d, err = mul.Do(xdv.Value, xdv.Value); err != nil {
-		return errors.Wrapf(err, doFail, mul)
+		return fmt.Errorf(doFail+": %w", mul, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -550,12 +551,12 @@ func cubeDiff(x, y *Node) (err error) {
 	}
 
 	if d, err = mul.UnsafeDo(d, three.boundTo); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, mul)
+		return fmt.Errorf(unsafeDoFail+": %w", mul, err)
 	}
 
 	err = mul.IncrDo(xdv.d, d, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -563,7 +564,7 @@ func cubeDiff(x, y *Node) (err error) {
 func tanhDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var one *Node
 	if one, err = getConst(x, "one"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	if retVal, err = HadamardProd(y, y); err == nil {
@@ -572,13 +573,13 @@ func tanhDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 			WithGroupName(gradClust)(retVal)
 			retVal, err = HadamardProd(retVal, gradY)
 			if err != nil {
-				return nil, errors.Wrap(err, hadamardProdFail)
+				return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, subFail)
+			return nil, fmt.Errorf("%s: %w", subFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, hadamardProdFail)
+		return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 	}
 	return
 }
@@ -588,14 +589,14 @@ func tanhDiff(x, y *Node) (err error) {
 
 	var one *Node
 	if one, err = getConst(x, "one"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	sq := newElemUnaryOp(squareOpType, y)
 
 	var d Value
 	if d, err = sq.Do(ydv.Value); err != nil {
-		return errors.Wrapf(err, doFail, sq)
+		return fmt.Errorf(doFail+": %w", sq, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -604,13 +605,13 @@ func tanhDiff(x, y *Node) (err error) {
 
 	sub := newElemBinOp(subOpType, one, y)
 	if d, err = sub.UnsafeDo(one.boundTo, d); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, sub)
+		return fmt.Errorf(unsafeDoFail+": %w", sub, err)
 	}
 
 	mul := newElemBinOp(mulOpType, x, y)
 	err = mul.IncrDo(xdv.d, d, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -618,7 +619,7 @@ func tanhDiff(x, y *Node) (err error) {
 func sigmoidDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var one *Node
 	if one, err = getConst(x, "one"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	if retVal, err = Sub(one, y); err == nil {
@@ -627,13 +628,13 @@ func sigmoidDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 			WithGroupName(gradClust)(retVal)
 			retVal, err = HadamardProd(retVal, gradY)
 			if err != nil {
-				return nil, errors.Wrap(err, hadamardProdFail)
+				return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 			}
 		} else {
-			return nil, errors.Wrap(err, hadamardProdFail)
+			return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, subFail)
+		return nil, fmt.Errorf("%s: %w", subFail, err)
 	}
 	return
 }
@@ -643,14 +644,14 @@ func sigmoidDiff(x, y *Node) (err error) {
 
 	var one *Node
 	if one, err = getConst(x, "one"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	sub := newElemBinOp(subOpType, one, y)
 
 	var d Value
 	if d, err = sub.Do(one.boundTo, ydv.Value); err != nil {
-		return errors.Wrapf(err, doFail, sub)
+		return fmt.Errorf(doFail+": %w", sub, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -659,12 +660,12 @@ func sigmoidDiff(x, y *Node) (err error) {
 
 	mul := newElemBinOp(mulOpType, x, y)
 	if d, err = mul.UnsafeDo(d, ydv.Value); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, mul)
+		return fmt.Errorf(unsafeDoFail+": %w", mul, err)
 	}
 
 	err = mul.IncrDo(xdv.d, d, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -673,17 +674,17 @@ func sigmoidDiff(x, y *Node) (err error) {
 func log1pDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 	var one *Node
 	if one, err = getConst(x, "one"); err != nil {
-		return nil, errors.Wrap(err, "getConst failed")
+		return nil, fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	if retVal, err = Add(x, one); err == nil {
 		WithGroupName(gradClust)(retVal)
 		retVal, err = HadamardDiv(gradY, retVal)
 		if err != nil {
-			return nil, errors.Wrap(err, hadamardProdFail)
+			return nil, fmt.Errorf("%s: %w", hadamardProdFail, err)
 		}
 	} else {
-		return nil, errors.Wrap(err, "Failed to carry Add()")
+		return nil, fmt.Errorf("%s: %w", "Failed to carry Add()", err)
 	}
 	return
 }
@@ -693,14 +694,14 @@ func log1pDiff(x, y *Node) (err error) {
 
 	var one *Node
 	if one, err = getConst(x, "one"); err != nil {
-		return errors.Wrap(err, "getConst failed")
+		return fmt.Errorf("%s: %w", "getConst failed", err)
 	}
 
 	add := newElemBinOp(addOpType, x, one)
 
 	var d Value
 	if d, err = add.Do(xdv.Value, one.boundTo); err != nil {
-		return errors.Wrapf(err, doFail, add)
+		return fmt.Errorf(doFail+": %w", add, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -710,7 +711,7 @@ func log1pDiff(x, y *Node) (err error) {
 	div := newElemBinOp(divOpType, y, x)
 	err = div.IncrDo(xdv.d, ydv.d, d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -720,7 +721,7 @@ func expm1DiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 		WithGroupName(gradClust)(retVal)
 		return HadamardProd(gradY, retVal)
 	}
-	return nil, errors.Wrap(err, "Failled to carry Exp()")
+	return nil, fmt.Errorf("%s: %w", "Failled to carry Exp()", err)
 }
 
 func expm1Diff(x, y *Node) (err error) {
@@ -730,7 +731,7 @@ func expm1Diff(x, y *Node) (err error) {
 
 	var d Value
 	if d, err = exp.Do(xdv.Value); err != nil {
-		return errors.Wrapf(err, doFail, exp)
+		return fmt.Errorf(doFail+": %w", exp, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -740,7 +741,7 @@ func expm1Diff(x, y *Node) (err error) {
 	mul := newElemBinOp(mulOpType, x, y)
 	err = mul.IncrDo(xdv.d, d, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -750,7 +751,7 @@ func softplusDiffExpr(x, y, gradY *Node) (retVal *Node, err error) {
 		WithGroupName(gradClust)(retVal)
 		return HadamardProd(retVal, gradY)
 	}
-	return nil, errors.Wrap(err, "Failed to carry Sigmoid()")
+	return nil, fmt.Errorf("%s: %w", "Failed to carry Sigmoid()", err)
 }
 
 func softplusDiff(x, y *Node) (err error) {
@@ -760,7 +761,7 @@ func softplusDiff(x, y *Node) (err error) {
 
 	var d Value
 	if d, err = sigmoid.Do(xdv.Value); err != nil {
-		return errors.Wrapf(err, doFail, sigmoid)
+		return fmt.Errorf(doFail+": %w", sigmoid, err)
 	}
 
 	if dT, ok := d.(tensor.Tensor); ok {
@@ -770,7 +771,7 @@ func softplusDiff(x, y *Node) (err error) {
 	mul := newElemBinOp(mulOpType, x, y)
 	err = mul.IncrDo(xdv.d, d, ydv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }

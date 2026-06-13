@@ -6,7 +6,6 @@ package cuda
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"gorgonia.org/cu"
 )
 
@@ -19,18 +18,18 @@ func (e *Engine) LoadCUDAFunc(moduleName, data string, funcs []string) (err erro
 		fns = make(map[string]cu.Function)
 	}
 	if err = cu.SetCurrentContext(e.c.Context.CUDAContext()); err != nil {
-		return errors.Wrapf(err, "Unable to set current context when loading module %q at device %v", moduleName, e.d)
+		return fmt.Errorf("Unable to set current context when loading module %q at device %v: %w", moduleName, e.d, err)
 	}
 
 	var mod cu.Module
 	if mod, err = cu.LoadData(data); err != nil {
-		return errors.Wrapf(err, "Failed to load module %q data for Device %v context %x", moduleName, e.d, e.c)
+		return fmt.Errorf("Failed to load module %q data for Device %v context %x: %w", moduleName, e.d, e.c, err)
 	}
 
 	for _, name := range funcs {
 		var fn cu.Function
 		if fn, err = mod.Function(name); err != nil {
-			return errors.Wrapf(err, "Unable to get function %q in Device %v context %x", name, e.d, e.c)
+			return fmt.Errorf("Unable to get function %q in Device %v context %x: %w", name, e.d, e.c, err)
 		}
 		fqn := fmt.Sprintf("%v.%v", moduleName, name)
 		fns[fqn] = fn

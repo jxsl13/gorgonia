@@ -7,8 +7,9 @@ import (
 	"hash"
 	"sort"
 
+	"errors"
+
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -49,13 +50,13 @@ func (op atOp) Do(inputs ...Value) (retVal Value, err error) {
 	case *tensor.Dense:
 		var r any
 		if r, err = tt.At(op.coordinates...); err != nil {
-			err = errors.Wrap(err, opDoFail)
+			err = fmt.Errorf("%s: %w", opDoFail, err)
 			return
 		}
 
 		retVal, _, _, err = anyToValue(r)
 	default:
-		err = errors.Errorf(nyiTypeFail, "atOp.Do()", tt)
+		err = fmt.Errorf(nyiTypeFail, "atOp.Do()", tt)
 	}
 	return
 }
@@ -122,7 +123,7 @@ func (op sizeOp) Do(inputs ...Value) (retVal Value, err error) {
 	case tensor.Tensor:
 		sh := t.Shape()
 		if op.axis >= len(sh) {
-			return nil, errors.Errorf("Shape is %v. Want size of %d", sh, op.axis)
+			return nil, fmt.Errorf("Shape is %v. Want size of %d", sh, op.axis)
 		}
 		size := sh[op.axis]
 
@@ -135,7 +136,7 @@ func (op sizeOp) Do(inputs ...Value) (retVal Value, err error) {
 		case tensor.Int:
 			retVal = NewI(size)
 		default:
-			return nil, errors.Errorf(nyiFail, "sizeOf.Do()", t.Dtype())
+			return nil, fmt.Errorf(nyiFail, "sizeOf.Do()", t.Dtype())
 		}
 	}
 
@@ -157,7 +158,7 @@ func (op sizeOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op sizeOp) DimSize(d int) (int, error) {
 	if d != op.axis {
-		return -1, errors.Errorf("Dimension mismatch. Size Op is for axis %d. Want Dim Size of %d", op.axis, d)
+		return -1, fmt.Errorf("Dimension mismatch. Size Op is for axis %d. Want Dim Size of %d", op.axis, d)
 	}
 	return op.val, nil
 }
@@ -176,7 +177,7 @@ func newRepeatOp(along int, a *Node) *repeatOp {
 
 func repeatedApply(along []int, children Nodes) (retVal *Node, err error) {
 	if len(children) != len(along)+1 {
-		return nil, errors.Errorf("Expected %v children. Got %v instead (hint: along axes and number of children must match)", len(along)+1, len(children))
+		return nil, fmt.Errorf("Expected %v children. Got %v instead (hint: along axes and number of children must match)", len(along)+1, len(children))
 	}
 
 	retVal = children[0]
@@ -291,7 +292,7 @@ func (op repeatOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 	if xshape.IsScalar() {
 		sum := newSumOp([]int{op.along}, output.shape, output.Dims())
 		if d, err = sum.Do(d); err != nil {
-			err = errors.Wrapf(err, doFail, sum)
+			err = fmt.Errorf(doFail+": %w", sum, err)
 			return
 		}
 	} else {
@@ -299,7 +300,7 @@ func (op repeatOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 		if xshape[axis] == 1 {
 			sum := newSumOp([]int{op.along}, output.shape, output.Dims())
 			if d, err = sum.Do(d); err != nil {
-				err = errors.Wrapf(err, doFail, sum)
+				err = fmt.Errorf(doFail+": %w", sum, err)
 				return
 			}
 		} else {
@@ -315,13 +316,13 @@ func (op repeatOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 			// a scalar can never get to this path
 			t := d.(tensor.Tensor)
 			if err = t.Reshape(newShape...); err != nil {
-				err = errors.Wrapf(err, reshapeFail, newShape, t.DataSize())
+				err = fmt.Errorf(reshapeFail+": %w", newShape, t.DataSize(), err)
 				return
 			}
 
 			sum := newSumOp(along, newShape, len(newShape))
 			if d, err = sum.Do(d); err != nil {
-				err = errors.Wrapf(err, doFail, sum)
+				err = fmt.Errorf(doFail+": %w", sum, err)
 				return
 			}
 			// sum.Do leaves the dimension of size 1 behind, so reshape here.
@@ -331,7 +332,7 @@ func (op repeatOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 				finalShape = append(finalShape, newShape[axis+2:]...)
 			}
 			if err = t.Reshape(finalShape...); err != nil {
-				err = errors.Wrapf(err, reshapeFail, newShape, t.DataSize())
+				err = fmt.Errorf(reshapeFail+": %w", newShape, t.DataSize(), err)
 				return
 			}
 		}
@@ -362,7 +363,7 @@ func (op repeatOp) Do(inputs ...Value) (retVal Value, err error) {
 
 	var rep int
 	if rep, err = valueToInt(inputs[1]); err != nil {
-		return nil, errors.Wrapf(err, "Cannot convert %v to an int", inputs[1])
+		return nil, fmt.Errorf("Cannot convert %v to an int: %w", inputs[1], err)
 	}
 
 	// process inputs[0]
@@ -380,7 +381,7 @@ func (op repeatOp) Do(inputs ...Value) (retVal Value, err error) {
 		// }
 		t = iv
 	default:
-		err = errors.Errorf(nyiTypeFail, "repeatOp.Do()", inputs[0])
+		err = fmt.Errorf(nyiTypeFail, "repeatOp.Do()", inputs[0])
 		return
 	}
 
@@ -389,7 +390,7 @@ func (op repeatOp) Do(inputs ...Value) (retVal Value, err error) {
 		goto fin
 	}
 	if t, err = tensor.Repeat(t, op.along, rep); err != nil {
-		err = errors.Wrapf(err, repFail, op.along, rep)
+		err = fmt.Errorf(repFail+": %w", op.along, rep, err)
 		return
 	}
 fin:
@@ -415,7 +416,7 @@ func (op repeatOp) Hashcode() uint32 { return simpleHash(op) }
 func (op repeatOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal Value, err error) {
 	pt, ok := prealloc.(tensor.Tensor)
 	if !ok {
-		return nil, errors.Errorf("Expected Tensor as a preallocated value. Got %v of %T instead", prealloc, prealloc)
+		return nil, fmt.Errorf("Expected Tensor as a preallocated value. Got %v of %T instead", prealloc, prealloc)
 	}
 
 	if err = checkArity(op, len(inputs)); err != nil {
@@ -424,7 +425,7 @@ func (op repeatOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal Value,
 
 	var rep int
 	if rep, err = valueToInt(inputs[1]); err != nil {
-		return nil, errors.Wrapf(err, "Cannot convert %v to an int", inputs[1])
+		return nil, fmt.Errorf("Cannot convert %v to an int: %w", inputs[1], err)
 	}
 
 	// process inputs[0]
@@ -464,7 +465,7 @@ func (op repeatOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal Value,
 		}
 		t = iv
 	default:
-		err = errors.Errorf(nyiTypeFail, "repeatOp.Do()", inputs[0])
+		err = fmt.Errorf(nyiTypeFail, "repeatOp.Do()", inputs[0])
 		return
 	}
 	if rep == 1 {
@@ -539,7 +540,7 @@ func (op *sliceOp) InferShape(inputs ...DimSizer) (s tensor.Shape, err error) {
 func (op *sliceOp) DiffWRT(i int) []bool {
 	if i > 1 {
 		// error
-		err := errors.Errorf("sliceOp should only have one or more inputs. Got %v instead", i)
+		err := fmt.Errorf("sliceOp should only have one or more inputs. Got %v instead", i)
 		panic(err)
 	}
 
@@ -568,7 +569,7 @@ func (op *sliceOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 	// var d Value
 	incrOp := sliceIncrOp{op}
 	if _, err = incrOp.UsePreallocDo(xdv.d, xdv.d, ydv.d); err != nil {
-		return errors.Wrapf(err, doFail, incrOp)
+		return fmt.Errorf(doFail+": %w", incrOp, err)
 	}
 
 	// there is no need to handle scalars, because you can never slice a scalar
@@ -597,7 +598,7 @@ func (op *sliceOp) Do(inputs ...Value) (retVal Value, err error) {
 	case tensor.Tensor:
 		var v tensor.Tensor
 		if v, err = T.Slice(slices...); err != nil {
-			return nil, errors.Wrapf(err, sliceFail, slices)
+			return nil, fmt.Errorf(sliceFail+": %w", slices, err)
 		}
 		if v.IsScalar() {
 			retVal, _ = anyToScalar(v.ScalarValue())
@@ -607,7 +608,7 @@ func (op *sliceOp) Do(inputs ...Value) (retVal Value, err error) {
 	case Scalar:
 		return nil, errors.New("Cannot slice a scalar value")
 	default:
-		return nil, errors.Errorf(nyiFail, "sliceOp.Do()", t)
+		return nil, fmt.Errorf(nyiFail, "sliceOp.Do()", t)
 	}
 	return
 }
@@ -702,7 +703,7 @@ func (op sliceIncrOp) DiffWRT(i int) []bool {
 func (op sliceIncrOp) SymDiff(inputs Nodes, outputNode, gradNode *Node) (retVal Nodes, err error) {
 	var slicedRes *Node
 	if slicedRes, err = ApplyOp(op.sliceOp, gradNode); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	retVal = Nodes{gradNode, slicedRes}
 
@@ -715,18 +716,18 @@ func (op sliceIncrOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (
 	// dzdx
 	add := newElemBinOp(addOpType, inputs[0], output)
 	if _, err = add.UnsafeDo(xdv.d, zdv.d); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, add)
+		return fmt.Errorf(unsafeDoFail+": %w", add, err)
 	}
 
 	// dzdy
 	var d Value
 	if d, err = op.sliceOp.Do(zdv.d); err != nil {
-		return errors.Wrapf(err, doFail, op)
+		return fmt.Errorf(doFail+": %w", op, err)
 	}
 
 	add = newElemBinOp(addOpType, inputs[1], output)
 	if _, err = add.UnsafeDo(ydv.d, d); err != nil {
-		return errors.Wrapf(err, doFail, add)
+		return fmt.Errorf(doFail+": %w", add, err)
 	}
 	return
 }
@@ -754,7 +755,7 @@ func (op sliceIncrOp) Do(inputs ...Value) (retVal Value, err error) {
 		grad := tensor.NewDense(T.Dtype(), T.Shape().Clone())
 		var v tensor.Tensor
 		if v, err = grad.Slice(slices...); err != nil {
-			return nil, errors.Wrapf(err, sliceFail, slices)
+			return nil, fmt.Errorf(sliceFail+": %w", slices, err)
 		}
 		switch i := incr.(type) {
 		case *F64:
@@ -768,7 +769,7 @@ func (op sliceIncrOp) Do(inputs ...Value) (retVal Value, err error) {
 	case Scalar:
 		return nil, errors.New("Cannot slice a scalar value")
 	default:
-		return nil, errors.Errorf(nyiFail, "sliceIncrOp()", t)
+		return nil, fmt.Errorf(nyiFail, "sliceIncrOp()", t)
 	}
 	return
 }
@@ -793,7 +794,7 @@ func (op sliceIncrOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal Val
 	case *tensor.Dense:
 		var v tensor.Tensor
 		if v, err = T.Slice(slices...); err != nil {
-			return nil, errors.Wrapf(err, sliceFail, slices)
+			return nil, fmt.Errorf(sliceFail+": %w", slices, err)
 		}
 		switch i := incr.(type) {
 		case *F64:
@@ -807,7 +808,7 @@ func (op sliceIncrOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal Val
 	case Scalar:
 		return nil, errors.New("Cannot slice a scalar value")
 	default:
-		return nil, errors.Errorf(nyiFail, "sliceIncrOp()", prealloc)
+		return nil, fmt.Errorf(nyiFail, "sliceIncrOp()", prealloc)
 	}
 	return
 }
@@ -883,7 +884,7 @@ func (op transposeOp) Type() hm.Type {
 func (op transposeOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err error) {
 	input := inputs[0].(tensor.Shape)
 	if input.IsScalar() {
-		return nil, errors.Errorf(undefinedOnShape, op, input)
+		return nil, fmt.Errorf(undefinedOnShape, op, input)
 	}
 
 	retVal = make(tensor.Shape, len(input))
@@ -923,11 +924,11 @@ func (op transposeOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (
 	var zdvdT tensor.Tensor
 	var ok bool
 	if zdvdT, ok = zdv.d.(tensor.Tensor); !ok {
-		return errors.Errorf("Expected the gradient of the output node to be a Tensor. Got %v instead", zdv.d)
+		return fmt.Errorf("Expected the gradient of the output node to be a Tensor. Got %v instead", zdv.d)
 	}
 
 	if err = zdvdT.T(newPattern...); err != nil {
-		return errors.Wrap(err, "Failed to T()")
+		return fmt.Errorf("%s: %w", "Failed to T()", err)
 	}
 
 	d := tensor.Materialize(zdvdT)
@@ -935,7 +936,7 @@ func (op transposeOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (
 
 	add := newEBOByType(addOpType, inputs[0].t, TypeOf(zdvdT))
 	if _, err = add.UnsafeDo(xdv.d, d); err != nil {
-		err = errors.Wrapf(err, doFail, add)
+		err = fmt.Errorf(doFail+": %w", add, err)
 	}
 	return
 }
@@ -1020,7 +1021,7 @@ func (op concatOp) Type() hm.Type {
 
 func (op concatOp) InferShape(ds ...DimSizer) (tensor.Shape, error) {
 	if len(ds) == 0 {
-		return nil, errors.Errorf("No shapes passed in!")
+		return nil, fmt.Errorf("No shapes passed in!")
 	}
 	shapes, err := DimSizersToShapes(ds)
 	if err != nil {
@@ -1072,7 +1073,7 @@ func (op concatOp) SymDiff(inputs Nodes, output *Node, grad *Node) (retVal Nodes
 	retVal = make(Nodes, len(inputs))
 	for i, in := range inputs {
 		if op.axis >= len(in.shape) {
-			return nil, errors.Errorf("Wanted dimension %d is larger than the shape %v", op.axis, in.shape)
+			return nil, fmt.Errorf("Wanted dimension %d is larger than the shape %v", op.axis, in.shape)
 		}
 		end := in.shape[op.axis] + start
 
@@ -1104,7 +1105,7 @@ func (op concatOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) erro
 	var start int
 	for _, in := range inputs {
 		if op.axis >= len(in.shape) {
-			return errors.Errorf("Wanted dimension %d is larger than the shape %v", op.axis, in.shape)
+			return fmt.Errorf("Wanted dimension %d is larger than the shape %v", op.axis, in.shape)
 		}
 		end := in.shape[op.axis] + start
 
@@ -1123,7 +1124,7 @@ func (op concatOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) erro
 			d := idvd.(*tensor.Dense)
 			d.Add(st, tensor.UseUnsafe())
 		default:
-			return errors.Errorf(nyiTypeFail, "DoDiff (hack) ", st)
+			return fmt.Errorf(nyiTypeFail, "DoDiff (hack) ", st)
 		}
 
 		start = end
@@ -1173,11 +1174,11 @@ func (op reshapeOp) Do(vals ...Value) (Value, error) {
 			}
 		} else {
 			if val, err = CloneValue(vals[0]); err != nil {
-				return nil, errors.Wrapf(err, cloneFail, vals[0])
+				return nil, fmt.Errorf(cloneFail+": %w", vals[0], err)
 			}
 		}
 		if val.Shape().TotalSize() != op.from.TotalSize() {
-			return nil, errors.Errorf("Shape mismatch. Input shape is %v. Expected %v", val.Shape(), op.from)
+			return nil, fmt.Errorf("Shape mismatch. Input shape is %v. Expected %v", val.Shape(), op.from)
 		}
 
 		if err := val.(tensor.Tensor).Reshape(op.to...); err != nil {
@@ -1191,7 +1192,7 @@ func (op reshapeOp) Do(vals ...Value) (Value, error) {
 		}
 		return v0, nil
 	default:
-		return nil, errors.Errorf(nyiTypeFail, "reshape.Do", vals[0])
+		return nil, fmt.Errorf(nyiTypeFail, "reshape.Do", vals[0])
 	}
 }
 
@@ -1226,7 +1227,7 @@ func (op reshapeOp) UnsafeDo(vals ...Value) (Value, error) {
 		}
 		return v0, nil
 	default:
-		return nil, errors.Errorf(nyiTypeFail, "reshape.Do", vals[0])
+		return nil, fmt.Errorf(nyiTypeFail, "reshape.Do", vals[0])
 	}
 }
 
@@ -1245,7 +1246,7 @@ func (op reshapeOp) CUDADo(extern External, dev Device, prealloc Value, vals ...
 		vT := ScalarAsTensor(v, op.to.Dims(), nil)
 		if err := vT.(tensor.Tensor).Reshape(op.to...); err != nil {
 
-			return nil, errors.Errorf(nyiTypeFail, "reshape.Do", "Scalar")
+			return nil, fmt.Errorf(nyiTypeFail, "reshape.Do", "Scalar")
 		}
 		return vT, nil
 	}

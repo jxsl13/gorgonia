@@ -7,7 +7,6 @@ import (
 	"log"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -65,7 +64,7 @@ func (op *dropoutOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	)
 
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Expected input to be a tensor")
+		return nil, fmt.Errorf("Expected input to be a tensor")
 	}
 
 	return in, nil
