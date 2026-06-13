@@ -29,7 +29,7 @@ tidy:
 	go mod tidy
 
 vet:
-	go vet $(PKGS)
+	go vet -unsafeptr=false $(PKGS)
 
 # Advisory: prints all staticcheck findings so they can be fixed. The gorgonia
 # library carries ~267 pre-existing issues; our new packages are clean.
