@@ -197,7 +197,7 @@ T26|x|//go:build cuda on cuda/ package + cmd/cudagen + examples/convnet_cuda; dr
 T27|x|//go:build blas on blase/ + examples/stacked_autoencoder; drop /blase$ grep-excludes; verify go build ./... clean without excludes on non-BLAS host|V29,C14,I.ci
 T28|x|delete workflow generator (.github/workflows/main.go + job-template.go) + runner-self-hosted.yml + runner-github-{macos,ubuntu}-amd64.yml|V30,C15,I.ci
 T29|x|add static linux.yaml (ubuntu-latest: cross-build arm/amd64/darwin + go test -race + avx/sse tag builds); modernize coverage->coverage.yaml (ubuntu-latest, checkout@v5/setup-go@v5/codecov@v5); darwin on macos-latest; all actions @latest|V30,C15,I.ci
-T30|.|rename all .yml -> .yaml (pre-check, darwin-arm64, coverage, .github/dependabot); verify grep -r self-hosted .github empty|V30,C15,I.ci
+T30|x|rename all .yml -> .yaml (pre-check, darwin-arm64, coverage, .github/dependabot); verify grep -r self-hosted .github empty|V30,C15,I.ci
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
