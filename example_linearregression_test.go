@@ -20,7 +20,7 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 	// (not the global rand.Float*) so the dataset is reproducible even if an
 	// imported package consumes the global math/rand source from a goroutine.
 	rng := rand.New(rand.NewSource(1))
-	var xBack, yBack interface{}
+	var xBack, yBack any
 	switch dt {
 	case Float32:
 		xBack = tensor.Range(tensor.Float32, 1, vecSize+1).([]float32)
@@ -45,7 +45,7 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 	return
 }
 
-func random(dt tensor.Dtype) interface{} {
+func random(dt tensor.Dtype) any {
 	// Local deterministic source — see xy() for why the global rand is avoided.
 	rng := rand.New(rand.NewSource(13370))
 	switch dt {
@@ -93,7 +93,7 @@ func linregRun(m, c *Node, machine VM, iter int, autoCleanup bool) (retM, retC V
 		defer runtime.UnlockOSThread()
 	}
 	var err error
-	for i := 0; i < iter; i++ {
+	for i := range iter {
 		if err = machine.RunAll(); err != nil {
 			fmt.Printf("Error during iteration: %v: %v\n", i, err)
 			break

@@ -3,7 +3,6 @@
 // add/sub/mul/div + matmul (SPEC T16); unsupported ops -> clear error.
 
 //go:build coreml && darwin && arm64
-// +build coreml,darwin,arm64
 
 package coreml
 

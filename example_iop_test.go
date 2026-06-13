@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"hash"
 	"hash/fnv"
-	"io/ioutil"
+	"io/fs"
+	"os"
 
 	"github.com/chewxy/hm"
 	. "github.com/jxsl13/gorgonia"
@@ -131,7 +132,7 @@ func Example_iop() {
 		}
 		return true
 	}
-	ioutil.WriteFile("xxx.dot", []byte(g.ToDot()), 0644)
+	os.WriteFile("xxx.dot", []byte(g.ToDot()), 0644)
 	fmt.Printf("%v", all1000(yGrad.Data().([]float64)))
 
 	// Output:

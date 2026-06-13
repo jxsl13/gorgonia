@@ -138,7 +138,7 @@ func Test_tapeMachinePointerWatchOk(t *testing.T) {
 
 	trainVM := NewTapeMachine(g, WithPointerWatch())
 
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		err = trainVM.RunAll()
 		c.NoError(err)
 	}

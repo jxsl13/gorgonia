@@ -29,8 +29,8 @@ func Image2Float32(img image.Image) ([]float32, error) {
 	imgSize := imgwh * 3
 
 	ans := make([]float32, imgSize)
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
+	for x := range width {
+		for y := range height {
 			r, g, b, _ := img.At(y, x).RGBA()
 			rpix, gpix, bpix := float32(r>>8)/float32(255.0), float32(g>>8)/float32(255.0), float32(b>>8)/float32(255.0)
 			ans[y+x*height] = rpix

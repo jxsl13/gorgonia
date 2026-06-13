@@ -74,7 +74,7 @@ func manualRMSProp64(t *testing.T, s *RMSPropSolver, model []ValueGrad) {
 	backingV := model[0].Value().Data().([]float64)
 	backingD := grad0.Data().([]float64)
 
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		for j, v := range backingV {
 			grad := backingD[j]
 			cw := cached[j]
@@ -119,7 +119,7 @@ func manualRMSProp32(t *testing.T, s *RMSPropSolver, model []ValueGrad) {
 		return dawson.ToleranceF32(a, b, 1e-4)
 	}
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		for j, v := range backingV {
 			grad := backingD[j]
 			cw := cached[j]
@@ -361,7 +361,7 @@ func TestAdamSolverPrecision(t *testing.T) {
 		inputIncrement float32
 		size           int
 		dtype          tensor.Dtype
-		expectedOutput interface{}
+		expectedOutput any
 	}{
 		{
 			desc:           "Example-float32-1",
@@ -402,7 +402,7 @@ func TestAdamSolverPrecision(t *testing.T) {
 			vm := NewTapeMachine(g, BindDualValues(weights))
 
 			for d := tC.inputStart; d < tC.inputEnd; d += tC.inputIncrement {
-				var backing interface{}
+				var backing any
 
 				if tC.dtype == tensor.Float32 {
 					arr := make([]float32, tC.size)

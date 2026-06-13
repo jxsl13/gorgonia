@@ -140,7 +140,7 @@ func (op *GroupNormOp) f64s(xT, prealloc *tensor.Dense, batchSize, channels, ima
 		mean, rstd := op.rowwiseMomentsF64(xSection, innerSize, 0)
 		rstd = 1 / math.Sqrt(math.Max(rstd, 0)+op.epsilon)
 
-		for j := 0; j < d; j++ {
+		for j := range d {
 			scale := rstd
 			bias := -scale * mean
 
@@ -148,7 +148,7 @@ func (op *GroupNormOp) f64s(xT, prealloc *tensor.Dense, batchSize, channels, ima
 			xSection := x[baseIndex : baseIndex+imageSize]
 			ySection := y[baseIndex : baseIndex+imageSize]
 
-			for k := 0; k < imageSize; k++ {
+			for k := range imageSize {
 				ySection[k] = scale*xSection[k] + bias
 			}
 		}
@@ -169,12 +169,12 @@ func (op *GroupNormOp) rowwiseMomentsF64(x []float64, n int, ddof int) (mean flo
 	m1stk := make([][]float64, depth)
 	m2stk := make([][]float64, depth)
 
-	for i := 0; i < depth; i++ {
+	for i := range depth {
 		m1stk[i] = make([]float64, groupNormVecSize)
 		m2stk[i] = make([]float64, groupNormVecSize)
 	}
 
-	for i := 0; i < m; i++ {
+	for i := range m {
 		m0 := int(math.Min(groupNormChunkSize, float64(nn-i*groupNormChunkSize)))
 
 		xSection1 := x[i*groupNormChunkSize*groupNormVecSize:]
@@ -185,7 +185,7 @@ func (op *GroupNormOp) rowwiseMomentsF64(x []float64, n int, ddof int) (mean flo
 		delta := make([]float64, groupNormVecSize)
 		tmp := make([]float64, groupNormVecSize)
 
-		for j := 0; j < m0; j++ {
+		for j := range m0 {
 			baseIndex := j * groupNormVecSize
 			xSection2 := xSection1[baseIndex : baseIndex+groupNormVecSize]
 
@@ -234,7 +234,7 @@ func (op *GroupNormOp) rowwiseMomentsF64(x []float64, n int, ddof int) (mean flo
 		m2 += delta * (x[i] - m1)
 	}
 
-	for i := 0; i < groupNormVecSize; i++ {
+	for i := range groupNormVecSize {
 		op.addMomentsF64(nn, m1stk[0][i], m2stk[0][i], &m0, &m1, &m2)
 	}
 
@@ -309,7 +309,7 @@ func (op *GroupNormOp) f32s(xT, prealloc *tensor.Dense, batchSize, channels, ima
 		mean, rstd := op.rowwiseMomentsF32(xSection, innerSize, 0)
 		rstd = 1 / math32.Sqrt(math32.Max(rstd, 0)+float32(op.epsilon))
 
-		for j := 0; j < d; j++ {
+		for j := range d {
 			scale := rstd
 			bias := -scale * mean
 
@@ -317,7 +317,7 @@ func (op *GroupNormOp) f32s(xT, prealloc *tensor.Dense, batchSize, channels, ima
 			xSection := x[baseIndex : baseIndex+imageSize]
 			ySection := y[baseIndex : baseIndex+imageSize]
 
-			for k := 0; k < imageSize; k++ {
+			for k := range imageSize {
 				ySection[k] = scale*xSection[k] + bias
 			}
 		}
@@ -338,12 +338,12 @@ func (op *GroupNormOp) rowwiseMomentsF32(x []float32, n int, ddof int) (mean flo
 	m1stk := make([][]float32, depth)
 	m2stk := make([][]float32, depth)
 
-	for i := 0; i < depth; i++ {
+	for i := range depth {
 		m1stk[i] = make([]float32, groupNormVecSize)
 		m2stk[i] = make([]float32, groupNormVecSize)
 	}
 
-	for i := 0; i < m; i++ {
+	for i := range m {
 		m0 := int(math32.Min(groupNormChunkSize, float32(nn-i*groupNormChunkSize)))
 
 		xSection1 := x[i*groupNormChunkSize*groupNormVecSize:]
@@ -354,7 +354,7 @@ func (op *GroupNormOp) rowwiseMomentsF32(x []float32, n int, ddof int) (mean flo
 		delta := make([]float32, groupNormVecSize)
 		tmp := make([]float32, groupNormVecSize)
 
-		for j := 0; j < m0; j++ {
+		for j := range m0 {
 			baseIndex := j * groupNormVecSize
 			xSection2 := xSection1[baseIndex : baseIndex+groupNormVecSize]
 
@@ -403,7 +403,7 @@ func (op *GroupNormOp) rowwiseMomentsF32(x []float32, n int, ddof int) (mean flo
 		m2 += delta * (x[i] - m1)
 	}
 
-	for i := 0; i < groupNormVecSize; i++ {
+	for i := range groupNormVecSize {
 		op.addMomentsF32(nn, m1stk[0][i], m2stk[0][i], &m0, &m1, &m2)
 	}
 
@@ -611,7 +611,7 @@ func (op *groupNormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 		ds := 0.0
 		db := 0.0
 
-		for j := 0; j < d; j++ {
+		for j := range d {
 			ds += dsSection[j]
 			db += dbSection[j]
 		}
@@ -620,7 +620,7 @@ func (op *groupNormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 		c2 := (db*mean[i] - ds) * c1 * c1 * c1 * s
 		c3 := -c2*mean[i] - db*c1*s
 
-		for j := 0; j < d; j++ {
+		for j := range d {
 			baseIndex := (i*d + j) * imageSize
 			xSection := in[baseIndex : baseIndex+imageSize]
 			dySection := dy[baseIndex : baseIndex+imageSize]
@@ -648,7 +648,7 @@ func (op *groupNormDiffOp) computeInternalGradientsF64(batchSize, channels, imag
 		dySection := dy[baseIndex : baseIndex+imageSize]
 		inSection := in[baseIndex : baseIndex+imageSize]
 
-		for j := 0; j < imageSize; j++ {
+		for j := range imageSize {
 			dsA[i] += dySection[j] * inSection[j]
 			dbA[i] += dySection[j]
 		}
@@ -688,7 +688,7 @@ func (op *groupNormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 		ds := float32(0.0)
 		db := float32(0.0)
 
-		for j := 0; j < d; j++ {
+		for j := range d {
 			ds += dsSection[j]
 			db += dbSection[j]
 		}
@@ -697,7 +697,7 @@ func (op *groupNormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 		c2 := (db*mean[i] - ds) * c1 * c1 * c1 * s
 		c3 := -c2*mean[i] - db*c1*s
 
-		for j := 0; j < d; j++ {
+		for j := range d {
 			baseIndex := (i*d + j) * imageSize
 			xSection := in[baseIndex : baseIndex+imageSize]
 			dySection := dy[baseIndex : baseIndex+imageSize]
@@ -725,7 +725,7 @@ func (op *groupNormDiffOp) computeInternalGradientsF32(batchSize, channels, imag
 		dySection := dy[baseIndex : baseIndex+imageSize]
 		inSection := in[baseIndex : baseIndex+imageSize]
 
-		for j := 0; j < imageSize; j++ {
+		for j := range imageSize {
 			dsA[i] += dySection[j] * inSection[j]
 			dbA[i] += dySection[j]
 		}

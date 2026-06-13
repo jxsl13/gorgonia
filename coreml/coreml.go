@@ -2,7 +2,6 @@
 // so that NO go-coreml type appears in our exported API (SPEC §V16, T15).
 
 //go:build coreml && darwin && arm64
-// +build coreml,darwin,arm64
 
 package coreml
 

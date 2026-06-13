@@ -52,13 +52,13 @@ func (bcpat BroadcastPattern) bc(left bool, axis byte) bool {
 }
 
 func (bcpat BroadcastPattern) on() (retVal [2][]int) {
-	for i := 0; i < bcAllowableAxes; i++ {
+	for i := range bcAllowableAxes {
 		if bcpat.bc(true, byte(i)) {
 			retVal[0] = append(retVal[0], i)
 		}
 	}
 
-	for i := 0; i < bcAllowableAxes; i++ {
+	for i := range bcAllowableAxes {
 		if bcpat.bc(false, byte(i)) {
 			retVal[1] = append(retVal[1], i)
 		}

@@ -58,7 +58,7 @@ func main() {
 	fmt.Printf("ϴ: %v\n", fa)
 	iter := 10000
 	var err error
-	for i := 0; i < iter; i++ {
+	for i := range iter {
 		if err = machine.RunAll(); err != nil {
 			fmt.Printf("Error during iteration: %v: %v\n", i, err)
 			break
@@ -85,7 +85,7 @@ func main() {
 
 func accuracy(prediction, y []float64) float64 {
 	var ok float64
-	for i := 0; i < len(prediction); i++ {
+	for i := range prediction {
 		if math.Round(prediction[i]-y[i]) == 0 {
 			ok += 1.0
 		}
@@ -159,7 +159,7 @@ func must(n *gorgonia.Node, err error) *gorgonia.Node {
 
 func one(size int) []float64 {
 	one := make([]float64, size)
-	for i := 0; i < size; i++ {
+	for i := range size {
 		one[i] = 1.0
 	}
 	return one

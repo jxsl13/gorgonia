@@ -128,7 +128,7 @@ func nonMaxSupr(detections Detections, iouTreshold float32) Detections {
 	nms = append(nms, detections[0])
 	for i := 1; i < len(detections); i++ {
 		tocheck, del := len(nms), false
-		for j := 0; j < tocheck; j++ {
+		for j := range tocheck {
 			currIOU := IOUFloat32(detections[i].rect, nms[j].rect)
 			if currIOU > iouTreshold && detections[i].class == nms[j].class {
 				del = true

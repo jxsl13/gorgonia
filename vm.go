@@ -98,7 +98,7 @@ func WithValueFmt(format string) VMOpt {
 //
 //	*lispMachine will ONLY take *Node
 //	*tapeMachine will take int (for register IDs) or *Node.
-func WithWatchlist(list ...interface{}) VMOpt {
+func WithWatchlist(list ...any) VMOpt {
 	f := func(m VM) {
 		switch v := m.(type) {
 		case *lispMachine:

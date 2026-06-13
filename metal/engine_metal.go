@@ -6,7 +6,6 @@
 // (mirroring cuda/*_cuda.go) builds on top of it and is a separate, larger step.
 
 //go:build metal && darwin && arm64
-// +build metal,darwin,arm64
 
 package metal
 

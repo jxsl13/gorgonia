@@ -71,12 +71,12 @@ func prepareX(M []RawImage, dt tensor.Dtype) (retVal tensor.Tensor) {
 	rows := len(M)
 	cols := len(M[0])
 
-	var backing interface{}
+	var backing any
 	switch dt {
 	case tensor.Float64:
 		b := make([]float64, rows*cols, rows*cols)
 		b = b[:0]
-		for i := 0; i < rows; i++ {
+		for i := range rows {
 			for j := 0; j < len(M[i]); j++ {
 				b = append(b, pixelWeight(M[i][j]))
 			}
@@ -85,7 +85,7 @@ func prepareX(M []RawImage, dt tensor.Dtype) (retVal tensor.Tensor) {
 	case tensor.Float32:
 		b := make([]float32, rows*cols, rows*cols)
 		b = b[:0]
-		for i := 0; i < rows; i++ {
+		for i := range rows {
 			for j := 0; j < len(M[i]); j++ {
 				b = append(b, float32(pixelWeight(M[i][j])))
 			}
@@ -100,13 +100,13 @@ func prepareY(N []Label, dt tensor.Dtype) (retVal tensor.Tensor) {
 	rows := len(N)
 	cols := 10
 
-	var backing interface{}
+	var backing any
 	switch dt {
 	case tensor.Float64:
 		b := make([]float64, rows*cols, rows*cols)
 		b = b[:0]
-		for i := 0; i < rows; i++ {
-			for j := 0; j < 10; j++ {
+		for i := range rows {
+			for j := range 10 {
 				if j == int(N[i]) {
 					b = append(b, 0.9)
 				} else {
@@ -118,8 +118,8 @@ func prepareY(N []Label, dt tensor.Dtype) (retVal tensor.Tensor) {
 	case tensor.Float32:
 		b := make([]float32, rows*cols, rows*cols)
 		b = b[:0]
-		for i := 0; i < rows; i++ {
-			for j := 0; j < 10; j++ {
+		for i := range rows {
+			for j := range 10 {
 				if j == int(N[i]) {
 					b = append(b, 0.9)
 				} else {

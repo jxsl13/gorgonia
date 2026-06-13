@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"io/ioutil"
+	"io/fs"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -58,7 +59,7 @@ func TestBroadcast(t *testing.T) {
 	x = NewMatrix(g, Float64, WithShape(2, 3), WithValue(xT), WithName("x"))
 	y = NewVector(g, Float64, WithShape(2), WithValue(yT), WithName("y"))
 	if a, b, err = Broadcast(x, y, NewBroadcastPattern(nil, []byte{1})); err != nil {
-		ioutil.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
+		os.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
 		t.Fatal(err)
 	}
 	z, err = Add(a, b)
@@ -66,7 +67,7 @@ func TestBroadcast(t *testing.T) {
 		t.Fatalf("Error: %v. a %v + b %v", err, a.Shape(), b.Shape())
 	}
 	if _, _, err = Broadcast(x, y, NewBroadcastPattern(nil, []byte{1})); err != nil {
-		ioutil.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
+		os.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
 		t.Fatal(err)
 	}
 
@@ -81,13 +82,13 @@ func TestBroadcast(t *testing.T) {
 	x = NewMatrix(g, Float64, WithShape(2, 3), WithValue(xT), WithName("x"))
 	y = NewVector(g, Float64, WithShape(2), WithValue(yT), WithName("y"))
 	if a, b, err = Broadcast(y, x, NewBroadcastPattern([]byte{1}, nil)); err != nil {
-		ioutil.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
+		os.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
 		t.Fatalf("%+v", err)
 	}
 	// TODO: Check the error returned by Add?
 	z, _ = Add(a, b)
 	if _, _, err = Broadcast(x, y, NewBroadcastPattern(nil, []byte{1})); err != nil {
-		ioutil.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
+		os.WriteFile("Broadcast.dot", []byte(g.ToDot()), 0644)
 		t.Fatal(err)
 	}
 

@@ -3,7 +3,6 @@
 // that exercise both the 2-wide NEON body and the scalar remainder (len%2).
 
 //go:build arm64
-// +build arm64
 
 package asmcheck
 

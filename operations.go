@@ -452,7 +452,7 @@ func Transpose(n *Node, axes ...int) (retVal *Node, err error) {
 	dims := len(n.shape)
 	if len(axes) == 0 || axes == nil {
 		axes = make([]int, dims)
-		for i := 0; i < dims; i++ {
+		for i := range dims {
 			axes[i] = dims - 1 - i
 		}
 	}
@@ -517,7 +517,7 @@ func Unconcat(a *Node, along int, n int) (Nodes, error) {
 
 	var start int
 	var retVal Nodes
-	for i := 0; i < batches; i++ {
+	for i := range batches {
 		ss := make([]tensor.Slice, len(aShape))
 		for i := range ss {
 			if i == along {

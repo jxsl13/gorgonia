@@ -15,6 +15,6 @@ type BatchedBLAS interface {
 // BatchedDevice is the superset of BatchedBLAS and the batched CUDA workflow.
 type BatchedDevice interface {
 	Batched
-	Retval() interface{}
+	Retval() any
 	Errors() error
 }

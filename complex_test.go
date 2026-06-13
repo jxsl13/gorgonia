@@ -45,19 +45,19 @@ func TestWeirdNetwork(t *testing.T) {
 	slicesP := make(Nodes, pFeats)
 	slicesQ := make(Nodes, qFeats)
 
-	for i := 0; i < xFeats; i++ {
+	for i := range xFeats {
 		if slicesX[i], err = Slice(eX, S(i)); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for i := 0; i < pFeats; i++ {
+	for i := range pFeats {
 		if slicesP[i], err = Slice(eP, S(i)); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	for i := 0; i < qFeats; i++ {
+	for i := range qFeats {
 		if slicesQ[i], err = Slice(eQ, S(i)); err != nil {
 			t.Fatal(err)
 		}
@@ -138,7 +138,7 @@ func TestWeirdNetwork(t *testing.T) {
 	// log.Println(prog)
 
 	// for i := 0; i < 104729; i++ {
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		if err = m.RunAll(); err != nil {
 			t.Errorf("%d %v", i, err)
 			t.Log(string(debug.Stack()))

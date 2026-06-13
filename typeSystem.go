@@ -7,7 +7,7 @@ import (
 )
 
 // inferType infers the type of the expression
-func inferType(expr interface{}) (retVal hm.Type, err error) {
+func inferType(expr any) (retVal hm.Type, err error) {
 	switch e := expr.(type) {
 	case *Node:
 		if e.isInput() || e.isConstant() {

@@ -3,6 +3,7 @@ package gorgonia
 import (
 	"bytes"
 	"fmt"
+	"slices"
 
 	"github.com/awalterschulze/gographviz"
 	"gonum.org/v1/gonum/graph"
@@ -58,7 +59,7 @@ func NewGraph(opts ...graphconopt) *ExprGraph {
 }
 
 // Clone clones the graph. All nodes gets cloned, and their values are cloned as well.
-func (g *ExprGraph) Clone() interface{} {
+func (g *ExprGraph) Clone() any {
 	g2 := new(ExprGraph)
 	g2.name = g.name
 
@@ -654,11 +655,8 @@ func (g *ExprGraph) subgraph(ns Nodes, findMissing bool, opts ...Nodes) *ExprGra
 			}
 
 			var hasParent bool
-			for _, parent := range g.to[n] {
-				if allset.Contains(parent) {
-					hasParent = true
-					break
-				}
+			if slices.ContainsFunc(g.to[n], allset.Contains) {
+				hasParent = true
 			}
 			if !hasParent {
 				roots = append(roots, n)

@@ -150,21 +150,21 @@ type assertState struct {
 
 func newAssertState(a *assert.Assertions) *assertState { return &assertState{a, true} }
 
-func (a *assertState) Equal(expected interface{}, actual interface{}, msgAndArgs ...interface{}) {
+func (a *assertState) Equal(expected any, actual any, msgAndArgs ...any) {
 	if !a.cont {
 		return
 	}
 	a.cont = a.Assertions.Equal(expected, actual, msgAndArgs...)
 }
 
-func (a *assertState) True(value bool, msgAndArgs ...interface{}) {
+func (a *assertState) True(value bool, msgAndArgs ...any) {
 	if !a.cont {
 		return
 	}
 	a.cont = a.Assertions.True(value, msgAndArgs...)
 }
 
-func checkErr(t *testing.T, expected bool, err error, name string, id interface{}) (cont bool) {
+func checkErr(t *testing.T, expected bool, err error, name string, id any) (cont bool) {
 	switch {
 	case expected:
 		if err == nil {

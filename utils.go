@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"math"
+	"slices"
 	"sync"
 
 	"github.com/chewxy/math32"
@@ -213,17 +214,13 @@ func hasNaN(v Value, dev Device) bool {
 		switch dt {
 		case tensor.Float32:
 			data := vt.Data().([]float32)
-			for _, datum := range data {
-				if math32.IsNaN(datum) {
-					return true
-				}
+			if slices.ContainsFunc(data, math32.IsNaN) {
+				return true
 			}
 		case tensor.Float64:
 			data := vt.Data().([]float64)
-			for _, datum := range data {
-				if math.IsNaN(datum) {
-					return true
-				}
+			if slices.ContainsFunc(data, math.IsNaN) {
+				return true
 			}
 		}
 		return false

@@ -1,5 +1,4 @@
 //go:build metal && darwin && arm64
-// +build metal,darwin,arm64
 
 package metal
 

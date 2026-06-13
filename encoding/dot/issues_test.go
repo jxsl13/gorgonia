@@ -70,7 +70,7 @@ func TestIssue_407(t *testing.T) {
 }
 
 func TestStressTest407(t *testing.T) {
-	for i := 0; i < 1024; i++ {
+	for i := range 1024 {
 		TestIssue_407(t)
 		if t.Failed() {
 			t.Errorf("Failed at iteration %d", i)

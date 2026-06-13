@@ -329,7 +329,7 @@ func (op *yoloOp) evaluateYOLO_f32(input tensor.Tensor, batchSize, stride, grid,
 	}
 
 	step := grid * numAnchors
-	for i := 0; i < grid; i++ {
+	for i := range grid {
 
 		vy, err := input.Slice(nil, S(i*step, i*step+step), S(1))
 		if err != nil {
@@ -341,7 +341,7 @@ func (op *yoloOp) evaluateYOLO_f32(input tensor.Tensor, batchSize, stride, grid,
 			return nil, errors.Wrap(err, "Can't do tensor.Add(...) for float32; (1)")
 		}
 
-		for n := 0; n < numAnchors; n++ {
+		for n := range numAnchors {
 			anchorsSlice, err := input.Slice(nil, S(i*numAnchors+n, input.Shape()[1], step), S(0))
 			if err != nil {
 				return nil, errors.Wrap(err, "Can't slice anchors while doing steps for grid")
@@ -457,7 +457,7 @@ func prepareOutputYOLO_f32(input, yoloBoxes, target, anchors []float32, masks []
 			yoloBBoxes[i+4] = bceLoss32(0, yoloBoxes[i+4])
 		}
 	}
-	for i := 0; i < len(bestAnchors); i++ {
+	for i := range bestAnchors {
 		if bestAnchors[i][0] != -1 {
 			scale := (2 - target[i*5+3]*target[i*5+4])
 			giInt := bestAnchors[i][1]
@@ -472,7 +472,7 @@ func prepareOutputYOLO_f32(input, yoloBoxes, target, anchors []float32, masks []
 			yoloBBoxes[bboxIdx+2] = mseLoss32(gw, input[bboxIdx+2], scale)
 			yoloBBoxes[bboxIdx+3] = mseLoss32(gh, input[bboxIdx+3], scale)
 			yoloBBoxes[bboxIdx+4] = bceLoss32(1, yoloBoxes[bboxIdx+4])
-			for j := 0; j < numClasses; j++ {
+			for j := range numClasses {
 				if j == int(target[i]) {
 					yoloBBoxes[bboxIdx+5+j] = bceLoss32(1, yoloBoxes[bboxIdx+4])
 				} else {
@@ -547,7 +547,7 @@ func (op *yoloOp) evaluateYOLO_f64(input tensor.Tensor, batchSize, stride, grid,
 	}
 
 	step := grid * numAnchors
-	for i := 0; i < grid; i++ {
+	for i := range grid {
 		vy, err := input.Slice(nil, S(i*step, i*step+step), S(1))
 		if err != nil {
 			return nil, errors.Wrap(err, "Can't slice while doing steps for grid")
@@ -556,7 +556,7 @@ func (op *yoloOp) evaluateYOLO_f64(input tensor.Tensor, batchSize, stride, grid,
 		if err != nil {
 			return nil, errors.Wrap(err, "Can't do tensor.Add(...) for float64; (1)")
 		}
-		for n := 0; n < numAnchors; n++ {
+		for n := range numAnchors {
 			anchorsSlice, err := input.Slice(nil, S(i*numAnchors+n, input.Shape()[1], step), S(0))
 			if err != nil {
 				return nil, errors.Wrap(err, "Can't slice anchors while doing steps for grid")
@@ -672,7 +672,7 @@ func prepareOutputYOLO_f64(input, yoloBoxes, target, anchors []float64, masks []
 			yoloBBoxes[i+4] = bceLoss64(0, yoloBoxes[i+4])
 		}
 	}
-	for i := 0; i < len(bestAnchors); i++ {
+	for i := range bestAnchors {
 		if bestAnchors[i][0] != -1 {
 			scale := (2 - target[i*5+3]*target[i*5+4])
 			giInt := bestAnchors[i][1]
@@ -687,7 +687,7 @@ func prepareOutputYOLO_f64(input, yoloBoxes, target, anchors []float64, masks []
 			yoloBBoxes[bboxIdx+2] = mseLoss64(gw, input[bboxIdx+2], scale)
 			yoloBBoxes[bboxIdx+3] = mseLoss64(gh, input[bboxIdx+3], scale)
 			yoloBBoxes[bboxIdx+4] = bceLoss64(1, yoloBoxes[bboxIdx+4])
-			for j := 0; j < numClasses; j++ {
+			for j := range numClasses {
 				if j == int(target[i]) {
 					yoloBBoxes[bboxIdx+5+j] = bceLoss64(1, yoloBoxes[bboxIdx+4])
 				} else {

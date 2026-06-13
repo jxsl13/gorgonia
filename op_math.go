@@ -779,7 +779,7 @@ func (op linAlgBinOp) do(inputs []Value, opts ...tensor.FuncOpt) (retVal Value, 
 	case matVecMulOperator:
 		retVal, err = tensor.MatVecMul(a, b, opts...)
 	case vecDotOperator:
-		var ret interface{}
+		var ret any
 
 		if ret, err = tensor.Inner(a, b); err != nil {
 			return nil, errors.Wrapf(err, "Failed to carry out linalgBinOp operation %v", op)
@@ -820,10 +820,7 @@ type tensordotOp struct {
 func makeTensordotOp(a, b *Node, aAxes, bAxes []int) tensordotOp {
 	aDims := a.Shape().Dims()
 	bDims := b.Shape().Dims()
-	retDims := a.Shape().Dims() + b.Shape().Dims() - 2*len(aAxes)
-	if retDims < 0 {
-		retDims = 0
-	}
+	retDims := max(a.Shape().Dims()+b.Shape().Dims()-2*len(aAxes), 0)
 	return tensordotOp{
 		aAxes:   aAxes,
 		bAxes:   bAxes,
@@ -1146,7 +1143,7 @@ func (op tensordotOp) SymDiff(inputs Nodes, output *Node, grad *Node) (retVal No
 		pattern := make([]int, len(in.shape))
 		counter := len(iAxes)
 
-		for patternIndex := 0; patternIndex < len(pattern); patternIndex++ {
+		for patternIndex := range pattern {
 			iAxesCoSortedIndex := contains(iAxesCoSorted, patternIndex)
 			if 0 <= iAxesCoSortedIndex {
 				pattern[patternIndex] = iAxesCoSortedIndex

@@ -21,7 +21,7 @@ import (
 type Value interface {
 	Shape() tensor.Shape // Shape  returns the shape of the Value. Scalar values return ScalarShape()
 	Size() int           // Size represents the number of elements in the Value. Note that in cases such as a *tensor.Dense, the underlying slice MAY have more elements than the Size() reports. This is correct.
-	Data() interface{}   // Data returns the original representation of the Value
+	Data() any           // Data returns the original representation of the Value
 	Dtype() tensor.Dtype // Dtype returns the Dtype of the value
 
 	tensor.Memory
@@ -62,27 +62,27 @@ type ValueEqualer interface {
 
 // ValueCloser represents any type that can perform a close-value check
 type ValueCloser interface {
-	ValueClose(interface{}) bool
+	ValueClose(any) bool
 }
 
 // Cloner represents any type that can clone itself.
 type Cloner interface {
-	Clone() interface{}
+	Clone() any
 }
 
 // CloneErrorer represents any type that can clone itself and return an error if necessary
 type CloneErrorer interface {
-	Clone() (interface{}, error)
+	Clone() (any, error)
 }
 
 // CopierTo represents any type that can copy data to the destination.
 type CopierTo interface {
-	CopyTo(dest interface{}) error
+	CopyTo(dest any) error
 }
 
 // CopierFrom represents any type that can copy data from the source provided.
 type CopierFrom interface {
-	CopyFrom(src interface{}) error
+	CopyFrom(src any) error
 }
 
 // Setter is a any value that can Memset itself to the provided value

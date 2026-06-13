@@ -27,7 +27,7 @@ func (dv *dualValue) SetValue(v Value) error {
 	return dv.sanity()
 }
 
-func (dv *dualValue) Clone() (retVal interface{}, err error) {
+func (dv *dualValue) Clone() (retVal any, err error) {
 	var v, d Value
 	if v, err = CloneValue(dv.Value); err != nil {
 		return nil, errors.Wrap(err, cloneFail)

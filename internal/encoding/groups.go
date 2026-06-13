@@ -29,7 +29,7 @@ type Groups []Group
 
 // Upsert the GroupID in the groups
 func (g Groups) Upsert(grp Group) Groups {
-	for i := 0; i < len(g); i++ {
+	for i := range g {
 		if (g)[i].ID == grp.ID {
 			return g
 		}
@@ -39,7 +39,7 @@ func (g Groups) Upsert(grp Group) Groups {
 
 // Have returns true if GroupID is in groups
 func (g Groups) Have(grp Group) bool {
-	for i := 0; i < len(g); i++ {
+	for i := range g {
 		if (g)[i].ID == grp.ID {
 			return true
 		}

@@ -22,7 +22,7 @@ func Must(n *Node, err error, opts ...NodeConsOpt) *Node {
 }
 
 // NodeFromAny creates a Node from a tensor.Tensor, automatically filling in shape and type info
-func NodeFromAny(g *ExprGraph, any interface{}, opts ...NodeConsOpt) *Node {
+func NodeFromAny(g *ExprGraph, any any, opts ...NodeConsOpt) *Node {
 	v, t, dt, err := anyToValue(any)
 	if err != nil {
 		panic(err)
@@ -84,7 +84,7 @@ func NewTensor(g *ExprGraph, t tensor.Dtype, dims int, opts ...NodeConsOpt) *Nod
 }
 
 // NewConstant takes in any reasonable value and makes it a constant node.
-func NewConstant(v interface{}, opts ...NodeConsOpt) *Node {
+func NewConstant(v any, opts ...NodeConsOpt) *Node {
 	var op Op
 	var t hm.Type
 	var name string
@@ -246,7 +246,7 @@ func Grad(cost *Node, WRTs ...*Node) (retVal Nodes, err error) {
 // It is equivalent to :
 //
 //	x = 2
-func Let(n *Node, be interface{}) error {
+func Let(n *Node, be any) error {
 	if !n.isInput() {
 		return errors.New("Cannot bind a value to a non input node")
 	}
@@ -257,7 +257,7 @@ func Let(n *Node, be interface{}) error {
 // UnsafeLet binds a Value to any node, not just a variable node. This means that you can use it to change any node's value at the runtime of the graph. UNSAFE!
 //
 // Additional notes: if `be` is a tensor.Slice, and the node's op is a sliceOp or sliceIncrOp, the op's slice will be replaced with the new slice.
-func UnsafeLet(n *Node, be interface{}) error {
+func UnsafeLet(n *Node, be any) error {
 	switch v := be.(type) {
 	case tensor.Slice:
 		switch so := n.op.(type) {

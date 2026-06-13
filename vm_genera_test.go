@@ -175,7 +175,7 @@ func TestLispMachineRepeatedRuns(t *testing.T) {
 
 	reps := 10
 
-	for i := 0; i < reps; i++ {
+	for i := range reps {
 		m := NewLispMachine(g)
 		if err := m.RunAll(); err != nil {
 			t.Errorf("Repetition %d error: %+v", i, err)

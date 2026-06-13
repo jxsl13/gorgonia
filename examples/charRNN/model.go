@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io/fs"
 	"log"
 	"math"
 	"math/rand"
+	"os"
 	"strconv"
 
 	. "github.com/jxsl13/gorgonia"
@@ -133,7 +134,7 @@ func NewLSTMModel(inputSize, embeddingSize, outputSize int, hiddenSizes []int) *
 	m.outputSize = outputSize
 	m.hiddenSizes = hiddenSizes
 
-	for depth := 0; depth < len(hiddenSizes); depth++ {
+	for depth := range hiddenSizes {
 		prevSize := embeddingSize
 		if depth > 0 {
 			prevSize = hiddenSizes[depth-1]
@@ -282,7 +283,7 @@ func (r *charRNN) fwd(srcIndex int, prev *lstmOut) (retVal *lstmOut, err error) 
 	if output, err = Mul(r.whd, lastHidden); err == nil {
 		if output, err = Add(output, r.bias_d); err != nil {
 			WithName("LAST HIDDEN")(lastHidden)
-			ioutil.WriteFile("err.dot", []byte(lastHidden.RestrictedToDot(3, 10)), 0644)
+			os.WriteFile("err.dot", []byte(lastHidden.RestrictedToDot(3, 10)), 0644)
 			panic(fmt.Sprintf("ERROR: %v", err))
 		}
 	}
@@ -371,7 +372,7 @@ func (r *charRNN) predict() {
 		machine.ForceCPU()
 		if err := machine.RunAll(); err != nil {
 			if ctxerr, ok := err.(contextualError); ok {
-				ioutil.WriteFile("FAIL1.dot", []byte(ctxerr.Node().RestrictedToDot(3, 3)), 0644)
+				os.WriteFile("FAIL1.dot", []byte(ctxerr.Node().RestrictedToDot(3, 3)), 0644)
 			}
 			log.Printf("ERROR1 while predicting with %p %+v", machine, err)
 		}
@@ -412,7 +413,7 @@ func (r *charRNN) predict() {
 		if err := machine.RunAll(); err != nil {
 			if ctxerr, ok := err.(contextualError); ok {
 				log.Printf("Instruction ID %v", ctxerr.InstructionID())
-				ioutil.WriteFile("FAIL2.dot", []byte(ctxerr.Node().RestrictedToDot(3, 3)), 0644)
+				os.WriteFile("FAIL2.dot", []byte(ctxerr.Node().RestrictedToDot(3, 3)), 0644)
 			}
 			log.Printf("ERROR2 while predicting with %p: %+v", machine, err)
 		}
@@ -476,7 +477,7 @@ func run(r *charRNN, iter int, solver Solver) (retCost, retPerp float32, err err
 	defer machine.Close()
 	if err = machine.RunAll(); err != nil {
 		if ctxerr, ok := err.(contextualError); ok {
-			ioutil.WriteFile("FAIL.dot", []byte(ctxerr.Node().RestrictedToDot(3, 3)), 0644)
+			os.WriteFile("FAIL.dot", []byte(ctxerr.Node().RestrictedToDot(3, 3)), 0644)
 
 		}
 		return

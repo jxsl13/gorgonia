@@ -63,7 +63,7 @@ func (err vmContextualError) Value() Value       { return err.node.Value() }
 func (err vmContextualError) InstructionID() int { return err.instr }
 func (err vmContextualError) Err() error         { return err.error }
 
-func nyi(what string, implFor interface{}) error {
+func nyi(what string, implFor any) error {
 	return errors.Errorf(nyiFail, what, implFor)
 }
 

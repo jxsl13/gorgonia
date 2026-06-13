@@ -21,8 +21,8 @@ var (
 	tne  = denseCmpOp(tensor.ElNe)
 )
 
-type denseBinOp func(a, b interface{}, opts ...tensor.FuncOpt) (tensor.Tensor, error)
-type denseCmpOp func(a, b interface{}, opts ...tensor.FuncOpt) (tensor.Tensor, error)
+type denseBinOp func(a, b any, opts ...tensor.FuncOpt) (tensor.Tensor, error)
+type denseCmpOp func(a, b any, opts ...tensor.FuncOpt) (tensor.Tensor, error)
 
 type ʘBinaryOperatorType byte
 

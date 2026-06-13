@@ -2,6 +2,7 @@ package gorgonia
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/xtgo/set"
 )
@@ -59,10 +60,8 @@ func (i *interval) addRange(from, to int) {
 	r := intervalRange{from, to}
 
 	// because I'm lazy to create a intervalRangeSet type, we'll just iterate and check
-	for _, ra := range i.ranges {
-		if r == ra {
-			return
-		}
+	if slices.Contains(i.ranges, r) {
+		return
 	}
 
 	i.ranges = append(i.ranges, r)

@@ -3,7 +3,10 @@ package gorgonia
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io/fs"
+	"os"
+	"slices"
+
 	"log"
 	"runtime"
 	"strings"
@@ -238,7 +241,7 @@ func (m *lispMachine) checkRoots() (err error) {
 				// }
 			case !m.setRootGrad() && !root.IsScalar() && !root.isStmt:
 				err = errors.Errorf("Expected cost to be a scalar. Got %v with shape %v instead", root, root.Shape())
-				ioutil.WriteFile("err.dot", []byte(root.RestrictedToDot(2, 10)), 0644)
+				os.WriteFile("err.dot", []byte(root.RestrictedToDot(2, 10)), 0644)
 				return
 			}
 		}
@@ -562,7 +565,7 @@ func (m *lispMachine) backward() (err error) {
 	return
 }
 
-func (m *lispMachine) watchedLogf(format string, attrs ...interface{}) {
+func (m *lispMachine) watchedLogf(format string, attrs ...any) {
 	if !m.logFwd() && !DEBUG {
 		goto backwards
 	}
@@ -584,11 +587,8 @@ backwards:
 		instr := m.q[m.bwd]
 		write := m.watchlist.Contains(instr.output)
 		if !write {
-			for _, in := range instr.inputs {
-				if m.watchlist.Contains(in) {
-					write = true
-					break
-				}
+			if slices.ContainsFunc(instr.inputs, m.watchlist.Contains) {
+				write = true
 			}
 		}
 
@@ -598,7 +598,7 @@ backwards:
 	}
 }
 
-func (m *lispMachine) logf(format string, attrs ...interface{}) {
+func (m *lispMachine) logf(format string, attrs ...any) {
 	switch {
 	case machineDev, autodiffDev:
 		if machineDev {

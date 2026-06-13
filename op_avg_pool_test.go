@@ -14,9 +14,9 @@ func TestAvgPoolOp(t *testing.T) {
 		kernelSize     tensor.Shape
 		pad            []int
 		stride         []int
-		expectedOutput interface{}
+		expectedOutput any
 		expectedShape  tensor.Shape
-		expectedCost   interface{}
+		expectedCost   any
 		PoolFunc       func(*Node, tensor.Shape, []int, []int) (*Node, error)
 	}{
 		{

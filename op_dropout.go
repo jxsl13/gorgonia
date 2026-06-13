@@ -103,7 +103,7 @@ func (op *dropoutOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, erro
 	return prealloc, nil
 }
 
-func (op *dropoutOp) do(input, output interface{}) {
+func (op *dropoutOp) do(input, output any) {
 	keepProb := 1.0 - op.probability
 
 	switch v := input.(type) {
@@ -217,7 +217,7 @@ func (op *dropoutDiffOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal 
 		dx := result.Float64s()
 		outputA := output.Float64s()
 
-		for i := 0; i < len(dy); i++ {
+		for i := range dy {
 			if probability != 0 && outputA[i] != 0 {
 				dx[i] = dy[i] / probability
 			} else {
@@ -229,7 +229,7 @@ func (op *dropoutDiffOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal 
 		dx := result.Float32s()
 		outputA := output.Float32s()
 
-		for i := 0; i < len(dy); i++ {
+		for i := range dy {
 			if probability != 0 && outputA[i] != 0 {
 				dx[i] = dy[i] / float32(probability)
 			} else {

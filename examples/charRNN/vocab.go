@@ -39,8 +39,8 @@ func initVocab(ss []string, thresh int) {
 }
 
 func init() {
-	sentencesRaw := strings.Split(corpus, "\n")
-	for _, s := range sentencesRaw {
+	sentencesRaw := strings.SplitSeq(corpus, "\n")
+	for s := range sentencesRaw {
 		s2 := strings.TrimSpace(s)
 		if s2 != "" {
 			sentences = append(sentences, s2)

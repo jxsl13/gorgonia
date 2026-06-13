@@ -90,7 +90,7 @@ func unaryCheckApply(op ʘUnaryOperator, t tensor.Tensor, opts ...tensor.FuncOpt
 	}
 
 	//default case:
-	var fn interface{}
+	var fn any
 	switch opFn := op.(type) {
 	case *sf64UnaryOperator:
 		fn = (func(float64) float64)(*opFn)

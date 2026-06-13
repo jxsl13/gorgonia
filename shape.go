@@ -96,13 +96,13 @@ func KeepDims(a *Node, expandLeft bool, fn func(a *Node) (*Node, error)) (*Node,
 	var retShape tensor.Shape
 	if expandLeft {
 		retShape = tensor.BorrowInts(diff + newShape.Dims())
-		for i := 0; i < diff; i++ {
+		for i := range diff {
 			retShape[i] = 1
 		}
 		copy(retShape[diff:], newShape)
 	} else {
 		retShape = newShape.Clone()
-		for i := 0; i < diff; i++ {
+		for range diff {
 			retShape = append(retShape, 1)
 		}
 

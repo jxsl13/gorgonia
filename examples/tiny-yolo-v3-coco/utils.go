@@ -42,8 +42,8 @@ func Image2Float32(img image.Image) ([]float32, error) {
 	imgwh := width * height
 	imgSize := imgwh * channelsNum
 	ans := make([]float32, imgSize)
-	for x := 0; x < width; x++ {
-		for y := 0; y < height; y++ {
+	for x := range width {
+		for y := range height {
 			r, g, b, _ := img.At(y, x).RGBA()
 			rpix, gpix, bpix := float32(r>>8)/float32(255.0), float32(g>>8)/float32(255.0), float32(b>>8)/float32(255.0)
 			ans[y+x*height] = rpix
@@ -71,8 +71,8 @@ func resizeImage(img image.Image, width int, height int) image.Image {
 	imgRect := image.Rect(0, 0, width, height)
 	resImg := image.NewRGBA(imgRect)
 	draw.Draw(resImg, resImg.Bounds(), &image.Uniform{C: color.White}, image.ZP, draw.Src)
-	for y := 0; y < width; y++ {
-		for x := 0; x < height; x++ {
+	for y := range width {
+		for x := range height {
 			averageColor := getAverageColor(img, minX+x*scaleX, minX+(x+1)*scaleX, minY+y*scaleY, minY+(y+1)*scaleY)
 			resImg.Set(x, y, averageColor)
 		}
@@ -117,11 +117,11 @@ func IOUFloat32(r1, r2 image.Rectangle) float32 {
 func Softmax(a []float32) []float32 {
 	sum := float32(0.0)
 	output := make([]float32, len(a))
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		output[i] = math32.Exp(a[i])
 		sum += output[i]
 	}
-	for i := 0; i < len(output); i++ {
+	for i := range output {
 		output[i] = output[i] / sum
 	}
 	return output

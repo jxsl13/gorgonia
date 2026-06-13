@@ -295,7 +295,7 @@ func (s *RMSPropSolver) Step(model []ValueGrad) (err error) {
 		switch cw := cv.(type) {
 		case *tensor.Dense:
 			var gt, gt2, w, regularized tensor.Tensor
-			var decay, omdecay, stepSize, eps, l2reg, clip, negClip interface{}
+			var decay, omdecay, stepSize, eps, l2reg, clip, negClip any
 			switch cw.Dtype() {
 			case tensor.Float64:
 				decay = s.decay
@@ -492,8 +492,8 @@ func (s *AdamSolver) Step(model []ValueGrad) (err error) {
 			w := weights.(*tensor.Dense)
 			v := cvv.(*tensor.Dense)
 
-			var l1reg, l2reg, clip, negClip, beta1, beta2, omβ1, omβ2, eps, negEta, onePerBatch interface{}
-			var correctionV1, correctionV2 interface{}
+			var l1reg, l2reg, clip, negClip, beta1, beta2, omβ1, omβ2, eps, negEta, onePerBatch any
+			var correctionV1, correctionV2 any
 			switch m.Dtype() {
 			case tensor.Float64:
 				l1reg = s.l1reg
@@ -789,8 +789,8 @@ func (s *VanillaSolver) Step(model []ValueGrad) (err error) {
 		case *tensor.Dense:
 			g := grad.(*tensor.Dense)
 
-			var l1reg, l2reg, clip, negClip, eta interface{}
-			var onePerBatch interface{}
+			var l1reg, l2reg, clip, negClip, eta any
+			var onePerBatch any
 			switch w.Dtype() {
 			case tensor.Float64:
 				l1reg = s.l1reg
@@ -1001,7 +1001,7 @@ func (s *Momentum) Step(model []ValueGrad) (err error) {
 			w := weights.(*tensor.Dense)
 			g := grad.(*tensor.Dense)
 
-			var l1reg, l2reg, clip, negClip, eta, momentum, onePerBatch interface{}
+			var l1reg, l2reg, clip, negClip, eta, momentum, onePerBatch any
 			switch cw.Dtype() {
 			case tensor.Float64:
 				l1reg = s.l1reg
@@ -1227,7 +1227,7 @@ func (s *AdaGradSolver) Step(model []ValueGrad) (err error) {
 		case *tensor.Dense:
 			var w, g, c, g2, regularized tensor.Tensor
 
-			var l2reg, clip, negClip, eps, eta interface{}
+			var l2reg, clip, negClip, eps, eta any
 			switch cw.Dtype() {
 			case tensor.Float64:
 				l2reg = s.l2reg
@@ -1464,7 +1464,7 @@ func (s *BarzilaiBorweinSolver) Step(model []ValueGrad) (err error) {
 				// Scalar Product == Total tensor contraction
 				dims := valueDiff.Dims()
 				contractionAxes := make([]int, dims, dims)
-				for axis := 0; axis < len(contractionAxes); axis++ {
+				for axis := range contractionAxes {
 					contractionAxes[axis] = axis
 				}
 
@@ -1623,8 +1623,8 @@ func (a *AdamW) Step(model []ValueGrad) (err error) {
 			a.states[n] = st
 		}
 
-		var decay, a1, a2, b1, b2, b2sqrt, ss, eps interface{}
-		var l1reg, l2reg, clip, negClip interface{}
+		var decay, a1, a2, b1, b2, b2sqrt, ss, eps any
+		var l1reg, l2reg, clip, negClip any
 		switch weights.Dtype() {
 		case tensor.Float64:
 			lr := a.η

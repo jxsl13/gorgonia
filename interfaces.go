@@ -19,7 +19,7 @@ type Tensor interface {
 
 	// type overloading methods
 	IsScalar() bool
-	ScalarValue() interface{}
+	ScalarValue() any
 
 	// engine/memory related stuff
 	// all Tensors should be able to be expressed of as a slab of memory

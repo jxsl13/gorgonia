@@ -299,10 +299,10 @@ func (op *avgPoolOp) f32s(batches, channels, outH, outW, inH, inW,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < outH; ph++ {
-				for pw := 0; pw < outW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range outH {
+				for pw := range outW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -349,10 +349,10 @@ func (op *avgPoolOp) f64s(batches, channels, outH, outW, inH, inW,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < outH; ph++ {
-				for pw := 0; pw < outW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range outH {
+				for pw := range outW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -515,10 +515,10 @@ func (op *avgPoolDiffOp) f32s(batches, channels, pooledH, pooledW, inH, inW int,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < pooledH; ph++ {
-				for pw := 0; pw < pooledW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range pooledH {
+				for pw := range pooledW {
 					index := ph*pooledW + pw
 					inIndex := maskData[index]
 
@@ -526,8 +526,8 @@ func (op *avgPoolDiffOp) f32s(batches, channels, pooledH, pooledW, inH, inW int,
 				}
 			}
 
-			for ph := 0; ph < inH; ph++ {
-				for pw := 0; pw < inW; pw++ {
+			for ph := range inH {
+				for pw := range inW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -575,10 +575,10 @@ func (op *avgPoolDiffOp) f64s(batches, channels, pooledH, pooledW, inH, inW int,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < pooledH; ph++ {
-				for pw := 0; pw < pooledW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range pooledH {
+				for pw := range pooledW {
 					index := ph*pooledW + pw
 					inIndex := maskData[index]
 
@@ -586,8 +586,8 @@ func (op *avgPoolDiffOp) f64s(batches, channels, pooledH, pooledW, inH, inW int,
 				}
 			}
 
-			for ph := 0; ph < inH; ph++ {
-				for pw := 0; pw < inW; pw++ {
+			for ph := range inH {
+				for pw := range inW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)

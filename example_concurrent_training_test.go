@@ -126,9 +126,9 @@ func prep() (x, y Value, bs []batch) {
 	// prep the data: y = ΣnX, where n = col ID, x ∈ X = colID / 100
 	xData := xV.Data().([]float64)
 	yData := yV.Data().([]float64)
-	for r := 0; r < rows; r++ {
+	for r := range rows {
 		var sum float64
-		for c := 0; c < cols; c++ {
+		for c := range cols {
 			idx := r*cols + c
 			fc := float64(c)
 			v := fc * fc / 100
@@ -152,13 +152,13 @@ func concurrentTraining(xV, yV Value, bs []batch, es int) {
 	threads := runtime.NumCPU()
 
 	ts := make([]*concurrentTrainer, threads)
-	for chunk := 0; chunk < threads; chunk++ {
+	for chunk := range threads {
 		trainer := newConcurrentTrainer()
 		ts[chunk] = trainer
 		defer trainer.vm.Close()
 	}
 
-	for e := 0; e < es; e++ {
+	for range es {
 		trainEpoch(bs, ts, threads)
 	}
 }
@@ -176,7 +176,7 @@ func nonConcurrentTraining(xV, yV Value, es int) {
 	Let(x, xV)
 	Let(y, yV)
 	solver := NewVanillaSolver(WithLearnRate(0.01), WithBatchSize(batchSize))
-	for i := 0; i < es; i++ {
+	for range es {
 		vm.RunAll()
 		solver.Step([]ValueGrad{x, y})
 		vm.Reset()

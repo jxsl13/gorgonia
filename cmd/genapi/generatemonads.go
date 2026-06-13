@@ -74,7 +74,7 @@ func processSig(pair nametypePair) strRepr {
 			inTypes = append(inTypes, typ)
 			continue
 		}
-		for i := 0; i < names; i++ {
+		for range names {
 			inTypes = append(inTypes, typ)
 		}
 	}
@@ -89,7 +89,7 @@ next:
 			retTypes = append(retTypes, typ)
 			continue
 		}
-		for i := 0; i < names; i++ {
+		for range names {
 			retTypes = append(retTypes, typ)
 		}
 	}

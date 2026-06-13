@@ -70,8 +70,8 @@ func (tiny *TinyYOLOv2Net) ProcessOutput() (Detections, error) {
 	rw := float32(416) / float32(416)
 	rh := float32(416) / float32(416)
 
-	for cx := 0; cx < 13; cx++ {
-		for cy := 0; cy < 13; cy++ {
+	for cx := range 13 {
+		for cy := range 13 {
 			for b := 0; b < tiny.boxesPerCell; b++ {
 				class := make([]float32, tiny.classesNum)
 				channel := b * (tiny.classesNum + 5)
@@ -124,7 +124,7 @@ func nonMaxSupr(detections Detections) Detections {
 
 	for i := 1; i < len(detections); i++ {
 		tocheck, del := len(nms), false
-		for j := 0; j < tocheck; j++ {
+		for j := range tocheck {
 			currIOU := IOUFloat32(detections[i].rect, nms[j].rect)
 			if currIOU > iouTreshold && detections[i].class == nms[j].class {
 				del = true

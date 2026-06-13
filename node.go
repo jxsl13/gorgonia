@@ -132,7 +132,7 @@ func WithName(name string) NodeConsOpt {
 // WithValue is a node construction option that binds the value to the *Node. This function may panic if:
 //   - Gorgonia was unable to convert interface{} into a Value.
 //   - The type of the Value does not match the type of the nodes.
-func WithValue(any interface{}) NodeConsOpt {
+func WithValue(any any) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
 	if err != nil {
 		panic(err)
@@ -166,7 +166,7 @@ func WithValue(any interface{}) NodeConsOpt {
 // WithGrad is a node construction option that binds the value to the *Node. This function may panic if:
 //   - There isn't already a value associated with the node (.boundTo == nil)
 //   - The type of the Value does not match the value of the node.
-func WithGrad(any interface{}) NodeConsOpt {
+func WithGrad(any any) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
 	if err != nil {
 		panic(err)
@@ -400,7 +400,7 @@ func (n *Node) CloneTo(g *ExprGraph) *Node {
 //   - the graph is not copied over - the node essentially does not belong to a collection
 //   - there is no ID
 //   - the children are not cloned
-func (n *Node) Clone() (retVal interface{}) {
+func (n *Node) Clone() (retVal any) {
 	n2 := newNode(In(n.g), WithOp(n.op), WithName(n.name), WithType(n.t))
 	if n.shape != nil {
 		n2.shape = n.shape.Clone()
@@ -598,9 +598,9 @@ func (n *Node) RestrictedToDot(up, down int) string {
 	//	up
 	ns = Nodes{n}
 	upQ = Nodes{n}
-	for l := 0; l < up; l++ {
+	for range up {
 		origLen := len(upQ)
-		for i := 0; i < origLen; i++ {
+		for i := range origLen {
 			qn := upQ[i]
 			toQN := sliceNodesToNodes(graph.NodesOf(g.To(qn.ID())))
 			upQ = append(upQ, toQN...)
@@ -611,9 +611,9 @@ func (n *Node) RestrictedToDot(up, down int) string {
 
 	// down
 	downQ = Nodes{n}
-	for d := 0; d < down; d++ {
+	for range down {
 		origLen := len(downQ)
-		for i := 0; i < origLen; i++ {
+		for i := range origLen {
 			qn := downQ[i]
 			downQ = append(downQ, qn.children...)
 			ns = append(ns, qn.children...)

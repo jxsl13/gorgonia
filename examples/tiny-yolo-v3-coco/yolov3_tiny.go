@@ -159,7 +159,7 @@ func NewYoloV3Tiny(g *gorgonia.ExprGraph, input *gorgonia.Node, classesNumber, b
 						scale := gammas[s] / math32.Sqrt(vars[s]+epsilon)
 						biases[s] = biases[s] - means[s]*scale
 						isize := shp[1] * shp[2] * shp[3]
-						for j := 0; j < isize; j++ {
+						for j := range isize {
 							kernels[isize*s+j] *= scale
 						}
 					}

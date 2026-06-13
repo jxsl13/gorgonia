@@ -24,7 +24,7 @@ func TestBuildIntervals(t *testing.T) {
 	var sorted Nodes
 	var intervals map[*Node]*interval
 
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		if sorted, err = Sort(g); err != nil {
 			t.Fatal(err)
 		}

@@ -402,11 +402,11 @@ func TestSumOp(t *testing.T) {
 type reductionTest struct {
 	dt        tensor.Dtype
 	inShape   tensor.Shape
-	inData    interface{}
+	inData    any
 	op        func(*Node, ...int) (*Node, error)
 	along     []int
 	wantShape tensor.Shape
-	wantData  interface{}
+	wantData  any
 }
 
 func testReductionOp(t *testing.T, test reductionTest) {
@@ -511,12 +511,12 @@ func TestMaxOpGrad(t *testing.T) {
 type reductionGradTest struct {
 	dt           tensor.Dtype
 	inShape      tensor.Shape
-	inData       interface{}
+	inData       any
 	op           func(*Node, ...int) (*Node, error)
 	along        []int
 	outGradShape tensor.Shape
-	outGrad      interface{}
-	wantInGrad   interface{}
+	outGrad      any
+	wantInGrad   any
 }
 
 func testReductionOpGrad(t *testing.T, test reductionGradTest) {

@@ -10,7 +10,7 @@ import (
 var stdengType reflect.Type
 
 func init() {
-	stdengType = reflect.TypeOf(StandardEngine{})
+	stdengType = reflect.TypeFor[StandardEngine]()
 }
 
 func assertEngine(v Value, eT reflect.Type) bool {

@@ -258,7 +258,7 @@ func main() {
 		bar.Prefix(fmt.Sprintf("Epoch %d", i))
 		bar.Set(0)
 		bar.Start()
-		for b := 0; b < batches; b++ {
+		for b := range batches {
 			start := b * bs
 			end := start + bs
 			if start >= numExamples {

@@ -47,7 +47,7 @@ func (l *convLayer) ToNode(g *gorgonia.ExprGraph, input ...*gorgonia.Node) (*gor
 	iters := shp.TotalSize() / len(l.biases)
 	dataF32 := []float32{}
 	for b := 0; b < len(l.biases); b++ {
-		for j := 0; j < iters; j++ {
+		for range iters {
 			dataF32 = append(dataF32, l.biases[b])
 		}
 	}

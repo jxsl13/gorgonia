@@ -61,5 +61,5 @@ type dataGroup struct {
 
 type dataLabel struct {
 	TimeRange []time.Time `json:"timeRange"`
-	Val       interface{} `json:"val"`
+	Val       any         `json:"val"`
 }

@@ -2,7 +2,8 @@ package gorgonia
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io/fs"
+	"os"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -323,8 +324,8 @@ func TestOld_NewSoftmax(t *testing.T) {
 	t.Logf("\n%v\n%v", sm.Value(), sm2.Value())
 	t.Logf("\n%v\n%v", Agrad, A2grad)
 
-	ioutil.WriteFile("oldsm.dot", []byte(h.ToDot()), 0644)
-	ioutil.WriteFile("newsm.dot", []byte(g.ToDot()), 0644)
+	os.WriteFile("oldsm.dot", []byte(h.ToDot()), 0644)
+	os.WriteFile("newsm.dot", []byte(g.ToDot()), 0644)
 
 }
 

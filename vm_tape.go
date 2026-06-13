@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/chewxy/hm"
@@ -145,7 +146,7 @@ func (m *tapeMachine) Prog() *program { return m.p }
 func (m *tapeMachine) LocMap() map[*Node]register { return m.locMap }
 
 // Let wraps the Let() function of the package, with additional checks that n is in the machine
-func (m *tapeMachine) Let(n *Node, be interface{}) (err error) {
+func (m *tapeMachine) Let(n *Node, be any) (err error) {
 	if !m.p.g.Has(n.ID()) {
 		return errors.Errorf("Node %v does not exist in this graph", n)
 	}
@@ -366,7 +367,7 @@ func (m *tapeMachine) writeValue(r register, v Value) {
 	}
 }
 
-func (m *tapeMachine) watchedLogf(format string, attrs ...interface{}) {
+func (m *tapeMachine) watchedLogf(format string, attrs ...any) {
 	instr := m.p.instructions[m.pc]
 	reads := instr.reads()
 	writes := instr.writes()
@@ -398,11 +399,8 @@ func (m *tapeMachine) watchedLogf(format string, attrs ...interface{}) {
 		}
 
 		n := m.nodeFromInstr(instr)
-		for _, watch := range m.watchNodes {
-			if watch == n {
-				watched = true
-				break
-			}
+		if slices.Contains(m.watchNodes, n) {
+			watched = true
 		}
 		if watched {
 			goto end
@@ -424,7 +422,7 @@ end:
 
 }
 
-func (m *tapeMachine) logf(format string, attrs ...interface{}) {
+func (m *tapeMachine) logf(format string, attrs ...any) {
 	switch {
 	case machineDev:
 		if m.logger != nil {
@@ -551,12 +549,7 @@ func (f fragment) String() string {
 }
 
 func (f fragment) has(want tapeInstr) bool {
-	for _, instr := range f {
-		if instr == want {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(f, want)
 }
 
 type alloc struct {

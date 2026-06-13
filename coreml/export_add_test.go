@@ -1,5 +1,4 @@
 //go:build coreml && darwin && arm64
-// +build coreml,darwin,arm64
 
 package coreml
 

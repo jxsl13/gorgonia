@@ -98,7 +98,7 @@ func (op *sparsemaxOp) Do(inputs ...Value) (Value, error) {
 		}
 	}
 
-	var output interface{}
+	var output any
 
 	switch inputTensor.Dtype() {
 	case tensor.Float64:
@@ -119,7 +119,7 @@ func (op *sparsemaxOp) Do(inputs ...Value) (Value, error) {
 }
 
 // FIXME: go2 generics
-func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (interface{}, error) {
+func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (any, error) {
 	inputData := inputTensor.Data().([]float32)
 	dims := inputTensor.Dims()
 	it := 0
@@ -135,7 +135,7 @@ func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (interface{},
 	for i := 0; i < from; i++ {
 		maxValue := float32(-math.MaxFloat32)
 
-		for j := 0; j < to; j++ {
+		for range to {
 			if inputData[it] > maxValue {
 				maxValue = inputData[it]
 			}
@@ -151,7 +151,7 @@ func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (interface{},
 	it = 0
 
 	for i := 0; i < from; i++ {
-		for j := 0; j < to; j++ {
+		for range to {
 			stableInput[it] = inputData[it] - maxValues[i]
 			it++
 		}
@@ -178,7 +178,7 @@ func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (interface{},
 		prevCum := float32(0.0)
 		maxIndex := 0
 
-		for j := 0; j < to; j++ {
+		for j := range to {
 			k := 1 + float32(j+1)*sortedData[it]
 
 			prevCum += sortedData[it]
@@ -199,7 +199,7 @@ func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (interface{},
 	it = 0
 
 	for i := 0; i < from; i++ {
-		for j := 0; j < to; j++ {
+		for range to {
 			vF := stableInput[it]
 
 			if vF-thresholds[i] > 0 {
@@ -213,7 +213,7 @@ func (op *sparsemaxOp) float32sparseMax(inputTensor tensor.Tensor) (interface{},
 	return output, nil
 }
 
-func (op *sparsemaxOp) float64sparseMax(inputTensor tensor.Tensor) (interface{}, error) {
+func (op *sparsemaxOp) float64sparseMax(inputTensor tensor.Tensor) (any, error) {
 	inputData := inputTensor.Data().([]float64)
 	dims := inputTensor.Dims()
 	it := 0
@@ -229,7 +229,7 @@ func (op *sparsemaxOp) float64sparseMax(inputTensor tensor.Tensor) (interface{},
 	for i := 0; i < from; i++ {
 		maxValue := -math.MaxFloat64
 
-		for j := 0; j < to; j++ {
+		for range to {
 			if inputData[it] > maxValue {
 				maxValue = inputData[it]
 			}
@@ -245,7 +245,7 @@ func (op *sparsemaxOp) float64sparseMax(inputTensor tensor.Tensor) (interface{},
 	it = 0
 
 	for i := 0; i < from; i++ {
-		for j := 0; j < to; j++ {
+		for range to {
 			stableInput[it] = inputData[it] - maxValues[i]
 			it++
 		}
@@ -272,7 +272,7 @@ func (op *sparsemaxOp) float64sparseMax(inputTensor tensor.Tensor) (interface{},
 		prevCum := 0.0
 		maxIndex := 0
 
-		for j := 0; j < to; j++ {
+		for j := range to {
 			k := 1 + float64(j+1)*sortedData[it]
 
 			prevCum += sortedData[it]
@@ -293,7 +293,7 @@ func (op *sparsemaxOp) float64sparseMax(inputTensor tensor.Tensor) (interface{},
 	it = 0
 
 	for i := 0; i < from; i++ {
-		for j := 0; j < to; j++ {
+		for range to {
 			vF := stableInput[it]
 
 			if vF-thresholds[i] > 0 {
@@ -456,7 +456,7 @@ func (op *sparsemaxDiffOp) Do(inputs ...Value) (Value, error) {
 		return nil, fmt.Errorf("sparsemaxDiffOp.Do inputs sizes should be equal")
 	}
 
-	var zero interface{}
+	var zero any
 
 	if inputTensor.Dtype() == tensor.Float32 {
 		zero = float32(0.0)

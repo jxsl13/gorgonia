@@ -1,7 +1,6 @@
 // ARM64 Metal GPU backend. SPEC §C8, T10. Build-tag gated.
 
 //go:build metal && darwin && arm64
-// +build metal,darwin,arm64
 
 package metal
 

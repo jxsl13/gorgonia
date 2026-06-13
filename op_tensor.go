@@ -47,7 +47,7 @@ func (op atOp) Do(inputs ...Value) (retVal Value, err error) {
 
 	switch tt := inputs[0].(type) {
 	case *tensor.Dense:
-		var r interface{}
+		var r any
 		if r, err = tt.At(op.coordinates...); err != nil {
 			err = errors.Wrap(err, opDoFail)
 			return

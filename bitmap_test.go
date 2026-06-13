@@ -12,7 +12,7 @@ func TestBitMap(t *testing.T) {
 	assert.Equal(1, len(bm.n))
 
 	track := uint64(0)
-	for i := 0; i < 64; i++ {
+	for i := range 64 {
 		bm.Set(i)
 		track |= uint64(1) << uint64(i)
 		assert.Equal(track, bm.n[0])
@@ -27,7 +27,7 @@ func TestBitMap(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < 64; i++ {
+	for i := range 64 {
 		bm.Clear(i)
 		track &= ^(uint64(1) << uint64(i))
 		assert.Equal(track, bm.n[0])
@@ -39,7 +39,7 @@ func TestBitMap(t *testing.T) {
 
 	track0 := uint64(0)
 	track1 := uint64(0)
-	for i := 0; i < 128; i++ {
+	for i := range 128 {
 		if i < 124 {
 			bm.Set(i)
 		} else {
@@ -102,7 +102,7 @@ func TestBitMap(t *testing.T) {
 
 func TestBitmap_BlocksWithZero(t *testing.T) {
 	bm := newBitmap(128)
-	for i := 0; i < 64; i++ {
+	for i := range 64 {
 		if i%2 == 0 {
 			bm.Set(i)
 		}
@@ -114,7 +114,7 @@ func TestBitmap_BlocksWithZero(t *testing.T) {
 		t.Errorf("Expected 1 Got %d instead", blockID)
 	}
 
-	for i := 0; i < 4; i++ {
+	for i := range 4 {
 		bm.Clear(i)
 	}
 

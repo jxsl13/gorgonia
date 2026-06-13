@@ -18,11 +18,11 @@ import (
 // It generates the backing required for the tensors.
 //
 // It's typically used in closures
-type InitWFn func(dt tensor.Dtype, s ...int) interface{}
+type InitWFn func(dt tensor.Dtype, s ...int) any
 
 // Zeroes creates an InitWfn that populates a Value with... zeroes. I don't know what you expected.
 func Zeroes() InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		size := tensor.Shape(s).TotalSize()
 		switch dt {
 		case tensor.Float64:
@@ -40,12 +40,12 @@ func Zeroes() InitWFn {
 
 // Ones creates an InitWfn that populates a Value with ones. See Zeroes() for more explanation.
 func Ones() InitWFn {
-	return func(dt tensor.Dtype, s ...int) interface{} { return ones(dt, s...).Data() }
+	return func(dt tensor.Dtype, s ...int) any { return ones(dt, s...).Data() }
 }
 
 // RangedFrom creates an InitWFn that populates a Value starting with the provided start, increamenting the number for each element in the value by 1
 func RangedFrom(start int) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		size := tensor.Shape(s).TotalSize()
 		return tensor.Range(dt, start, start+size)
 	}
@@ -53,8 +53,8 @@ func RangedFrom(start int) InitWFn {
 }
 
 // RangedFromWithStep creates an InitWFn that populates a value starting with the provided start, and incrementing the number for each element by the provided increment.
-func RangedFromWithStep(start, increment interface{}) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+func RangedFromWithStep(start, increment any) InitWFn {
+	f := func(dt tensor.Dtype, s ...int) any {
 		totalSize := tensor.Shape(s).TotalSize()
 
 		switch dt {
@@ -79,7 +79,7 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 			}
 
 			result := make([]float64, totalSize)
-			for i := 0; i < totalSize; i++ {
+			for i := range totalSize {
 				result[i] = st
 				st += incr
 			}
@@ -110,7 +110,7 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 			}
 
 			result := make([]float32, totalSize)
-			for i := 0; i < totalSize; i++ {
+			for i := range totalSize {
 				result[i] = st
 				st += incr
 			}
@@ -119,7 +119,7 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 			st := start.(int)
 			incr := increment.(int)
 			result := make([]int, totalSize)
-			for i := 0; i < totalSize; i++ {
+			for i := range totalSize {
 				result[i] = st
 				st += incr
 			}
@@ -133,8 +133,8 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 }
 
 // ValuesOf creates an InitWrn that populates a value with val. This function will cause a panic if val's type is incompatible with the values type.
-func ValuesOf(val interface{}) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+func ValuesOf(val any) InitWFn {
+	f := func(dt tensor.Dtype, s ...int) any {
 		size := tensor.Shape(s).TotalSize()
 
 		switch dt {
@@ -174,7 +174,7 @@ func ValuesOf(val interface{}) InitWFn {
 //
 // This will create a backing slice of []float64, with the length of 4, and its values are drawn from a gaussian distro
 func Gaussian(mean, stdev float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return Gaussian64(mean, stdev, s...)
@@ -195,7 +195,7 @@ func Gaussian(mean, stdev float64) InitWFn {
 //
 // This will create a backing slice of []float64, with the length of 4, and its values are drawn from a uniform distro
 func Uniform(low, high float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return Uniform64(low, high, s...)
@@ -211,7 +211,7 @@ func Uniform(low, high float64) InitWFn {
 
 // GlorotN creates a InitWFn that populates a Value with weights normally sampled using Glorot et al.'s algorithm
 func GlorotN(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return GlorotEtAlN64(gain, s...)
@@ -227,7 +227,7 @@ func GlorotN(gain float64) InitWFn {
 
 // GlorotU creates a InitWFn that populates a Value with weights uniformly sampled using Glorot et al.'s algorithm
 func GlorotU(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return GlorotEtAlU64(gain, s...)
@@ -242,7 +242,7 @@ func GlorotU(gain float64) InitWFn {
 }
 
 func HeN(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return HeEtAlN64(gain, s...)
@@ -255,7 +255,7 @@ func HeN(gain float64) InitWFn {
 }
 
 func HeU(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return HeEtAlU64(gain, s...)

@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"io/ioutil"
+	"io/fs"
+	"os"
 	"testing"
 )
 
@@ -14,7 +15,7 @@ func TestLogStabilization(t *testing.T) {
 	lp := Must(Log(p))
 	if lp.children[0] != x {
 		t.Error("Oops.")
-		ioutil.WriteFile("log(a+1).dot", []byte(lp.ToDot()), 0644)
+		os.WriteFile("log(a+1).dot", []byte(lp.ToDot()), 0644)
 	}
 
 	// log(1+a)
@@ -22,7 +23,7 @@ func TestLogStabilization(t *testing.T) {
 	lp = Must(Log(p))
 	if lp.children[0] != x {
 		t.Error("Oops.")
-		ioutil.WriteFile("log(1+a).dot", []byte(lp.ToDot()), 0644)
+		os.WriteFile("log(1+a).dot", []byte(lp.ToDot()), 0644)
 	}
 
 	//log(1-a)
@@ -41,7 +42,7 @@ func TestLogStabilization(t *testing.T) {
 	}
 
 	if t.Failed() {
-		ioutil.WriteFile("log(1-a).dot", []byte(lp.ToDot()), 0644)
+		os.WriteFile("log(1-a).dot", []byte(lp.ToDot()), 0644)
 	}
 
 	//log(a-1)
@@ -58,7 +59,7 @@ func TestLogStabilization(t *testing.T) {
 	lp = Must(Log(p))
 	if lp.children[0] != p {
 		t.Error("Oops.")
-		ioutil.WriteFile("log(a+2).dot", []byte(lp.ToDot()), 0644)
+		os.WriteFile("log(a+2).dot", []byte(lp.ToDot()), 0644)
 	}
 }
 
@@ -78,7 +79,7 @@ func TestExpStabilization(t *testing.T) {
 	}
 
 	if t.Failed() {
-		ioutil.WriteFile("exp(a)-1.dot", []byte(s.ToDot()), 0644)
+		os.WriteFile("exp(a)-1.dot", []byte(s.ToDot()), 0644)
 	}
 }
 
@@ -109,7 +110,7 @@ func TestLogSigmoidStabilization(t *testing.T) {
 	}
 
 	if t.Failed() {
-		ioutil.WriteFile("fullGraph.dot", []byte(g.ToDot()), 0644)
-		ioutil.WriteFile("logY.dot", []byte(logY.ToDot()), 0644)
+		os.WriteFile("fullGraph.dot", []byte(g.ToDot()), 0644)
+		os.WriteFile("logY.dot", []byte(logY.ToDot()), 0644)
 	}
 }

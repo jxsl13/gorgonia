@@ -49,7 +49,7 @@ func (o scalarBinOp) Do(same bool, vals ...Value) (retVal Value, err error) {
 		return
 	}
 
-	var r interface{} // float or bool only plz
+	var r any // float or bool only plz
 	switch a := vals[0].(type) {
 	case *F64:
 		b := vals[1].(*F64)
@@ -370,7 +370,7 @@ func (o tBinOp) do(vals []Value, opts ...tensor.FuncOpt) (retVal Value, err erro
 	}
 
 	// extract the goddamn values
-	var a, b interface{}
+	var a, b any
 	if o.tensorLeft {
 		t, ok := vals[0].(tensor.Tensor)
 		if !ok {
@@ -938,7 +938,7 @@ func hadamardPowDiff(ctx ExecutionContext, x, y, z *Node) (err error) {
 	case *F32:
 		ym1 = NewF32(ydvt.any() - float32(1))
 	case *tensor.Dense:
-		var one interface{}
+		var one any
 		switch ydvt.Dtype() {
 		case tensor.Float64:
 			one = float64(1)

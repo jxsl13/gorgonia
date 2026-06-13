@@ -11,6 +11,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash"
+	"slices"
 	"strings"
 
 	"github.com/chewxy/hm"
@@ -133,12 +134,9 @@ func (op maxOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Nodes, err
 	opDim := len(t.Shape())
 
 	var leftAxes []byte
-	for i := 0; i < opDim; i++ {
-		for _, ax := range op.along {
-			if i == ax {
-				leftAxes = append(leftAxes, byte(i))
-				break
-			}
+	for i := range opDim {
+		if slices.Contains(op.along, i) {
+			leftAxes = append(leftAxes, byte(i))
 		}
 	}
 

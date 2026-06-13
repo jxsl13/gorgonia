@@ -21,7 +21,7 @@ func ExampleConv2d() {
 	y := gorgonia.Must(nnops.Conv2d(x, filter, []int{3, 3}, []int{0, 0}, []int{2, 2}, []int{1, 1}))
 	m := gorgonia.NewTapeMachine(g)
 	runtime.LockOSThread()
-	for i := 0; i < 1000; i++ {
+	for i := range 1000 {
 		if err := m.RunAll(); err != nil {
 			log.Fatalf("iteration: %d. Err: %v", i, err)
 		}

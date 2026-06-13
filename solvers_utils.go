@@ -7,7 +7,7 @@ import (
 
 // this file provides utility functions for solvers
 
-func doL1Reg(w, g tensor.Tensor, l1reg interface{}) (err error) {
+func doL1Reg(w, g tensor.Tensor, l1reg any) (err error) {
 	var l1regs tensor.Tensor
 	if l1regs, err = tensor.Sign(w); err != nil {
 		errors.Wrap(err, signFail)
@@ -19,14 +19,14 @@ func doL1Reg(w, g tensor.Tensor, l1reg interface{}) (err error) {
 	return nil
 }
 
-func doL2Reg(w, g tensor.Tensor, l2reg interface{}) (err error) {
+func doL2Reg(w, g tensor.Tensor, l2reg any) (err error) {
 	if _, err = tensor.Mul(w, l2reg, tensor.WithIncr(g)); err != nil {
 		return errors.Wrap(err, pointWiseMulFail)
 	}
 	return nil
 }
 
-func computeRecip(x float64, as tensor.Dtype) (retVal interface{}, err error) {
+func computeRecip(x float64, as tensor.Dtype) (retVal any, err error) {
 	switch as {
 	case tensor.Float64:
 		return 1.0 / x, nil
@@ -50,7 +50,7 @@ func divBatch(g tensor.Tensor, batch float64) (err error) {
 	return nil
 }
 
-func clipGrad(g tensor.Tensor, clip, negClip interface{}) (err error) {
+func clipGrad(g tensor.Tensor, clip, negClip any) (err error) {
 	if _, err = tensor.Clamp(g, negClip, clip, tensor.UseUnsafe()); err != nil {
 		return errors.Wrap(err, clampFail)
 	}

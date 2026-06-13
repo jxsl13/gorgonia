@@ -100,10 +100,10 @@ func (op *upsampleOp) Do(inputs ...Value) (retVal Value, err error) {
 	b, c, h, w := inShp[0], inShp[1], inShp[2], inShp[3]
 
 	out := tensor.New(tensor.Of(in.Dtype()), tensor.WithShape(b, c, h*(1+op.stride), w*(1+op.stride)), tensor.WithEngine(in.Engine()))
-	for bi := 0; bi < b; bi++ {
-		for ci := 0; ci < c; ci++ {
-			for hi := 0; hi < h; hi++ {
-				for wi := 0; wi < w; wi++ {
+	for bi := range b {
+		for ci := range c {
+			for hi := range h {
+				for wi := range w {
 					val, err := in.At(bi, ci, hi, wi)
 					if err != nil {
 						return nil, errors.Errorf("Error accessing input data at [%v, %v, %v, %v]", bi, ci, hi, wi)
@@ -194,10 +194,10 @@ func (op *upsampleDiffOp) Do(inputs ...Value) (retVal Value, err error) {
 	insh := in.Shape()
 	gradIn = tensor.New(tensor.Of(in.Dtype()), tensor.WithShape(in.Shape().Clone()...), tensor.WithEngine(in.Engine()))
 	b, c, h, w := insh[0], insh[1], insh[2], insh[3]
-	for bi := 0; bi < b; bi++ {
-		for ci := 0; ci < c; ci++ {
-			for hi := 0; hi < h; hi++ {
-				for wi := 0; wi < w; wi++ {
+	for bi := range b {
+		for ci := range c {
+			for hi := range h {
+				for wi := range w {
 					summ := 0.
 					for sh := 0; sh <= op.stride; sh++ {
 						for sw := 0; sw <= op.stride; sw++ {

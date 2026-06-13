@@ -1,5 +1,4 @@
 //go:build blas
-// +build blas
 
 package main
 

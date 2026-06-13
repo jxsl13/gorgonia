@@ -4,7 +4,6 @@
 // vs a CPU reference. SPEC §C13, §V18, B6.
 
 //go:build coreml && darwin && arm64
-// +build coreml,darwin,arm64
 
 package coreml
 
