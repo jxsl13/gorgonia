@@ -96,7 +96,7 @@ func init() {
 			log.Fatal("You need to define a $GOPATH")
 		}
 	}
-	gorgonialoc = path.Join(gopath, "src/gorgonia.org/gorgonia")
+	gorgonialoc = path.Join(gopath, "src/github.com/jxsl13/gorgonia")
 	golgiloc = path.Join(gopath, "src/gorgonia.org/golgi")
 	unaryTemplate = template.Must(template.New("Unary").Funcs(funcmap).Parse(unaryTemplateRaw))
 	binaryTemplate = template.Must(template.New("Binary").Funcs(funcmap).Parse(binaryTemplateRaw))

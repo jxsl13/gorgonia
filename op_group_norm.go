@@ -68,7 +68,7 @@ func (op *GroupNormOp) ReturnsPtr() bool { return false }
 func (op *GroupNormOp) CallsExtern() bool { return false }
 
 func (op *GroupNormOp) WriteHash(h hash.Hash) {
-	fmt.Fprintf(h, op.String())
+	fmt.Fprintf(h, "%s", op.String())
 }
 
 func (op *GroupNormOp) Hashcode() uint32 { return simpleHash(op) }
@@ -520,7 +520,7 @@ func (op *groupNormDiffOp) ReturnsPtr() bool { return false }
 func (op *groupNormDiffOp) CallsExtern() bool { return false }
 
 func (op *groupNormDiffOp) WriteHash(h hash.Hash) {
-	fmt.Fprintf(h, op.String())
+	fmt.Fprintf(h, "%s", op.String())
 }
 
 func (op *groupNormDiffOp) Hashcode() uint32 { return simpleHash(op) }

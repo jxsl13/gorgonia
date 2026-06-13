@@ -3,7 +3,7 @@
 package nnops
 
 import (
-	G "gorgonia.org/gorgonia"
+	G "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

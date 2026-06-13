@@ -6,7 +6,7 @@ import (
 
 	rng "github.com/leesper/go_rng"
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia/internal/encoding"
+	"github.com/jxsl13/gorgonia/internal/encoding"
 	"gorgonia.org/tensor"
 )
 

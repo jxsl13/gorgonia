@@ -37,7 +37,7 @@ func (op *byIndicesOp) ReturnsPtr() bool { return false }
 
 func (op *byIndicesOp) CallsExtern() bool { return false }
 
-func (op *byIndicesOp) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op *byIndicesOp) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op *byIndicesOp) Hashcode() uint32 { return simpleHash(op) }
 
@@ -164,7 +164,7 @@ func (op *byIndicesOpDiffOp) ReturnsPtr() bool { return false }
 func (op *byIndicesOpDiffOp) CallsExtern() bool { return false }
 
 func (op *byIndicesOpDiffOp) WriteHash(h hash.Hash) {
-	fmt.Fprintf(h, op.String())
+	fmt.Fprintf(h, "%s", op.String())
 }
 
 func (op *byIndicesOpDiffOp) Hashcode() uint32 { return simpleHash(op) }

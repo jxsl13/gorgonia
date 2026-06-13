@@ -37,7 +37,7 @@ func (op *dropoutOp) ReturnsPtr() bool { return false }
 
 func (op *dropoutOp) CallsExtern() bool { return false }
 
-func (op *dropoutOp) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op *dropoutOp) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op *dropoutOp) Hashcode() uint32 { return simpleHash(op) }
 

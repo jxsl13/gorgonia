@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"runtime"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -16,6 +16,10 @@ const (
 
 // manually generate a fake dataset which is y=2x+random
 func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
+	// Local source seeded deterministically. A local *rand.Rand is required
+	// (not the global rand.Float*) so the dataset is reproducible even if an
+	// imported package consumes the global math/rand source from a goroutine.
+	rng := rand.New(rand.NewSource(1))
 	var xBack, yBack interface{}
 	switch dt {
 	case Float32:
@@ -23,7 +27,7 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 		yBackC := tensor.Range(tensor.Float32, 1, vecSize+1).([]float32)
 
 		for i, v := range yBackC {
-			yBackC[i] = v*2 + rand.Float32()
+			yBackC[i] = v*2 + rng.Float32()
 		}
 		yBack = yBackC
 	case Float64:
@@ -31,7 +35,7 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 		yBackC := tensor.Range(tensor.Float64, 1, vecSize+1).([]float64)
 
 		for i, v := range yBackC {
-			yBackC[i] = v*2 + rand.Float64()
+			yBackC[i] = v*2 + rng.Float64()
 		}
 		yBack = yBackC
 	}
@@ -42,12 +46,13 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 }
 
 func random(dt tensor.Dtype) interface{} {
-	rand.Seed(13370)
+	// Local deterministic source — see xy() for why the global rand is avoided.
+	rng := rand.New(rand.NewSource(13370))
 	switch dt {
 	case tensor.Float32:
-		return rand.Float32()
+		return rng.Float32()
 	case tensor.Float64:
-		return rand.Float64()
+		return rng.Float64()
 	default:
 		panic("Unhandled dtype")
 	}

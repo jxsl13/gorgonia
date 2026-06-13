@@ -54,7 +54,7 @@ func (op minBetween) CallsExtern() bool { return false }
 func (op minBetween) OverwritesInput() int { return -1 }
 
 /* Other methods */
-func (op minBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op minBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op minBetween) Hashcode() uint32 { return simpleHash(op) }
 
@@ -123,7 +123,7 @@ func (op maxBetween) CallsExtern() bool { return false }
 func (op maxBetween) OverwritesInput() int { return -1 }
 
 /* Other methods */
-func (op maxBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op maxBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op maxBetween) Hashcode() uint32 { return simpleHash(op) }
 

@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"sync"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

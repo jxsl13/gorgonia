@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	latestGo   = "1.16.x"
-	previousGo = "1.15.x"
+	latestGo   = "1.26.x"
+	previousGo = "1.26.x"
 )
 
 func main() {

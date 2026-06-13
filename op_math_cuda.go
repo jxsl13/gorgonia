@@ -8,7 +8,7 @@ import (
 
 	"github.com/pkg/errors"
 	"gorgonia.org/cu"
-	"gorgonia.org/gorgonia/cuda"
+	"github.com/jxsl13/gorgonia/cuda"
 	"gorgonia.org/tensor"
 )
 

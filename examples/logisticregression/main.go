@@ -9,7 +9,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	G "gorgonia.org/gorgonia"
+	G "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

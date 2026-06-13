@@ -14,8 +14,8 @@ import (
 	_ "net/http/pprof"
 
 	"github.com/pkg/errors"
-	G "gorgonia.org/gorgonia"
-	"gorgonia.org/gorgonia/examples/mnist"
+	G "github.com/jxsl13/gorgonia"
+	"github.com/jxsl13/gorgonia/examples/mnist"
 	"gorgonia.org/tensor"
 
 	"time"

@@ -3,7 +3,7 @@ package gorgonia_test
 import (
 	"fmt"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 )
 
 // This example showcases the reasons for the more confusing functions.

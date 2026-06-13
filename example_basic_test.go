@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 )
 
 // Basic example of representing mathematical equations as graphs.

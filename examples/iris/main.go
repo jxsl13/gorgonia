@@ -10,7 +10,7 @@ import (
 	"github.com/go-gota/gota/dataframe"
 	"github.com/go-gota/gota/series"
 	"gonum.org/v1/gonum/mat"
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

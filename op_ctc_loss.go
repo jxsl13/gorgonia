@@ -520,7 +520,7 @@ type ctcLossDiffOp struct {
 func (op *ctcLossDiffOp) Arity() int { return 5 }
 
 func (op *ctcLossDiffOp) WriteHash(h hash.Hash) {
-	fmt.Fprintf(h, op.String())
+	fmt.Fprintf(h, "%s", op.String())
 }
 
 func (op *ctcLossDiffOp) Hashcode() uint32 { return simpleHash(op) }

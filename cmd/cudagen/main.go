@@ -136,7 +136,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	gorgoniaLoc, err := packageLoc("gorgonia.org/gorgonia")
+	gorgoniaLoc, err := packageLoc("github.com/jxsl13/gorgonia")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -174,7 +174,7 @@ package %v
 `, packageName)
 	buf.WriteString(header)
 	if ! *sameModule {
-		buf.WriteString("import \"gorgonia.org/gorgonia\"\n")
+		buf.WriteString("import \"github.com/jxsl13/gorgonia\"\n")
 	}
 
 	buf.WriteString("func init() {\n")

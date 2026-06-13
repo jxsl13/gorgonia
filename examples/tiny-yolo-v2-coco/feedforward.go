@@ -2,7 +2,7 @@ package main
 
 import (
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

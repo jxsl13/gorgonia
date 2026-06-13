@@ -16,7 +16,7 @@ type job struct {
 	JobID     string          //stable-go
 	JobName   string          //Build and test on latest stable Go release
 	RunsOn    string          //ubuntu-latest
-	GoVersion string          //1.15.x
+	GoVersion string          //1.26.x
 	Tags      map[string]bool // none:false, avx:true, sse:true
 	WithRace  bool            // false
 }

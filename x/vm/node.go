@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 )
 
 // Doer is implementing the Do method of gorgonia's Op interface

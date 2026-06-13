@@ -7,8 +7,8 @@ import (
 	"gonum.org/v1/gonum/graph/encoding"
 	gonumDot "gonum.org/v1/gonum/graph/encoding/dot"
 	"gonum.org/v1/gonum/graph/simple"
-	"gorgonia.org/gorgonia"
-	internalEncoding "gorgonia.org/gorgonia/internal/encoding"
+	"github.com/jxsl13/gorgonia"
+	internalEncoding "github.com/jxsl13/gorgonia/internal/encoding"
 )
 
 func subGraphs() map[internalEncoding.Group]subgrapher {

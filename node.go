@@ -11,7 +11,7 @@ import (
 	"github.com/chewxy/hm"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
-	"gorgonia.org/gorgonia/internal/encoding"
+	"github.com/jxsl13/gorgonia/internal/encoding"
 	"gorgonia.org/tensor"
 )
 
