@@ -186,7 +186,7 @@ T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm p
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
 T16|x|Phase3: graph->CoreML MIL translator for supported op subset (matmul, conv, activations, pooling, add/mul); unsupported op -> clear error|V18,I.coreml
-T17|.|Phase3: parity tests Model.Predict vs CPU graph within tol; ANECompat advisory report; example examples/*_coreml|V18,I.coreml
+T17|x|Phase3: parity tests Model.Predict vs CPU graph within tol; ANECompat advisory report; example examples/*_coreml|V18,I.coreml
 T18|.|Phase3: extend CI macos-14 to build+test coreml tag (device tests skip when no ANE)|V17,I.ci-darwin
 T19|x|establish vendoring convention: internal/vendor/<name>/ layout, UPSTREAM.md provenance template, replace-directive pattern, LICENSE rule|V20,V21,V22,C12,I.vendor
 T20|x|vendor gorgonia.org/vecf32 + vecf64 (latest) into internal/vendor; add ARM64 NEON asm + scalar fallback; replace directives; parity asm==scalar; transitive tensor picks up copy|V11,V20,V21,V23,C10,C12,I.vendor,I.asm
