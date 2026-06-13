@@ -189,7 +189,7 @@ T17|.|Phase3: parity tests Model.Predict vs CPU graph within tol; ANECompat advi
 T18|.|Phase3: extend CI macos-14 to build+test coreml tag (device tests skip when no ANE)|V17,I.ci-darwin
 T19|x|establish vendoring convention: internal/vendor/<name>/ layout, UPSTREAM.md provenance template, replace-directive pattern, LICENSE rule|V20,V21,V22,C12,I.vendor
 T20|x|vendor gorgonia.org/vecf32 + vecf64 (latest) into internal/vendor; add ARM64 NEON asm + scalar fallback; replace directives; parity asm==scalar; transitive tensor picks up copy|V11,V20,V21,V23,C10,C12,I.vendor,I.asm
-T21|.|metal GPU conv2d via MPSGraph convolution2D; parity vs CPU nn conv (split from T11)|V14,V15,I.metal
+T21|x|metal GPU conv2d via MPSGraph convolution2D; parity vs CPU nn conv (split from T11)|V14,V15,I.metal
 ```
 
 ## §B bugs

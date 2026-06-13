@@ -7,9 +7,10 @@ package metal
 
 /*
 #cgo darwin CFLAGS: -x objective-c -fobjc-arc
-#cgo darwin LDFLAGS: -framework Metal -framework Foundation -framework MetalPerformanceShaders
+#cgo darwin LDFLAGS: -framework Metal -framework Foundation -framework MetalPerformanceShaders -framework MetalPerformanceShadersGraph
 #import <Metal/Metal.h>
 #import <MetalPerformanceShaders/MetalPerformanceShaders.h>
+#import <MetalPerformanceShadersGraph/MetalPerformanceShadersGraph.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -129,6 +130,54 @@ static void mtlMatMul(void* p, const float* A, const float* B, float* C, int M, 
 
     memcpy(C, [bc contents], cBytes);
 }
+
+// mtlConv2D computes a 2D convolution on the GPU via MPSGraph.
+// Layout: src NHWC [N,H,W,Cin], weights HWIO [KH,KW,Cin,Cout], out NHWC
+// [N,OH,OW,Cout]. Explicit padding (pt,pb,pl,pr), stride (sx,sy). No bias.
+// Returns 0 on success, nonzero on failure.
+static int mtlConv2D(void* p,
+        const float* src, const float* wts, float* out,
+        int N, int H, int W, int Cin, int KH, int KW, int Cout,
+        int sx, int sy, int pt, int pb, int pl, int pr,
+        int OH, int OW) {
+    mtlCtx* ctx = (mtlCtx*)p;
+
+    size_t srcBytes = (size_t)N*H*W*Cin*sizeof(float);
+    size_t wBytes   = (size_t)KH*KW*Cin*Cout*sizeof(float);
+    size_t outBytes = (size_t)N*OH*OW*Cout*sizeof(float);
+
+    id<MTLBuffer> bSrc = [ctx->dev newBufferWithBytes:src length:srcBytes options:MTLResourceStorageModeShared];
+    id<MTLBuffer> bW   = [ctx->dev newBufferWithBytes:wts length:wBytes options:MTLResourceStorageModeShared];
+
+    MPSGraph* g = [MPSGraph new];
+    MPSGraphTensor* tSrc = [g placeholderWithShape:@[@(N),@(H),@(W),@(Cin)] dataType:MPSDataTypeFloat32 name:@"src"];
+    MPSGraphTensor* tW   = [g placeholderWithShape:@[@(KH),@(KW),@(Cin),@(Cout)] dataType:MPSDataTypeFloat32 name:@"w"];
+
+    MPSGraphConvolution2DOpDescriptor* desc =
+        [MPSGraphConvolution2DOpDescriptor descriptorWithStrideInX:sx strideInY:sy
+            dilationRateInX:1 dilationRateInY:1 groups:1
+            paddingLeft:pl paddingRight:pr paddingTop:pt paddingBottom:pb
+            paddingStyle:MPSGraphPaddingStyleExplicit
+            dataLayout:MPSGraphTensorNamedDataLayoutNHWC
+            weightsLayout:MPSGraphTensorNamedDataLayoutHWIO];
+    if (!desc) return 1;
+
+    MPSGraphTensor* tOut = [g convolution2DWithSourceTensor:tSrc weightsTensor:tW descriptor:desc name:nil];
+    if (!tOut) return 2;
+
+    MPSGraphTensorData* dSrc = [[MPSGraphTensorData alloc] initWithMTLBuffer:bSrc shape:@[@(N),@(H),@(W),@(Cin)] dataType:MPSDataTypeFloat32];
+    MPSGraphTensorData* dW   = [[MPSGraphTensorData alloc] initWithMTLBuffer:bW shape:@[@(KH),@(KW),@(Cin),@(Cout)] dataType:MPSDataTypeFloat32];
+
+    NSDictionary* results = [g runWithMTLCommandQueue:ctx->queue
+        feeds:@{tSrc:dSrc, tW:dW}
+        targetTensors:@[tOut] targetOperations:nil];
+
+    MPSGraphTensorData* dOut = results[tOut];
+    if (!dOut) return 3;
+    [[dOut mpsndarray] readBytes:out strideBytes:nil];
+    (void)outBytes;
+    return 0;
+}
 */
 import "C"
 
@@ -221,4 +270,36 @@ func (d *Device) MatMul(a, b []float32, m, n, k int) ([]float32, error) {
 		(*C.float)(unsafe.Pointer(&c[0])),
 		C.int(m), C.int(n), C.int(k))
 	return c, nil
+}
+
+// Conv2D computes a 2D convolution on the GPU (MPSGraph). src is NHWC
+// [n,h,w,cin], weights HWIO [kh,kw,cin,cout]. Returns NHWC [n,oh,ow,cout].
+// Explicit padding (pt,pb,pl,pr) and stride (sx,sy); no bias.
+func (d *Device) Conv2D(src, weights []float32, n, h, w, cin, kh, kw, cout, sx, sy, pt, pb, pl, pr int) (out []float32, oh, ow int, err error) {
+	if d.ctx == nil {
+		return nil, 0, 0, fmt.Errorf("metal: device closed")
+	}
+	if len(src) != n*h*w*cin {
+		return nil, 0, 0, fmt.Errorf("metal: src len %d != n*h*w*cin %d", len(src), n*h*w*cin)
+	}
+	if len(weights) != kh*kw*cin*cout {
+		return nil, 0, 0, fmt.Errorf("metal: weights len %d != kh*kw*cin*cout %d", len(weights), kh*kw*cin*cout)
+	}
+	oh = (h+pt+pb-kh)/sy + 1
+	ow = (w+pl+pr-kw)/sx + 1
+	if oh <= 0 || ow <= 0 {
+		return nil, 0, 0, fmt.Errorf("metal: non-positive output dims %dx%d", oh, ow)
+	}
+	out = make([]float32, n*oh*ow*cout)
+	rc := C.mtlConv2D(d.ctx,
+		(*C.float)(unsafe.Pointer(&src[0])),
+		(*C.float)(unsafe.Pointer(&weights[0])),
+		(*C.float)(unsafe.Pointer(&out[0])),
+		C.int(n), C.int(h), C.int(w), C.int(cin), C.int(kh), C.int(kw), C.int(cout),
+		C.int(sx), C.int(sy), C.int(pt), C.int(pb), C.int(pl), C.int(pr),
+		C.int(oh), C.int(ow))
+	if rc != 0 {
+		return nil, 0, 0, fmt.Errorf("metal: conv2d failed (code %d)", int(rc))
+	}
+	return out, oh, ow, nil
 }
