@@ -26,10 +26,7 @@ jobs:
         run: go build ./...
 
       - name: Vet
-        # -unsafeptr=false: gorgonia deliberately builds Values from device /
-        # external memory via unsafe.Pointer(mem.Uintptr()); vet's conservative
-        # unsafeptr analyzer flags this legacy pattern as a false positive.
-        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go vet -unsafeptr=false
+        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go vet
 
       - name: ARM64 NEON parity (vendored vecf32/vecf64)
         run: go test ./internal/asmcheck/...

@@ -2,7 +2,6 @@ package gorgonia
 
 import (
 	"fmt"
-	"unsafe"
 
 	"github.com/chewxy/hm"
 	"github.com/pkg/errors"
@@ -126,68 +125,12 @@ func makeValue(t hm.Type, s tensor.Shape) (retVal Value, err error) {
 	}
 }
 
-func makeValueFromMem(t hm.Type, s tensor.Shape, mem tensor.Memory) (retVal Value, err error) {
-	var dt tensor.Dtype
-	if dt, err = dtypeOf(t); err != nil {
-		return
-	}
-	if s.IsScalar() {
-		return makeScalarFromMem(dt, mem)
-	}
-
-	switch tt := t.(type) {
-	case TensorType:
-		memsize := calcMemSize(dt, s)
-		return tensor.New(tensor.Of(dt), tensor.WithShape(s...), tensor.FromMemory(mem.Uintptr(), uintptr(memsize))), nil
-	case tensor.Dtype:
-		return makeScalarFromMem(tt, mem)
-	default:
-		err = errors.Errorf(nyiTypeFail, "MakeValue", tt)
-		return
-	}
-}
-
-// makeScalarFromMem reinterprets mem's address as a scalar Value of dtype dt.
-//
-// It converts mem.Uintptr() to an unsafe.Pointer. go vet's unsafeptr analyzer
-// flags this because, in general, a uintptr is an integer (not a GC-visible
-// reference) and the documented valid unsafe.Pointer patterns do not cover a
-// uintptr obtained from a method call (see https://pkg.go.dev/unsafe and
-// https://go.dev/blog/, golang/go#58625). It is nonetheless safe here because:
-//
-//   - gorgonia (via gorgonia.org/tensor) depends on
-//     go4.org/unsafe/assume-no-moving-gc, which asserts a non-moving garbage
-//     collector at startup and panics otherwise — so the address stays valid;
-//   - the caller keeps the backing tensor.Memory alive for the lifetime of the
-//     returned Value.
-//
-// tensor.Memory exposes only Uintptr() (no Pointer() unsafe.Pointer), so the
-// uintptr round-trip is unavoidable at this layer; the truly clean fix is an
-// upstream Memory.Pointer() method. Verified safe at runtime: `go test -race`
-// (which enables -d=checkptr) passes. CI vet therefore runs -unsafeptr=false.
-//
-//go:nocheckptr
-func makeScalarFromMem(dt tensor.Dtype, mem tensor.Memory) (retVal Value, err error) {
-	switch dt {
-	case tensor.Float64:
-		retVal = (*F64)(unsafe.Pointer(mem.Uintptr()))
-	case tensor.Float32:
-		retVal = (*F32)(unsafe.Pointer(mem.Uintptr()))
-	case tensor.Int:
-		retVal = (*I)(unsafe.Pointer(mem.Uintptr()))
-	case tensor.Int64:
-		retVal = (*I64)(unsafe.Pointer(mem.Uintptr()))
-	case tensor.Int32:
-		retVal = (*I32)(unsafe.Pointer(mem.Uintptr()))
-	case tensor.Byte:
-		retVal = (*U8)(unsafe.Pointer(mem.Uintptr()))
-	case tensor.Bool:
-		retVal = (*B)(unsafe.Pointer(mem.Uintptr()))
-	default:
-		err = errors.Errorf(nyiTypeFail, "makeScalarFromMem", dt)
-	}
-	return
-}
+// makeValueFromMem builds a Value backed by external/device memory. It is only
+// reachable when an external engine is active (CUDA); the non-cuda build's
+// ExternMetadata.Get always errors before this is called. The real, unsafe
+// implementation lives in values_extern_cuda.go (build tag `cuda`); the non-cuda
+// build uses the stub in noextern.go. This keeps the uintptr->unsafe.Pointer
+// reconstruction out of the default build entirely.
 
 func logicalSize(s tensor.Shape) int {
 	if s.IsScalar() {
