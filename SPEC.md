@@ -61,6 +61,7 @@ Phase 2 — Apple Silicon perf backends:
   importers also resolve to our copy. Preserve upstream LICENSE verbatim; record
   provenance (module path + exact version/commit) so our diff stays re-syncable.
 - C13: CoreML path = our own `coreml/` cgo pkg linking `-framework CoreML -framework Foundation`, build tag `coreml && darwin && arm64`. Build a `.mlmodel`/`.mlpackage` on disk, compile at RUNTIME via `[MLModel compileModelAtURL:error:]` (no coremlcompiler/Xcode), load, predict. Compute units selectable (All/CPUAndGPU/CPUOnly). Verified linkable with CLT 26.5 (B6).
+- C14: CUDA + BLAS code is build-tag-gated so default tooling on a machine WITHOUT those toolchains never compiles it. CUDA (`//go:build cuda`): whole `cuda/` package, `cmd/cudagen`, `examples/convnet_cuda` (root `*_cuda.go` + `ops/nn/*_cuda.go` already tagged). BLAS (`//go:build blas`): `blase/` package, `examples/stacked_autoencoder`. After this, `go build/vet/generate/staticcheck/govulncheck ./...` need NO `/cuda$` `/blase$` grep-excludes. CUDA/BLAS only build with `-tags cuda`/`-tags blas` on hosts with the toolchain (cannot verify the positive here, C3).
 - C11: research refs — Metal: mikecvet/go-mm, tsawler/go-metal (MPSGraph).
   ARM64 NEON: jairad26/go-simd, axiomhq/simd-go, pehringer/simd. ANE: 
   gomlx/go-coreml, fredyshox/ANECompat. See §R.
@@ -168,6 +169,7 @@ Phase 2 — Apple Silicon perf backends:
 - V26: a host-accessible GPU tensor.Engine (embeds tensor.StdEng) integrates end-to-end via gorgonia NewTapeMachine(g, WithEngine(e)) — NO cuda-style device-transfer machinery. TapeMachine sets every value's engine to m.Engine (vm_tape.go), so pass the engine to the MACHINE, not only to let-bound values. Non-overridden ops fall back to StdEng on CPU. B7.
 - V27: CI pre-check gate enforces, with `git diff --exit-code` after each mutating cmd: `gofmt -l` (exclude internal/vendor — V20 verbatim), `go mod tidy`, `go generate` (exclude `cuda` pkg — only generator is CUDA cudagen needing the toolchain), and `govulncheck` (latest, scoped to non-cgo-lib pkgs). Repo MUST stay gofmt-clean + tidy-clean + vuln-free.
 - V28: staticcheck is available via `make lint` (local, exclude internal/vendor) and runs in the CI pre-check as ADVISORY (continue-on-error) — the gorgonia lib carries ~267 pre-existing issues, so it surfaces but does NOT fail CI. Our new packages (coreml/metal/ asmcheck) stay staticcheck-clean. Tighten to blocking once legacy is cleaned. ?
+- V29: on a host WITHOUT CUDA/BLAS, `go build ./...` (no tags, no grep-excludes) succeeds — every `gorgonia.org/cu` / CBLAS-importing file is gated by `cuda` / `blas`. CI/Makefile drop the `/cuda$` `/blase$` excludes. `-tags cuda` / `-tags blas` compile the gated code (needs the toolchain).
 
 ## §T tasks
 
@@ -189,6 +191,8 @@ T22|x|Metal tensor.Engine (embed StdEng + GPU MatMul via MatMuler); tensors With
 T23|x|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go so a gorgonia graph runs end-to-end on GPU (large)|V13,V14,I.metal-vm
 T24|x|CI pre-check job: gofmt + go mod tidy + go generate + govulncheck, fail on any git diff (V27)|V27,I.ci
 T25|x|add staticcheck: root Makefile (fmt/tidy/vet/lint/vuln/test/pre-check/check) + advisory staticcheck step in pre-check.yml (excl vendored); keep our pkgs clean|V28,I.makefile,I.ci
+T26|x|//go:build cuda on cuda/ package + cmd/cudagen + examples/convnet_cuda; drop /cuda$ grep-excludes; verify go build ./... clean without excludes on non-CUDA host|V29,C14,I.ci
+T27|.|//go:build blas on blase/ + examples/stacked_autoencoder; drop /blase$ grep-excludes; verify go build ./... clean without excludes on non-BLAS host|V29,C14,I.ci
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml

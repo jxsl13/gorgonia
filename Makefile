@@ -14,7 +14,7 @@ export GOFLAGS := -mod=mod
 # Go files excluding vendored copies (kept verbatim, SPEC §V20).
 GOFILES := $(shell find . -name '*.go' -not -path './internal/vendor/*')
 # Packages buildable without CUDA / BLAS / cgo-only frameworks.
-PKGS := $(shell go list ./... | grep -vE '/examples/|/cmd/|/cuda$$|/blase$$')
+PKGS := $(shell go list ./... | grep -vE '/examples/|/cmd/|/blase$$')
 
 .PHONY: tools fmt tidy vet lint vuln test pre-check check
 
@@ -46,7 +46,7 @@ test:
 pre-check:
 	@unformatted="$$(gofmt -l $(GOFILES))"; \
 	  if [ -n "$$unformatted" ]; then echo "gofmt needed:"; echo "$$unformatted"; exit 1; fi
-	go generate $$(go list ./... | grep -v '/cuda$$')
+	go generate ./...
 	git diff --exit-code
 	go mod tidy
 	git diff --exit-code go.mod go.sum

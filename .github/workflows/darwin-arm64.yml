@@ -23,16 +23,16 @@ jobs:
       # which are absent on a stock macOS runner — exclude them from the default
       # build/vet/test. They are gated by the `cuda` build tag separately.
       - name: Default build (no tags)
-        run: go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$|/asmcheck$' | xargs go build
+        run: go list ./... | grep -vE '/examples/|/cmd/|/blase$|/asmcheck$' | xargs go build
 
       - name: Vet
-        run: go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$' | xargs go vet
+        run: go list ./... | grep -vE '/examples/|/cmd/|/blase$' | xargs go vet
 
       - name: ARM64 NEON parity (vendored vecf32/vecf64)
         run: go test ./internal/asmcheck/...
 
       - name: Core test suite
-        run: go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$' | xargs go test
+        run: go list ./... | grep -vE '/examples/|/cmd/|/blase$' | xargs go test
 
       - name: Metal backend build (tag=metal)
         env:

@@ -32,11 +32,11 @@ jobs:
           fi
 
       - name: go generate (no diff)
-        # The only //go:generate directives invoke CUDA's cudagen, which needs the
-        # CUDA toolchain; the cuda package is excluded. Any other generated output
-        # must already be committed.
+        # The only //go:generate directives invoke CUDA's cudagen and live in the
+        # cuda-tagged package, so plain `go generate ./...` (no cuda tag) skips
+        # them. Any generated output must already be committed.
         run: |
-          go generate $(go list ./... | grep -v '/cuda$')
+          go generate ./...
           git diff --exit-code
 
       - name: go mod tidy (no diff)
@@ -48,7 +48,7 @@ jobs:
         # Scoped to packages buildable without CUDA/BLAS/cgo-only frameworks.
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck $(go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$')
+          govulncheck $(go list ./... | grep -vE '/examples/|/cmd/|/blase$')
 
       - name: staticcheck (advisory)
         # Advisory only (SPEC §V28): the gorgonia library carries ~267
@@ -57,4 +57,4 @@ jobs:
         continue-on-error: true
         run: |
           go install honnef.co/go/tools/cmd/staticcheck@latest
-          staticcheck $(go list ./... | grep -vE '/examples/|/cmd/|/cuda$|/blase$')
+          staticcheck $(go list ./... | grep -vE '/examples/|/cmd/|/blase$')
