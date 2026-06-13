@@ -93,6 +93,7 @@ Phase 2 — Apple Silicon perf backends:
   Builds default + `metal` tag (+ `coreml` tag Phase 3), runs asm + metal parity
   tests. Note: hosted GPU/ANE access may be limited — parity tests fall back to
   CPU compute-unit when device unavailable; build/compile always gated.
+- I.makefile: root `Makefile` with targets devs run locally — `fmt`, `tidy`, `vet`, `lint` (staticcheck), `vuln` (govulncheck), `test`, `pre-check` (mirror the CI gate), `check` (all). Lets us SEE + FIX issues.
 
 ## §V invariants
 
@@ -166,6 +167,7 @@ Phase 2 — Apple Silicon perf backends:
   the consistent boundary it actually reached.
 - V26: a host-accessible GPU tensor.Engine (embeds tensor.StdEng) integrates end-to-end via gorgonia NewTapeMachine(g, WithEngine(e)) — NO cuda-style device-transfer machinery. TapeMachine sets every value's engine to m.Engine (vm_tape.go), so pass the engine to the MACHINE, not only to let-bound values. Non-overridden ops fall back to StdEng on CPU. B7.
 - V27: CI pre-check gate enforces, with `git diff --exit-code` after each mutating cmd: `gofmt -l` (exclude internal/vendor — V20 verbatim), `go mod tidy`, `go generate` (exclude `cuda` pkg — only generator is CUDA cudagen needing the toolchain), and `govulncheck` (latest, scoped to non-cgo-lib pkgs). Repo MUST stay gofmt-clean + tidy-clean + vuln-free.
+- V28: staticcheck is available via `make lint` (local, exclude internal/vendor) and runs in the CI pre-check as ADVISORY (continue-on-error) — the gorgonia lib carries ~267 pre-existing issues, so it surfaces but does NOT fail CI. Our new packages (coreml/metal/ asmcheck) stay staticcheck-clean. Tighten to blocking once legacy is cleaned. ?
 
 ## §T tasks
 
@@ -186,6 +188,7 @@ T12|x|example examples/metal (GPU elementwise + matmul, runs on M2 Pro). VM auto
 T22|x|Metal tensor.Engine (embed StdEng + GPU MatMul via MatMuler); tensors WithEngine(metal.Engine) auto-dispatch MatMul to GPU; parity vs CPU|V14,I.metal-vm
 T23|x|full TapeMachine device-transfer wiring: *_metal.go mirror device_cuda.go/op_math_cuda.go/vm_tape_cuda.go so a gorgonia graph runs end-to-end on GPU (large)|V13,V14,I.metal-vm
 T24|x|CI pre-check job: gofmt + go mod tidy + go generate + govulncheck, fail on any git diff (V27)|V27,I.ci
+T25|x|add staticcheck: root Makefile (fmt/tidy/vet/lint/vuln/test/pre-check/check) + advisory staticcheck step in pre-check.yml (excl vendored); keep our pkgs clean|V28,I.makefile,I.ci
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
