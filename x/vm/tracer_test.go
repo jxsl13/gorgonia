@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 )
 
 func ExampleWithTracing() {

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -168,7 +168,7 @@ func PrepareBiases(g *gorgonia.ExprGraph, shape tensor.Shape, biases map[string]
 	iters := shape.TotalSize() / len(biases[layerName])
 	newArr := []float32{}
 	for i := 0; i < len(biases[layerName]); i++ {
-		for j := 0; j < iters; j++ {
+		for range iters {
 			newArr = append(newArr, biases[layerName][i])
 		}
 	}

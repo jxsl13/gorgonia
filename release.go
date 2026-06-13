@@ -1,4 +1,4 @@
-// +build !debug
+//go:build !debug
 
 package gorgonia
 
@@ -19,20 +19,20 @@ const (
 
 func tabcount() int { return 0 }
 
-func enterLogScope()                                   {}
-func leaveLogScope()                                   {}
-func logf(format string, others ...interface{})        {}
-func compileLogf(format string, attrs ...interface{})  {}
-func shapeLogf(format string, attrs ...interface{})    {}
-func typeSysLogf(format string, attrs ...interface{})  {}
-func symdiffLogf(format string, attrs ...interface{})  {}
-func autodiffLogf(format string, attrs ...interface{}) {}
-func machineLogf(format string, attrs ...interface{})  {}
-func stabLogf(format string, attrs ...interface{})     {}
-func solverLogf(format string, attrs ...interface{})   {}
-func cudaLogf(format string, attrs ...interface{})     {}
-func allocatorLogf(format string, attr ...interface{}) {}
-func recoverFrom(format string, attrs ...interface{})  {}
+func enterLogScope()                           {}
+func leaveLogScope()                           {}
+func logf(format string, others ...any)        {}
+func compileLogf(format string, attrs ...any)  {}
+func shapeLogf(format string, attrs ...any)    {}
+func typeSysLogf(format string, attrs ...any)  {}
+func symdiffLogf(format string, attrs ...any)  {}
+func autodiffLogf(format string, attrs ...any) {}
+func machineLogf(format string, attrs ...any)  {}
+func stabLogf(format string, attrs ...any)     {}
+func solverLogf(format string, attrs ...any)   {}
+func cudaLogf(format string, attrs ...any)     {}
+func allocatorLogf(format string, attr ...any) {}
+func recoverFrom(format string, attrs ...any)  {}
 
 // GraphCollisionStats returns the collisions in the graph only when built with the debug tag, otherwise it's a noop that returns 0
 func GraphCollisionStats() (int, int, int) { return 0, 0, 0 }

@@ -63,7 +63,7 @@ func (op *ctcLossOp) WriteHash(h hash.Hash) {
 func (op *ctcLossOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op *ctcLossOp) String() string {
-	return fmt.Sprintf("CTCLoss{}()")
+	return "CTCLoss{}()"
 }
 
 func (op *ctcLossOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
@@ -142,7 +142,7 @@ func (op *ctcLossOp) f64s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 	targetBatchOffsets := make([]int, batchSize)
 	if targetsT.Dims() == 1 {
 		pos := 0
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = pos
 			pos += targetLengths[i]
 			if maxTargetLength < targetLengths[i] {
@@ -153,7 +153,7 @@ func (op *ctcLossOp) f64s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 		targetStride = targetsT.Strides()[0]
 	} else {
 		batchStride := targetsT.Strides()[0]
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = i * batchStride
 			if maxTargetLength < targetLengths[i] {
 				maxTargetLength = targetLengths[i]
@@ -164,7 +164,7 @@ func (op *ctcLossOp) f64s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 	}
 
 	maxInputLength := logProbsT.Shape()[0]
-	for i := 0; i < batchSize; i++ {
+	for i := range batchSize {
 		if inputLengths[i] > maxInputLength {
 			return fmt.Errorf("expected inputLengths to have value at most %v, but got %v", maxInputLength, inputLengths[i])
 		}
@@ -223,7 +223,7 @@ func (op *ctcLossOp) f64s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 		}
 
 		for t := 1; t < inputLength; t++ {
-			for s := 0; s < targetWidth; s++ {
+			for s := range targetWidth {
 				currentTargetPrime := op.getPrimeTarget(targets, targetsOffset, targetStride, s)
 
 				i := (t-1)*(targetWidth) + s
@@ -318,7 +318,7 @@ func (op *ctcLossOp) f32s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 	targetBatchOffsets := make([]int, batchSize)
 	if targetsT.Dims() == 1 {
 		pos := 0
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = pos
 			pos += targetLengths[i]
 			if maxTargetLength < targetLengths[i] {
@@ -329,7 +329,7 @@ func (op *ctcLossOp) f32s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 		targetStride = targetsT.Strides()[0]
 	} else {
 		batchStride := targetsT.Strides()[0]
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = i * batchStride
 			if maxTargetLength < targetLengths[i] {
 				maxTargetLength = targetLengths[i]
@@ -340,7 +340,7 @@ func (op *ctcLossOp) f32s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 	}
 
 	maxInputLength := logProbsT.Shape()[0]
-	for i := 0; i < batchSize; i++ {
+	for i := range batchSize {
 		if inputLengths[i] > maxInputLength {
 			return fmt.Errorf("expected inputLengths to have value at most %v, but got %v", maxInputLength, inputLengths[i])
 		}
@@ -399,7 +399,7 @@ func (op *ctcLossOp) f32s(logProbsT, prealloc, targetsT, inputLengthsT, targetLe
 		}
 
 		for t := 1; t < inputLength; t++ {
-			for s := 0; s < targetWidth; s++ {
+			for s := range targetWidth {
 				currentTargetPrime := op.getPrimeTarget(targets, targetsOffset, targetStride, s)
 
 				i := (t-1)*(targetWidth) + s
@@ -520,13 +520,13 @@ type ctcLossDiffOp struct {
 func (op *ctcLossDiffOp) Arity() int { return 5 }
 
 func (op *ctcLossDiffOp) WriteHash(h hash.Hash) {
-	fmt.Fprintf(h, op.String())
+	fmt.Fprintf(h, "%s", op.String())
 }
 
 func (op *ctcLossDiffOp) Hashcode() uint32 { return simpleHash(op) }
 
 func (op *ctcLossDiffOp) String() string {
-	return fmt.Sprintf("ctcLossDiff{}()")
+	return "ctcLossDiff{}()"
 }
 
 func (op *ctcLossDiffOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
@@ -595,7 +595,7 @@ func (op *ctcLossDiffOp) f64s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 	if targetsT.Dims() == 1 {
 		pos := 0
 
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = pos
 			pos += targetLengths[i]
 
@@ -608,7 +608,7 @@ func (op *ctcLossDiffOp) f64s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 	} else {
 		batchStride := targetsT.Strides()[0]
 
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = i * batchStride
 		}
 
@@ -727,8 +727,8 @@ func (op *ctcLossDiffOp) f64s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 				}
 			}
 
-			for t := 0; t < inputLength; t++ {
-				for c := 0; c < numLabels; c++ {
+			for t := range inputLength {
+				for c := range numLabels {
 					res := op.getOrPanicF64(gradSlice, t, c)
 					lp := lppSection[t*numLabels+c]
 
@@ -764,7 +764,7 @@ func (op *ctcLossDiffOp) f32s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 	if targetsT.Dims() == 1 {
 		pos := 0
 
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = pos
 			pos += targetLengths[i]
 
@@ -777,7 +777,7 @@ func (op *ctcLossDiffOp) f32s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 	} else {
 		batchStride := targetsT.Strides()[0]
 
-		for i := 0; i < batchSize; i++ {
+		for i := range batchSize {
 			targetBatchOffsets[i] = i * batchStride
 		}
 
@@ -896,8 +896,8 @@ func (op *ctcLossDiffOp) f32s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 				}
 			}
 
-			for t := 0; t < inputLength; t++ {
-				for c := 0; c < numLabels; c++ {
+			for t := range inputLength {
+				for c := range numLabels {
 					res := op.getOrPanicF32(gradSlice, t, c)
 					lp := lppSection[t*numLabels+c]
 
@@ -914,7 +914,7 @@ func (op *ctcLossDiffOp) f32s(logProbsT, targetsT, inputLengthsT, targetLengthsT
 	return nil
 }
 
-func (op ctcLossDiffOp) getOrPanic(view tensor.View, coords ...int) interface{} {
+func (op ctcLossDiffOp) getOrPanic(view tensor.View, coords ...int) any {
 	v, err := view.At(coords...)
 	if err != nil {
 		panic(err)

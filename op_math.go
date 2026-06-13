@@ -20,7 +20,6 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -76,14 +75,15 @@ func newElemBinOp(ot ʘBinaryOperatorType, a, b *Node) elemBinOp {
 func (op elemBinOp) Arity() int { return 2 }
 
 // elemBinOp has either of these types:
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor a
-//		elemBinOp :: (Floats a) ⇒ a → Tensor a → a
-//		elemBinOp :: (Floats a) ⇒ a → a → a
-//		elemBinOp :: (Floats a) ⇒ a → a → Bool
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor Bool
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor Bool
-//		elemBinOp :: (Floats a) ⇒ a → Tensor a → Bool
+//
+//	elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
+//	elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor a
+//	elemBinOp :: (Floats a) ⇒ a → Tensor a → a
+//	elemBinOp :: (Floats a) ⇒ a → a → a
+//	elemBinOp :: (Floats a) ⇒ a → a → Bool
+//	elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor Bool
+//	elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor Bool
+//	elemBinOp :: (Floats a) ⇒ a → Tensor a → Bool
 //
 // To make things clearer, it helps to consider elemBinOp to be the representation of
 // a dispatch table for different functions. In a sense it's "overloading" functions.
@@ -131,16 +131,17 @@ func (op elemBinOp) Type() hm.Type {
 }
 
 // elemBinOp has these allowed shapes:
-// 		op :: () → () → ()
-//		op :: () → (...) → (...)
-//		op :: (...) → () → (...)
+//
+//	op :: () → () → ()
+//	op :: () → (...) → (...)
+//	op :: (...) → () → (...)
 func (op elemBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err error) {
 	shapeLogf("Inferring shape of %v", op)
 	enterLogScope()
 	defer leaveLogScope()
 
 	if inputs[0] == nil || inputs[1] == nil {
-		return nil, errors.Errorf(nyiFail, "elemBinOp.inferShape", "runtime impl")
+		return nil, fmt.Errorf(nyiFail, "elemBinOp.inferShape", "runtime impl")
 	}
 
 	switch x := inputs[0].(type) {
@@ -166,7 +167,7 @@ func (op elemBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err err
 				retVal = x
 			case !x.IsScalar() && !y.IsScalar():
 				if !x.Eq(y) {
-					return nil, errors.Errorf("Shape mismatch: %v and %v", x, y)
+					return nil, fmt.Errorf("Shape mismatch: %v and %v", x, y)
 				}
 				if x.Dims() > y.Dims() {
 					retVal = x
@@ -190,10 +191,13 @@ func (op elemBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err err
 
 // DiffWRT gives info on whether or not the operation is actually differentiable
 // For example, this is differentiable:
-//		c = a ** b
+//
+//	c = a ** b
+//
 // The result of the differentiation wrt to a and b would be:
-// 		dc/da = b * a ** (b-1)
-// 		dc/db = a ** b * ln(a)
+//
+//	dc/da = b * a ** (b-1)
+//	dc/db = a ** b * ln(a)
 //
 // However, operators like < and > are NOT differentiable
 //
@@ -233,7 +237,7 @@ func (op elemBinOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Nodes,
 	for i, grad := range retVal {
 		if inputs[i].IsScalar() && !grad.IsScalar() {
 			if retVal[i], err = Sum(grad); err != nil {
-				err = errors.Wrap(err, operationError)
+				err = fmt.Errorf("%s: %w", operationError, err)
 				return
 			}
 		}
@@ -254,7 +258,7 @@ func (op elemBinOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (er
 	b := op.ʘBinaryOperator.binOpType()
 	if err = ʘBinOpDiffFns[b](ctx, inputs[0], inputs[1], output); err != nil {
 		if _, ok := err.(AutoDiffError); !ok {
-			return errors.Wrapf(err, autodiffFail, b)
+			return fmt.Errorf(autodiffFail+": %w", b, err)
 		}
 		err = nil
 	}
@@ -269,7 +273,7 @@ func (op elemBinOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (er
 			var d Value
 			var t tensor.Tensor
 			if t, err = tensor.Sum(indvdT); err != nil {
-				return errors.Wrap(err, operationError)
+				return fmt.Errorf("%s: %w", operationError, err)
 			}
 			defer returnTensor(t)
 
@@ -359,12 +363,12 @@ func (op elemBinOp) IncrDo(incr Value, inputs ...Value) (err error) {
 	// if !op.ReturnsPtr() {
 	var retVal Value
 	if retVal, err = op.Do(inputs...); err != nil {
-		return errors.Wrapf(err, doFail, op)
+		return fmt.Errorf(doFail+": %w", op, err)
 	}
 
 	add := newEBOByType(addOpType, TypeOf(incr), TypeOf(retVal))
 	if retVal, err = add.UnsafeDo(incr, retVal); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, add)
+		return fmt.Errorf(unsafeDoFail+": %w", add, err)
 	}
 	err = noIncrErr{retVal}
 	return
@@ -410,7 +414,8 @@ func newElemUnaryOp(op ʘUnaryOperatorType, a *Node) elemUnaryOp {
 func (op elemUnaryOp) Arity() int { return 1 }
 
 // all pointwise unary operations have this type:
-//		op :: (Arithable a) ⇒ a → a
+//
+//	op :: (Arithable a) ⇒ a → a
 func (op elemUnaryOp) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	return hm.NewFnType(a, a)
@@ -418,7 +423,7 @@ func (op elemUnaryOp) Type() hm.Type {
 
 func (op elemUnaryOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err error) {
 	if inputs[0] == nil {
-		return nil, errors.Errorf(nyiFail, "inferShape", "nil shape")
+		return nil, fmt.Errorf(nyiFail, "inferShape", "nil shape")
 	}
 
 	return inputs[0].(tensor.Shape), nil
@@ -526,7 +531,7 @@ func (op elemUnaryOp) do(a Value, opts ...tensor.FuncOpt) (retVal Value, err err
 			opFn := op.ʘUnaryOperator.(*sf64UnaryOperator)
 			retVal, _ = anyToScalar((*opFn)(f))
 		default:
-			return nil, errors.Errorf(nyiFail, "elemUnaryOp.do", vt)
+			return nil, fmt.Errorf(nyiFail, "elemUnaryOp.do", vt)
 		}
 	}
 	return
@@ -552,7 +557,7 @@ func (op linAlgBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err e
 
 	x, y := inputs[0].(tensor.Shape), inputs[1].(tensor.Shape)
 	if x == nil || y == nil {
-		return nil, errors.Errorf("Cannot infer shape from %v %v", x, y)
+		return nil, fmt.Errorf("Cannot infer shape from %v %v", x, y)
 	}
 
 	shapeLogf("x.shape: %v; y.shape: %v", x, y)
@@ -570,7 +575,7 @@ func (op linAlgBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err e
 		}
 
 		if x[1] != y[0] {
-			return nil, errors.Errorf("Inner dimensions do not match up")
+			return nil, fmt.Errorf("Inner dimensions do not match up")
 		}
 
 		retVal = tensor.Shape{x[0], y[1]}
@@ -580,7 +585,7 @@ func (op linAlgBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err e
 			defer tensor.ReturnInts(x)
 		}
 		if x[0] != y[0] && x[1] != y[0] {
-			return nil, errors.Errorf("Incompatible shapes: %v and %v", x, y)
+			return nil, fmt.Errorf("Incompatible shapes: %v and %v", x, y)
 		}
 
 		switch {
@@ -603,7 +608,7 @@ func (op linAlgBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err e
 		innerY := y[len(y)-2:]
 		outerY := y[:len(y)-2]
 		if !outerX.Eq(outerY) {
-			return nil, errors.Errorf("Expected outer dimensions of %v and %v to match. Got %v and %v", x, y, outerX, outerY)
+			return nil, fmt.Errorf("Expected outer dimensions of %v and %v to match. Got %v and %v", x, y, outerX, outerY)
 		}
 
 		// batchSize := outerX.TotalSize()
@@ -628,7 +633,7 @@ func (op linAlgBinOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Node
 	o := op.āBinaryOperator
 
 	if retVal, err = āBinOpDiffExprs[o](op.transA, op.transB, inputs[0], inputs[1], output, gradNode); err != nil {
-		return nil, errors.Wrap(err, "Failed to differentiate expressions")
+		return nil, fmt.Errorf("%s: %w", "Failed to differentiate expressions", err)
 	}
 
 	for _, n := range retVal {
@@ -713,12 +718,12 @@ func (op linAlgBinOp) IncrDo(incr Value, inputs ...Value) (err error) {
 
 	var retVal Value
 	if retVal, err = op.do(inputs); err != nil {
-		return errors.Wrapf(err, doFail, op)
+		return fmt.Errorf(doFail+": %w", op, err)
 	}
 
 	add := newEBOByType(addOpType, TypeOf(incr), TypeOf(retVal))
 	if retVal, err = add.UnsafeDo(incr, retVal); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, add)
+		return fmt.Errorf(unsafeDoFail+": %w", add, err)
 	}
 
 	err = noIncrErr{retVal}
@@ -729,7 +734,7 @@ func (op linAlgBinOp) IncrDo(incr Value, inputs ...Value) (err error) {
 func (op linAlgBinOp) UsePreallocDo(prealloc Value, inputs ...Value) (retVal Value, err error) {
 	t, ok := prealloc.(tensor.Tensor)
 	if !ok {
-		return nil, errors.Errorf("Expected Tensor as preallocated value. Got %v of %T instead", prealloc, prealloc)
+		return nil, fmt.Errorf("Expected Tensor as preallocated value. Got %v of %T instead", prealloc, prealloc)
 	}
 	if op.āBinaryOperator == batchedMatMulOperator {
 		return op.preallocBatchMatMul(false, prealloc, inputs...)
@@ -751,7 +756,7 @@ func (op linAlgBinOp) do(inputs []Value, opts ...tensor.FuncOpt) (retVal Value, 
 
 	if op.transA && op.āBinaryOperator != batchedMatMulOperator {
 		if err = a.T(); err != nil {
-			return nil, errors.Wrap(err, tFail)
+			return nil, fmt.Errorf("%s: %w", tFail, err)
 		}
 
 		// untranspose
@@ -760,7 +765,7 @@ func (op linAlgBinOp) do(inputs []Value, opts ...tensor.FuncOpt) (retVal Value, 
 
 	if op.transB && op.āBinaryOperator != batchedMatMulOperator {
 		if err = b.T(); err != nil {
-			return nil, errors.Wrap(err, tFail)
+			return nil, fmt.Errorf("%s: %w", tFail, err)
 		}
 
 		// untranspose
@@ -773,10 +778,10 @@ func (op linAlgBinOp) do(inputs []Value, opts ...tensor.FuncOpt) (retVal Value, 
 	case matVecMulOperator:
 		retVal, err = tensor.MatVecMul(a, b, opts...)
 	case vecDotOperator:
-		var ret interface{}
+		var ret any
 
 		if ret, err = tensor.Inner(a, b); err != nil {
-			return nil, errors.Wrapf(err, "Failed to carry out linalgBinOp operation %v", op)
+			return nil, fmt.Errorf("Failed to carry out linalgBinOp operation %v: %w", op, err)
 		}
 
 		retVal, _ = anyToScalar(ret)
@@ -814,10 +819,7 @@ type tensordotOp struct {
 func makeTensordotOp(a, b *Node, aAxes, bAxes []int) tensordotOp {
 	aDims := a.Shape().Dims()
 	bDims := b.Shape().Dims()
-	retDims := a.Shape().Dims() + b.Shape().Dims() - 2*len(aAxes)
-	if retDims < 0 {
-		retDims = 0
-	}
+	retDims := max(a.Shape().Dims()+b.Shape().Dims()-2*len(aAxes), 0)
 	return tensordotOp{
 		aAxes:   aAxes,
 		bAxes:   bAxes,
@@ -844,7 +846,7 @@ func (op tensordotOp) Type() hm.Type {
 
 func (op tensordotOp) InferShape(ds ...DimSizer) (tensor.Shape, error) {
 	if err := checkArity(op, len(ds)); err != nil {
-		return nil, errors.Wrap(err, "tensordot")
+		return nil, fmt.Errorf("%s: %w", "tensordot", err)
 	}
 
 	shapes, err := DimSizersToShapes(ds)
@@ -883,12 +885,12 @@ func (op tensordotOp) InferShape(ds ...DimSizer) (tensor.Shape, error) {
 
 func (op tensordotOp) Do(vals ...Value) (Value, error) {
 	if err := checkArity(op, len(vals)); err != nil {
-		return nil, errors.Wrap(err, "tensordot")
+		return nil, fmt.Errorf("%s: %w", "tensordot", err)
 	}
 
 	ts, err := valuesToTensors(vals)
 	if err != nil {
-		return nil, errors.Wrap(err, "tensordot - valuesToTensors failed")
+		return nil, fmt.Errorf("%s: %w", "tensordot - valuesToTensors failed", err)
 	}
 
 	return tensor.Contract(ts[0], ts[1], op.aAxes, op.bAxes)
@@ -1079,7 +1081,7 @@ func (op tensordotOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) e
 			d.Add(tensordotPermDense, tensor.UseUnsafe()) // TODO: Should output directly into d and save the add
 
 		default:
-			return errors.Errorf(nyiTypeFail, "Do Diff (hack)", st)
+			return fmt.Errorf(nyiTypeFail, "Do Diff (hack)", st)
 		}
 	}
 
@@ -1140,7 +1142,7 @@ func (op tensordotOp) SymDiff(inputs Nodes, output *Node, grad *Node) (retVal No
 		pattern := make([]int, len(in.shape))
 		counter := len(iAxes)
 
-		for patternIndex := 0; patternIndex < len(pattern); patternIndex++ {
+		for patternIndex := range pattern {
 			iAxesCoSortedIndex := contains(iAxesCoSorted, patternIndex)
 			if 0 <= iAxesCoSortedIndex {
 				pattern[patternIndex] = iAxesCoSortedIndex
@@ -1189,7 +1191,7 @@ func (op tensordotOp) SymDiff(inputs Nodes, output *Node, grad *Node) (retVal No
 					nodes:  inputs,
 					single: other,
 					grad:   grad,
-					err:    errors.Wrap(err, "While performing tensordot of (other × grad) in SymDiff of `tensordotOp`. Nodes() returns the inputs. Node() returns the `other`, Grad() returns grad`"),
+					err:    fmt.Errorf("%s: %w", "While performing tensordot of (other × grad) in SymDiff of `tensordotOp`. Nodes() returns the inputs. Node() returns the `other`, Grad() returns grad`", err),
 				}
 				return nil, err
 			}
@@ -1203,7 +1205,7 @@ func (op tensordotOp) SymDiff(inputs Nodes, output *Node, grad *Node) (retVal No
 					err = SymDiffError{
 						nodes:  inputs,
 						single: other,
-						err:    errors.Wrap(err, "While getting .DimSize(0) of other, while SymDiff-ing. Nodes() returns the inputs, Node() returns `other`. There is no Grad or Grad map."),
+						err:    fmt.Errorf("%s: %w", "While getting .DimSize(0) of other, while SymDiff-ing. Nodes() returns the inputs, Node() returns `other`. There is no Grad or Grad map.", err),
 					}
 					return nil, err
 				}

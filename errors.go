@@ -2,8 +2,6 @@ package gorgonia
 
 import (
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 // NoOpError is an error returned when an operation does nothing.
@@ -63,12 +61,12 @@ func (err vmContextualError) Value() Value       { return err.node.Value() }
 func (err vmContextualError) InstructionID() int { return err.instr }
 func (err vmContextualError) Err() error         { return err.error }
 
-func nyi(what string, implFor interface{}) error {
-	return errors.Errorf(nyiFail, what, implFor)
+func nyi(what string, implFor any) error {
+	return fmt.Errorf(nyiFail, what, implFor)
 }
 
 func nondiffErr(op Op) error {
-	return errors.Errorf("%s is a non-differentiable function", op)
+	return fmt.Errorf("%s is a non-differentiable function", op)
 }
 
 // checkErrSetDeriv sets the deriv if the error is a Valuer. Helper function for linalg operations

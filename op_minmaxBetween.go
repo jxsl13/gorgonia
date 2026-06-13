@@ -5,7 +5,6 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -29,7 +28,7 @@ func (op minBetween) InferShape(shps ...DimSizer) (tensor.Shape, error) {
 	a := shps[0].(tensor.Shape)
 	b := shps[1].(tensor.Shape)
 	if !a.Eq(b) {
-		return nil, errors.Errorf("Expected both inputs to have the same shape. Got %v and %v instead", a, b)
+		return nil, fmt.Errorf("Expected both inputs to have the same shape. Got %v and %v instead", a, b)
 	}
 	return a.Clone(), nil
 }
@@ -54,7 +53,7 @@ func (op minBetween) CallsExtern() bool { return false }
 func (op minBetween) OverwritesInput() int { return -1 }
 
 /* Other methods */
-func (op minBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op minBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op minBetween) Hashcode() uint32 { return simpleHash(op) }
 
@@ -98,7 +97,7 @@ func (op maxBetween) InferShape(shps ...DimSizer) (tensor.Shape, error) {
 	a := shps[0].(tensor.Shape)
 	b := shps[1].(tensor.Shape)
 	if !a.Eq(b) {
-		return nil, errors.Errorf("Expected both inputs to have the same shape. Got %v and %v instead", a, b)
+		return nil, fmt.Errorf("Expected both inputs to have the same shape. Got %v and %v instead", a, b)
 	}
 	return a.Clone(), nil
 }
@@ -123,7 +122,7 @@ func (op maxBetween) CallsExtern() bool { return false }
 func (op maxBetween) OverwritesInput() int { return -1 }
 
 /* Other methods */
-func (op maxBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op maxBetween) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op maxBetween) Hashcode() uint32 { return simpleHash(op) }
 
@@ -181,7 +180,7 @@ func minmaxAutoDiff(ctx ExecutionContext, a, b *Node, output *Node) (err error) 
 	ctx.Device = a.Device()
 	mask, err := eq.Do(adv.Value, outdv.Value)
 	if err != nil {
-		return errors.Wrap(err, "Unable to get mask")
+		return fmt.Errorf("%s: %w", "Unable to get mask", err)
 	}
 
 	dev := a.Device()
@@ -190,14 +189,14 @@ func minmaxAutoDiff(ctx ExecutionContext, a, b *Node, output *Node) (err error) 
 	var extra bool
 
 	if gradOut, extra, err = output.GradOnDevice(dev, ctx.External); err != nil {
-		return errors.Wrapf(err, gradOnDeviceFail, output, dev)
+		return fmt.Errorf(gradOnDeviceFail+": %w", output, dev, err)
 	}
 	if extra {
 		defer ctx.PutValue(dev, gradOut)
 	}
 
 	if gradA, extra, err = a.GradOnDevice(dev, ctx.External); err != nil {
-		return errors.Wrapf(err, gradOnDeviceFail, a, dev)
+		return fmt.Errorf(gradOnDeviceFail+": %w", a, dev, err)
 	}
 	if extra {
 		defer ctx.PutValue(dev, gradA)
@@ -208,14 +207,14 @@ func minmaxAutoDiff(ctx ExecutionContext, a, b *Node, output *Node) (err error) 
 
 	var d Value
 	if d, err = mul.Do(gradOut, mask); err != nil {
-		return errors.Wrapf(err, "IncrDo gradA failed")
+		return fmt.Errorf("IncrDo gradA failed: %w", err)
 	}
 	adv.SetDeriv(d)
 
 	sub := NewSubOp(b, a, ctx)
 	sub.Incr = gradB
 	if d, err = sub.Do(gradOut, adv.d); err != nil {
-		return errors.Wrapf(err, "IncrDo gradB failed")
+		return fmt.Errorf("IncrDo gradB failed: %w", err)
 	}
 	bdv.SetDeriv(d)
 	return nil

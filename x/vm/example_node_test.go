@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 )
 
 func Examplenode_Compute() {

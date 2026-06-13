@@ -1,10 +1,10 @@
 package dot
 
 import (
+	internalEncoding "github.com/jxsl13/gorgonia/internal/encoding"
 	"gonum.org/v1/gonum/graph"
 	"gonum.org/v1/gonum/graph/encoding"
 	gonumDot "gonum.org/v1/gonum/graph/encoding/dot"
-	internalEncoding "gorgonia.org/gorgonia/internal/encoding"
 )
 
 type exprSubGraph struct {

@@ -86,7 +86,7 @@ func DenormalizeWeights(biases, gammas, means, vars, kernels map[string][]float3
 
 		biasesExtract[i] = biasesExtract[i] - meansExtract[i]*scale
 		isize := convShape[1] * convShape[2] * convShape[3]
-		for j := 0; j < isize; j++ {
+		for j := range isize {
 			kernelsExtract[isize*i+j] = kernelsExtract[isize*i+j] * scale
 		}
 	}

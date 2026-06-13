@@ -1,9 +1,10 @@
-// +build cuda
+//go:build cuda
 
 package gorgonia
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"gorgonia.org/cu"
 	"gorgonia.org/tensor"
 )
@@ -87,7 +88,7 @@ func (instr *execOp) exec(m *tapeMachine) (err error) {
 	case CUDADoer:
 		prealloc := m.getValue(instr.writeTo)
 		if v, err = op.CUDADo(m, toDev, prealloc, inputs...); err != nil {
-			return errors.Wrapf(err, "Happened while attempting to use CUDA to execute %v. Node is %x. Register was %v", instr, instr.id, instr.writeTo.id)
+			return fmt.Errorf("Happened while attempting to use CUDA to execute %v. Node is %x. Register was %v: %w", instr, instr.id, instr.writeTo.id, err)
 		}
 		e := &m.Engines()[int(toDev)]
 		setEngine(v, e)
@@ -98,28 +99,28 @@ func (instr *execOp) exec(m *tapeMachine) (err error) {
 			if pd, ok := instr.op.(UsePreallocDoer); ok {
 				p := m.cpumem[instr.writeTo.id]
 				if v, err = pd.UsePreallocDo(p, inputs...); err != nil {
-					return errors.Wrapf(err, "Happened while attempting to execute %v. Node is %x. Register was: %v ", instr, instr.id, instr.writeTo.id)
+					return fmt.Errorf("Happened while attempting to execute %v. Node is %x. Register was: %v : %w", instr, instr.id, instr.writeTo.id, err)
 				}
 			} else {
 				// TODO: maybe warn?
 				if v, err = instr.op.Do(inputs...); err != nil {
-					return errors.Wrap(err, opDoFail)
+					return fmt.Errorf("%s: %w", opDoFail, err)
 				}
 			}
 		case instr.useUnsafe:
 			if ud, ok := instr.op.(UnsafeDoer); ok {
 				if v, err = ud.UnsafeDo(inputs...); err != nil {
-					return errors.Wrap(err, "Failed to carry UnsafeDo()")
+					return fmt.Errorf("%s: %w", "Failed to carry UnsafeDo()", err)
 				}
 			} else {
 				// TODO: warn?
 				if v, err = instr.op.Do(inputs...); err != nil {
-					return errors.Wrap(err, opDoFail)
+					return fmt.Errorf("%s: %w", opDoFail, err)
 				}
 			}
 		default:
 			if v, err = instr.op.Do(inputs...); err != nil {
-				return errors.Wrap(err, opDoFail)
+				return fmt.Errorf("%s: %w", opDoFail, err)
 			}
 		}
 		setEngine(v, m.Engine)
@@ -142,7 +143,7 @@ func (instr *execOp) exec(m *tapeMachine) (err error) {
 	if m.trace() && (len(m.watchNodes) == 0 || m.watchNodes.Contains(node)) {
 		m.Signal()
 		if err = node.bindCopy(v); err != nil {
-			return errors.Wrapf(err, "TraceExec failed to bind copy")
+			return fmt.Errorf("TraceExec failed to bind copy: %w", err)
 		}
 		// TODO: Iop{} is not supported yet
 	} else {
@@ -181,7 +182,7 @@ func (instr *execOp) exec(m *tapeMachine) (err error) {
 
 					var mem tensor.Memory
 					if mem, err = m.Get(dev, memsize); err != nil {
-						return errors.Wrapf(err, "Unable to allocate %v bytes from %v", memsize, dev)
+						return fmt.Errorf("Unable to allocate %v bytes from %v: %w", memsize, dev, err)
 					}
 
 					var d Value

@@ -13,7 +13,7 @@ type Trace struct {
 	StateFunction string
 	ID            int64
 	Start         time.Time
-	End           time.Time `json:",omitempty"`
+	End           time.Time
 }
 
 type chanTracerContextKey int

@@ -9,9 +9,8 @@ import (
 
 	"github.com/awalterschulze/gographviz"
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
+	"github.com/jxsl13/gorgonia/internal/encoding"
 	"gonum.org/v1/gonum/graph"
-	"gorgonia.org/gorgonia/internal/encoding"
 	"gorgonia.org/tensor"
 )
 
@@ -130,9 +129,9 @@ func WithName(name string) NodeConsOpt {
 }
 
 // WithValue is a node construction option that binds the value to the *Node. This function may panic if:
-//	- Gorgonia was unable to convert interface{} into a Value.
-//	- The type of the Value does not match the type of the nodes.
-func WithValue(any interface{}) NodeConsOpt {
+//   - Gorgonia was unable to convert any into a Value.
+//   - The type of the Value does not match the type of the nodes.
+func WithValue(any any) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
 	if err != nil {
 		panic(err)
@@ -164,9 +163,9 @@ func WithValue(any interface{}) NodeConsOpt {
 }
 
 // WithGrad is a node construction option that binds the value to the *Node. This function may panic if:
-//	- There isn't already a value associated with the node (.boundTo == nil)
-//	- The type of the Value does not match the value of the node.
-func WithGrad(any interface{}) NodeConsOpt {
+//   - There isn't already a value associated with the node (.boundTo == nil)
+//   - The type of the Value does not match the value of the node.
+func WithGrad(any any) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
 	if err != nil {
 		panic(err)
@@ -385,7 +384,7 @@ func (n *Node) Graph() *ExprGraph { return n.g }
 // CloneTo clones the node into a new graph. If CloneTo() is called on the same graph as the n, it will return n. The reason this is done is because
 // at any given time, every node  should be unique in the *ExprGraph.
 //
-//TODO: clone children as well (this means that CloneTo() is only currently suitable fo input nodes)
+// TODO: clone children as well (this means that CloneTo() is only currently suitable fo input nodes)
 func (n *Node) CloneTo(g *ExprGraph) *Node {
 	if n.g != nil && g == n.g {
 		return n
@@ -397,10 +396,10 @@ func (n *Node) CloneTo(g *ExprGraph) *Node {
 }
 
 // Clone clones the node. There are some caveats:
-//		- the graph is not copied over - the node essentially does not belong to a collection
-//		- there is no ID
-// 		- the children are not cloned
-func (n *Node) Clone() (retVal interface{}) {
+//   - the graph is not copied over - the node essentially does not belong to a collection
+//   - there is no ID
+//   - the children are not cloned
+func (n *Node) Clone() (retVal any) {
 	n2 := newNode(In(n.g), WithOp(n.op), WithName(n.name), WithType(n.t))
 	if n.shape != nil {
 		n2.shape = n.shape.Clone()
@@ -451,7 +450,7 @@ func (n *Node) Grad() (Value, error) {
 		return n.deriv.Value(), nil
 	}
 
-	return nil, errors.Errorf("No Gradient node/value found for %T", n)
+	return nil, fmt.Errorf("No Gradient node/value found for %T", n)
 }
 
 // Dims indicates how many dimensions the node's result has
@@ -553,7 +552,8 @@ func (n *Node) WriteHash(h hash.Hash32) {
 
 // Hashcode provides the hash for the tree, assuming that the node is the root of the tree.
 // Original implementation was here by Vatine (who's apparently 80 years old and using SO!?!):
-//		http://stackoverflow.com/questions/1988665/hashing-a-tree-structure
+//
+//	http://stackoverflow.com/questions/1988665/hashing-a-tree-structure
 func (n *Node) Hashcode() uint32 {
 	if n.hashed {
 		return n.hash
@@ -597,9 +597,9 @@ func (n *Node) RestrictedToDot(up, down int) string {
 	//	up
 	ns = Nodes{n}
 	upQ = Nodes{n}
-	for l := 0; l < up; l++ {
+	for range up {
 		origLen := len(upQ)
-		for i := 0; i < origLen; i++ {
+		for i := range origLen {
 			qn := upQ[i]
 			toQN := sliceNodesToNodes(graph.NodesOf(g.To(qn.ID())))
 			upQ = append(upQ, toQN...)
@@ -610,9 +610,9 @@ func (n *Node) RestrictedToDot(up, down int) string {
 
 	// down
 	downQ = Nodes{n}
-	for d := 0; d < down; d++ {
+	for range down {
 		origLen := len(downQ)
-		for i := 0; i < origLen; i++ {
+		for i := range origLen {
 			qn := downQ[i]
 			downQ = append(downQ, qn.children...)
 			ns = append(ns, qn.children...)
@@ -702,16 +702,16 @@ func (n *Node) bindCopy(v Value) (err error) {
 				return nil
 			}
 
-			return errors.Errorf("Cannot yet handle bindCopy() of *dualValue into *dualValue") // TODO FIX
+			return fmt.Errorf("Cannot yet handle bindCopy() of *dualValue into *dualValue") // TODO FIX
 		}
 		if copied, err = Copy(dv.Value, v); err != nil {
-			return errors.Wrapf(err, "Failed to copy while binding to node with *dualValue")
+			return fmt.Errorf("Failed to copy while binding to node with *dualValue: %w", err)
 		}
 		dv.Value = copied // in case they're scalars
 		return nil
 	}
 	if copied, err = Copy(n.boundTo, v); err != nil {
-		return errors.Wrapf(err, "Failed to copy while binding to node")
+		return fmt.Errorf("Failed to copy while binding to node: %w", err)
 	}
 	n.boundTo = copied // in case it's a scalar
 	return nil

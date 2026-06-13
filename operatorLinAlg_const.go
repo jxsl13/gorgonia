@@ -39,7 +39,8 @@ var āBinOpTypes = [maxĀBinaryOperator]func() hm.Type{
 /* TYPES FOR LINALG BINARY OP*/
 
 // matVecMulOp is a function with this type:
-//		matVecMulOp :: (Float a) ⇒ Vector a → Matrix a → Vector a
+//
+//	matVecMulOp :: (Float a) ⇒ Vector a → Matrix a → Vector a
 //
 // For the moment only floats are allowed
 func matVecMulType() hm.Type {
@@ -51,7 +52,8 @@ func matVecMulType() hm.Type {
 }
 
 // matMulOp is a function with this type:
-//		matMulOp :: (Float a) ⇒ Matrix a → Matrix a → Matrix a
+//
+//	matMulOp :: (Float a) ⇒ Matrix a → Matrix a → Matrix a
 //
 // For the moment only floats are allowed
 func matMulType() hm.Type {
@@ -62,7 +64,8 @@ func matMulType() hm.Type {
 }
 
 // vecDotOp is a function with this type:
-//		vecDotOp :: (Float a) ⇒ Vector a → Vector a → a
+//
+//	vecDotOp :: (Float a) ⇒ Vector a → Vector a → a
 //
 // For the moment only floats are allowed
 func vecDotType() hm.Type {
@@ -73,7 +76,8 @@ func vecDotType() hm.Type {
 }
 
 // outerProdOp is a function with this type:
-//		outerProdOp :: (Float a) ⇒ Vector a → Vector a → Matrix a
+//
+//	outerProdOp :: (Float a) ⇒ Vector a → Vector a → Matrix a
 //
 // For the moment only floats are allowed
 func outerProdType() hm.Type {

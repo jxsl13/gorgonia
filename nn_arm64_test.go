@@ -1,5 +1,4 @@
 //go:build arm64
-// +build arm64
 
 package gorgonia
 
@@ -10,7 +9,7 @@ var bnAllCases = []struct {
 
 	Dtype tensor.Dtype
 
-	X      interface{}
+	X      any
 	XShape tensor.Shape
 
 	ScaleInit  InitWFn
@@ -19,8 +18,8 @@ var bnAllCases = []struct {
 	BiasInit  InitWFn
 	BiasShape tensor.Shape
 
-	ExpectedTrainResult, ExpectedOutputGrad, ExpectedBiasGrad, ExpectedScaleGrad, ExpectedInputGrad, ExpectedMean, ExpectedVariance interface{}
-	ExpectedEvalResult                                                                                                              interface{}
+	ExpectedTrainResult, ExpectedOutputGrad, ExpectedBiasGrad, ExpectedScaleGrad, ExpectedInputGrad, ExpectedMean, ExpectedVariance any
+	ExpectedEvalResult                                                                                                              any
 }{
 	{
 		desc:                "Float32 (3,2)",
@@ -220,8 +219,8 @@ var bnstackedCases = []struct {
 	BiasInit  InitWFn
 	BiasShape tensor.Shape
 
-	ExpectedTrainResult, ExpectedOutputGrad, ExpectedBiasGrad, ExpectedScaleGrad, ExpectedMean, ExpectedVariance interface{}
-	ExpectedEvalResult                                                                                           interface{}
+	ExpectedTrainResult, ExpectedOutputGrad, ExpectedBiasGrad, ExpectedScaleGrad, ExpectedMean, ExpectedVariance any
+	ExpectedEvalResult                                                                                           any
 }{
 	{
 		desc:                "Example (1d Float32)",

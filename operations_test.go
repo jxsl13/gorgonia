@@ -2,7 +2,7 @@ package gorgonia
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"runtime"
 	"testing"
 
@@ -264,7 +264,7 @@ func TestGt(t *testing.T) {
 
 		m1 := NewTapeMachine(g)
 		if err = m1.RunAll(); err != nil {
-			ioutil.WriteFile("fail.dot", []byte(g.ToDot()), 0644)
+			os.WriteFile("fail.dot", []byte(g.ToDot()), 0644)
 			t.Errorf("%v", m1.Prog())
 			t.Errorf("Test %d: %+v", i, err)
 			continue
@@ -416,7 +416,7 @@ func TestSoftMax(t *testing.T) {
 	if err := m.RunAll(); err != nil {
 		t.Error(err)
 	}
-	ioutil.WriteFile("fullGraph.dot", []byte(g.ToDot()), 0644)
+	os.WriteFile("fullGraph.dot", []byte(g.ToDot()), 0644)
 	var xG Value
 	var err error
 	if xG, err = x.Grad(); err != nil {
@@ -464,7 +464,7 @@ var sliceTests = []struct {
 	slices []tensor.Slice
 
 	expected tensor.Shape
-	data     interface{}
+	data     any
 	err      bool
 }{
 	{"vec[0]", tensor.Shape{2}, []tensor.Slice{S(0)}, scalarShape, float64(0), false},

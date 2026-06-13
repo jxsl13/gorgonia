@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"io/ioutil"
+	"os"
+
 	"testing"
 
 	"gorgonia.org/tensor"
@@ -56,7 +57,7 @@ func TestBatchNormUnderstanding(t *testing.T) {
 	if err := m.RunAll(); err != nil {
 		t.Fatal(err)
 	}
-	ioutil.WriteFile("foo.dot", []byte(g.ToDot()), 0644)
+	os.WriteFile("foo.dot", []byte(g.ToDot()), 0644)
 	t.Logf("\n%v", y2.Value())
 	// _, _ = scale, scale2
 	// _, _ = bias, bias2

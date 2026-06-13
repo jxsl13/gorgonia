@@ -1,4 +1,4 @@
-// +build cuda
+//go:build cuda
 
 package gorgonia
 
@@ -112,7 +112,7 @@ func BenchmarkOneMilCUDA(b *testing.B) {
 	defer m.Close()
 
 	// runtime.LockOSThread()
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		if err := m.RunAll(); err != nil {
 			b.Fatalf("Failed at n: %d. Error: %v", n, err)
 			break
@@ -131,7 +131,7 @@ func BenchmarkOneMil(b *testing.B) {
 	m := NewTapeMachine(g)
 	defer m.Close()
 
-	for n := 0; n < b.N; n++ {
+	for b.Loop() {
 		if err := m.RunAll(); err != nil {
 			b.Fatalf("Failed at n: %d. Error: %v", n, err)
 			break

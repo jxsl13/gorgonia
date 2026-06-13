@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"hash"
 
+	"errors"
+
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia/internal/encoding"
+	"github.com/jxsl13/gorgonia/internal/encoding"
 	"gorgonia.org/tensor"
 )
 
@@ -22,23 +23,23 @@ func AveragePool2D(x *Node, kernel tensor.Shape, pad, stride []int) (*Node, erro
 
 	// check shape
 	if xShape.Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have a shape with dimension 4")
+		return nil, fmt.Errorf("Expected input to have a shape with dimension 4")
 	}
 
 	if kernel.Dims() != 2 {
-		return nil, errors.Errorf("Expected kernel to have a shape of dimension 2")
+		return nil, fmt.Errorf("Expected kernel to have a shape of dimension 2")
 	}
 
 	// checks
 	for _, s := range stride {
 		if s <= 0 {
-			return nil, errors.Errorf("Cannot use strides of less than or equal 0: %v", stride)
+			return nil, fmt.Errorf("Cannot use strides of less than or equal 0: %v", stride)
 		}
 	}
 
 	for _, p := range pad {
 		if p < 0 {
-			return nil, errors.Errorf("Cannot use padding of less than 0: %v", pad)
+			return nil, fmt.Errorf("Cannot use padding of less than 0: %v", pad)
 		}
 	}
 
@@ -131,7 +132,8 @@ func newAvgPoolOp(inputShape, kernel tensor.Shape, pad, stride []int) *avgPoolOp
 func (op *avgPoolOp) Arity() int { return 1 }
 
 // avgPoolOp has this type:
-// 		op :: (...) → (...)
+//
+//	op :: (...) → (...)
 func (op *avgPoolOp) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	t := newTensorType(4, a)
@@ -141,7 +143,7 @@ func (op *avgPoolOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
 	if s, ok := inputs[0].(tensor.Shape); ok {
 		return op.calcShape(s), nil
 	}
-	return nil, errors.Errorf("Expected a shape")
+	return nil, fmt.Errorf("Expected a shape")
 }
 
 func (op *avgPoolOp) Do(inputs ...Value) (retVal Value, err error) {
@@ -183,7 +185,7 @@ func (op *avgPoolOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, erro
 		op.do(p, in)
 		return p, nil
 	}
-	return nil, errors.Errorf("Expected prealloc to be a tensor")
+	return nil, fmt.Errorf("Expected prealloc to be a tensor")
 }
 
 func (op *avgPoolOp) DiffWRT(inputs int) []bool { return []bool{true} }
@@ -217,7 +219,7 @@ func (op *avgPoolOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (e
 	diff := &avgPoolDiffOp{op2}
 
 	if _, err = diff.UsePreallocDo(inputDV.d, inputDV.Value, outDV.Value, outDV.d); err != nil {
-		return errors.Wrapf(err, doFail, diff)
+		return fmt.Errorf(doFail+": %w", diff, err)
 	}
 	return
 }
@@ -230,11 +232,11 @@ func (op *avgPoolOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	var in tensor.Tensor
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Expected input to be a tensor")
+		return nil, fmt.Errorf("Expected input to be a tensor")
 	}
 
 	if in.Shape().Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have 4 dimensions")
+		return nil, fmt.Errorf("Expected input to have 4 dimensions")
 	}
 	return in, nil
 }
@@ -298,10 +300,10 @@ func (op *avgPoolOp) f32s(batches, channels, outH, outW, inH, inW,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < outH; ph++ {
-				for pw := 0; pw < outW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range outH {
+				for pw := range outW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -348,10 +350,10 @@ func (op *avgPoolOp) f64s(batches, channels, outH, outW, inH, inW,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < outH; ph++ {
-				for pw := 0; pw < outW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range outH {
+				for pw := range outW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -438,7 +440,7 @@ func (op *avgPoolDiffOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, 
 		op.do(p, in, pooled, pooledGrad)
 		return prealloc, nil
 	}
-	return nil, errors.Errorf("Cannot do with PreallocDo - expected PreAlloc to be tensor")
+	return nil, fmt.Errorf("Cannot do with PreallocDo - expected PreAlloc to be tensor")
 }
 
 func (op *avgPoolDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad tensor.Tensor, err error) {
@@ -448,21 +450,21 @@ func (op *avgPoolDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad ten
 
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected input to be a tensor")
+		err = fmt.Errorf("Expected input to be a tensor")
 		return
 	}
 
 	if in.Shape().Dims() != 4 {
-		err = errors.Errorf("Expected input to have 4 dimensions")
+		err = fmt.Errorf("Expected input to have 4 dimensions")
 		return
 	}
 
 	if pooled, ok = inputs[1].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooled to be a tensor")
+		err = fmt.Errorf("Expected pooled to be a tensor")
 		return
 	}
 	if pooledGrad, ok = inputs[2].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooledGrad to be a tensor")
+		err = fmt.Errorf("Expected pooledGrad to be a tensor")
 		return
 	}
 
@@ -514,10 +516,10 @@ func (op *avgPoolDiffOp) f32s(batches, channels, pooledH, pooledW, inH, inW int,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < pooledH; ph++ {
-				for pw := 0; pw < pooledW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range pooledH {
+				for pw := range pooledW {
 					index := ph*pooledW + pw
 					inIndex := maskData[index]
 
@@ -525,8 +527,8 @@ func (op *avgPoolDiffOp) f32s(batches, channels, pooledH, pooledW, inH, inW int,
 				}
 			}
 
-			for ph := 0; ph < inH; ph++ {
-				for pw := 0; pw < inW; pw++ {
+			for ph := range inH {
+				for pw := range inW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -574,10 +576,10 @@ func (op *avgPoolDiffOp) f64s(batches, channels, pooledH, pooledW, inH, inW int,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < pooledH; ph++ {
-				for pw := 0; pw < pooledW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range pooledH {
+				for pw := range pooledW {
 					index := ph*pooledW + pw
 					inIndex := maskData[index]
 
@@ -585,8 +587,8 @@ func (op *avgPoolDiffOp) f64s(batches, channels, pooledH, pooledW, inH, inW int,
 				}
 			}
 
-			for ph := 0; ph < inH; ph++ {
-				for pw := 0; pw < inW; pw++ {
+			for ph := range inH {
+				for pw := range inW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)

@@ -8,7 +8,6 @@ import (
 	"runtime"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/dawson"
 	"gorgonia.org/tensor"
@@ -140,7 +139,7 @@ func (t malformed) FreeTypeVar() hm.TypeVarSet     { return nil }
 func (t malformed) Eq(hm.Type) bool                { return false }
 func (t malformed) Types() hm.Types                { return nil }
 func (t malformed) Normalize(a, b hm.TypeVarSet) (hm.Type, error) {
-	return nil, errors.Errorf("cannot normalize malformed")
+	return nil, fmt.Errorf("cannot normalize malformed")
 }
 
 type assertState struct {
@@ -150,21 +149,21 @@ type assertState struct {
 
 func newAssertState(a *assert.Assertions) *assertState { return &assertState{a, true} }
 
-func (a *assertState) Equal(expected interface{}, actual interface{}, msgAndArgs ...interface{}) {
+func (a *assertState) Equal(expected any, actual any, msgAndArgs ...any) {
 	if !a.cont {
 		return
 	}
 	a.cont = a.Assertions.Equal(expected, actual, msgAndArgs...)
 }
 
-func (a *assertState) True(value bool, msgAndArgs ...interface{}) {
+func (a *assertState) True(value bool, msgAndArgs ...any) {
 	if !a.cont {
 		return
 	}
 	a.cont = a.Assertions.True(value, msgAndArgs...)
 }
 
-func checkErr(t *testing.T, expected bool, err error, name string, id interface{}) (cont bool) {
+func checkErr(t *testing.T, expected bool, err error, name string, id any) (cont bool) {
 	switch {
 	case expected:
 		if err == nil {

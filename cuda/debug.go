@@ -1,4 +1,5 @@
-// +build debug
+//go:build cuda && debug
+// +build cuda,debug
 
 package cuda
 
@@ -45,7 +46,7 @@ func leaveLogScope() {
 	replacement = "\n" + strings.Repeat("\t", tabcount)
 }
 
-func logf(format string, others ...interface{}) {
+func logf(format string, others ...any) {
 	if DEBUG {
 		// format = strings.Replace(format, "\n", replacement, -1)
 		s := fmt.Sprintf(format, others...)
@@ -55,7 +56,7 @@ func logf(format string, others ...interface{}) {
 	}
 }
 
-func allocatorLogf(format string, attrs ...interface{}) {
+func allocatorLogf(format string, attrs ...any) {
 	if allocatorDev {
 		logf(format, attrs...)
 	}

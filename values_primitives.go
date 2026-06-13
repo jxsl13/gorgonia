@@ -7,7 +7,6 @@ import (
 	"unsafe"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -94,25 +93,25 @@ func (v *B) Size() int { return 0 }
 /* Data() */
 
 // Data returns the original representation of the Value
-func (v *F64) Data() interface{} { return v.any() }
+func (v *F64) Data() any { return v.any() }
 
 // Data returns the original representation of the Value
-func (v *F32) Data() interface{} { return v.any() }
+func (v *F32) Data() any { return v.any() }
 
 // Data returns the original representation of the Value
-func (v *I) Data() interface{} { return v.any() }
+func (v *I) Data() any { return v.any() }
 
 // Data returns the original representation of the Value
-func (v *I64) Data() interface{} { return v.any() }
+func (v *I64) Data() any { return v.any() }
 
 // Data returns the original representation of the Value
-func (v *I32) Data() interface{} { return v.any() }
+func (v *I32) Data() any { return v.any() }
 
 // Data returns the original representation of the Value
-func (v *U8) Data() interface{} { return v.any() }
+func (v *U8) Data() any { return v.any() }
 
 // Data returns the original representation of the Value
-func (v *B) Data() interface{} { return v.any() }
+func (v *B) Data() any { return v.any() }
 
 func (v *F64) any() float64 { return float64(*v) }
 func (v *F32) any() float32 { return float32(*v) }
@@ -210,7 +209,7 @@ func (v *F64) MemSize() uintptr { return 8 }
 func (v *F32) MemSize() uintptr { return 4 }
 
 // MemSize satisfies the tensor.Memory interface
-func (v *I) MemSize() uintptr { return reflect.TypeOf(*v).Size() }
+func (v *I) MemSize() uintptr { return reflect.TypeFor[I]().Size() }
 
 // MemSize satisfies the tensor.Memory interface
 func (v *I64) MemSize() uintptr { return 8 }
@@ -222,7 +221,7 @@ func (v *I32) MemSize() uintptr { return 4 }
 func (v *U8) MemSize() uintptr { return 1 }
 
 // MemSize satisfies the tensor.Memory interface
-func (v *B) MemSize() uintptr { return reflect.TypeOf(*v).Size() }
+func (v *B) MemSize() uintptr { return reflect.TypeFor[B]().Size() }
 
 /* Pointer */
 
@@ -292,7 +291,7 @@ func formatScalar(v Scalar, s fmt.State, c rune) {
 	fmt.Fprintf(s, buf.String(), v.Data())
 }
 
-func anyToScalar(any interface{}) (Scalar, tensor.Dtype) {
+func anyToScalar(any any) (Scalar, tensor.Dtype) {
 	switch at := any.(type) {
 	case Scalar:
 		return at, at.Dtype()
@@ -315,7 +314,7 @@ func anyToScalar(any interface{}) (Scalar, tensor.Dtype) {
 	}
 }
 
-func anyToValue(any interface{}) (val Value, t hm.Type, dt tensor.Dtype, err error) {
+func anyToValue(any any) (val Value, t hm.Type, dt tensor.Dtype, err error) {
 	switch a := any.(type) {
 	case Value:
 		val = a
@@ -346,7 +345,7 @@ func anyToValue(any interface{}) (val Value, t hm.Type, dt tensor.Dtype, err err
 		dt = a.Dtype()
 		return
 	default:
-		err = errors.Errorf("value %v of %T not yet handled", any, any)
+		err = fmt.Errorf("value %v of %T not yet handled", any, any)
 		return
 	}
 }

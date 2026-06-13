@@ -1,17 +1,19 @@
-// +build cuda
+//go:build cuda
 
 package gorgonia
 
 // for non-cuda builds, look at noextern.go
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
-	"github.com/pkg/errors"
+	"errors"
+
+	"github.com/jxsl13/gorgonia/cuda"
 	"gorgonia.org/cu"
 	cudnn "gorgonia.org/cu/dnn"
-	"gorgonia.org/gorgonia/cuda"
 	"gorgonia.org/tensor"
 )
 
@@ -175,7 +177,7 @@ func (m *ExternMetadata) Transfer(toDev, fromDev Device, v Value, synchronous bo
 	case fromDev == CPU && toDev != CPU:
 		d := int(toDev)
 		if d > len(m.engines) {
-			return nil, errors.Errorf("No context for ToDev")
+			return nil, fmt.Errorf("No context for ToDev")
 		}
 
 		ctx := m.engines[d].Context()
@@ -189,7 +191,7 @@ func (m *ExternMetadata) Transfer(toDev, fromDev Device, v Value, synchronous bo
 	case fromDev != CPU && toDev == CPU:
 		d := int(fromDev)
 		if d > len(m.engines) {
-			return nil, errors.Errorf("No context for FromDev")
+			return nil, fmt.Errorf("No context for FromDev")
 		}
 
 		ctx := m.engines[d].Context()
@@ -230,7 +232,7 @@ func (m *ExternMetadata) init(sizes []int64) (err error) {
 	}
 	devices, err := cu.NumDevices()
 	if err != nil {
-		return errors.Wrapf(err, "Failed to get number of devices")
+		return fmt.Errorf("Failed to get number of devices: %w", err)
 	}
 
 	if devices == 0 {
@@ -245,7 +247,7 @@ func (m *ExternMetadata) init(sizes []int64) (err error) {
 		e := &m.engines[i]
 		dev, err := cu.GetDevice(i)
 		if err != nil {
-			return errors.Wrapf(err, "Failed to get device %d", i)
+			return fmt.Errorf("Failed to get device %d: %w", i, err)
 		}
 
 		if err = e.Init(dev, sizes[i]); err != nil {
@@ -339,10 +341,10 @@ func (n *Node) GradOnDevice(toDev Device, extern External) (retVal Value, allocO
 	} else if n.deriv != nil {
 		return n.deriv.ValueOnDevice(toDev, extern)
 	} else {
-		return nil, false, errors.Errorf("No gradient node/value found for %v", n)
+		return nil, false, fmt.Errorf("No gradient node/value found for %v", n)
 	}
 	if d == nil {
-		return nil, false, errors.Errorf("No gradient node/value found for %v", n)
+		return nil, false, fmt.Errorf("No gradient node/value found for %v", n)
 	}
 
 	fromDev := n.Device()

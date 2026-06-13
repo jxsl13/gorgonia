@@ -31,9 +31,11 @@ type batchedBLAS interface {
 
 // Use defines which BLAS implementation gorgonia should use.
 // The default is Gonum's Native. These are the other options:
-//		Use(blase.Implementation())
-//		Use(cubone.Implementation())
-//		Use(cgo.Implementation)
+//
+//	Use(blase.Implementation())
+//	Use(cubone.Implementation())
+//	Use(cgo.Implementation)
+//
 // Note the differences in the brackets. The blase and cubone ones are functions.
 func Use(b BLAS) {
 	// close the blast door! close the blast door!

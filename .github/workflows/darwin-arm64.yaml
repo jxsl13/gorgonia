@@ -1,0 +1,61 @@
+name: darwin-arm64 (Apple Silicon)
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    # macos-14 is the GitHub-hosted Apple Silicon (arm64) runner.
+    runs-on: macos-latest
+    env:
+      GOFLAGS: -mod=mod
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.x'
+
+      # CUDA + BLAS code is `cuda`/`blas` build-tag gated (SPEC §C14), so the
+      # default `./...` build needs no exclusions on a stock runner. vet/test are
+      # scoped to library packages (examples are demos, cmd are tools).
+      - name: Default build (no tags)
+        run: go build ./...
+
+      - name: Vet
+        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go vet
+
+      - name: ARM64 NEON parity (vendored vecf32/vecf64)
+        run: go test ./internal/asmcheck/...
+
+      - name: Core test suite
+        run: go list ./... | grep -vE '/examples/|/cmd/' | xargs go test
+
+      - name: Metal backend build (tag=metal)
+        env:
+          CGO_ENABLED: '1'
+        run: go build -tags metal ./metal/...
+
+      - name: Metal GPU parity tests
+        # Hosted runners may lack a usable GPU; New() returns an error and the
+        # tests t.Skip rather than fail (SPEC §V17).
+        env:
+          CGO_ENABLED: '1'
+        run: go test -tags metal ./metal/...
+
+      - name: CoreML backend build (tag=coreml)
+        # Runtime compile via CoreML.framework — needs only Command Line Tools,
+        # not full Xcode/coremlcompiler (SPEC §C13, B6).
+        env:
+          CGO_ENABLED: '1'
+        run: go build -tags coreml ./coreml/... ./examples/coreml/...
+
+      - name: CoreML parity tests
+        # Device-bound: compile/predict t.Skip when CoreML is unavailable on the
+        # runner rather than fail (SPEC §V17/§V18).
+        env:
+          CGO_ENABLED: '1'
+        run: go test -tags coreml ./coreml/...

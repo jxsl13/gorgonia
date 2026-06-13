@@ -57,7 +57,7 @@ func TestInferNodeType(t *testing.T) {
 }
 
 var inferTypeTests = []struct {
-	expr interface{}
+	expr any
 
 	correct hm.Type
 	err     bool

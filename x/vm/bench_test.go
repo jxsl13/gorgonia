@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -36,7 +36,7 @@ func BenchmarkMachine_Run(b *testing.B) {
 	vm := NewMachine(g)
 	ctx := context.Background()
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		//ctx, cancel := context.WithTimeout(context.Background(), 900*time.Millisecond)
 		if err := vm.Run(ctx); err != nil {
 			b.Fatal(err)
@@ -72,7 +72,7 @@ func BenchmarkMachine_RunTapeMachine(b *testing.B) {
 	vm := gorgonia.NewTapeMachine(g)
 	b.ResetTimer()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		if err := vm.RunAll(); err != nil {
 			b.Fatal(err)
 		}

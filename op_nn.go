@@ -11,7 +11,6 @@ import (
 	"github.com/chewxy/hm"
 	"github.com/chewxy/math32"
 	rng "github.com/leesper/go_rng"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -79,7 +78,7 @@ func (op randomOp) InferShape(...DimSizer) (tensor.Shape, error) { return op.sha
 
 func (op randomOp) Do(...Value) (retVal Value, err error) {
 	if op.shape.IsScalar() {
-		var v interface{}
+		var v any
 		switch op.dt {
 		case Float64:
 			switch op.which {
@@ -106,7 +105,7 @@ func (op randomOp) Do(...Value) (retVal Value, err error) {
 				v = float32(rand.Binomial(int64(op.a), op.b))
 			}
 		default:
-			return nil, errors.Errorf(nyiFail, "randomOp.do()", op.dt)
+			return nil, fmt.Errorf(nyiFail, "randomOp.do()", op.dt)
 		}
 
 		retVal, _ = anyToScalar(v)
@@ -141,7 +140,7 @@ func (op randomOp) Do(...Value) (retVal Value, err error) {
 		}
 		return
 	default:
-		return nil, errors.Errorf(nyiFail, "randomOp.do() for non-scalar", op.dt)
+		return nil, fmt.Errorf(nyiFail, "randomOp.do() for non-scalar", op.dt)
 	}
 }
 
@@ -194,7 +193,7 @@ func (op im2colOp) InferShape(shapes ...DimSizer) (retVal tensor.Shape, err erro
 	if s, ok := shapes[0].(tensor.Shape); ok {
 		return op.calcShape(s), nil
 	}
-	return nil, errors.Errorf("expected tensor.Shape. got %T instead", shapes[0])
+	return nil, fmt.Errorf("expected tensor.Shape. got %T instead", shapes[0])
 }
 
 func (op im2colOp) Do(inputs ...Value) (retVal Value, err error) {
@@ -243,7 +242,7 @@ func (op im2colOp) SymDiff(inputs Nodes, output, grad *Node) (retVal Nodes, err 
 	im := inputs[0]
 	s := im.Shape()
 	if s.Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have a shape with 4 dims")
+		return nil, fmt.Errorf("Expected input to have a shape with 4 dims")
 	}
 	var unpaddedB, unpaddedC, unpaddedH, unpaddedW int
 	unpaddedB, unpaddedC, unpaddedH, unpaddedW = s[0], s[1], s[2], s[3]
@@ -285,7 +284,7 @@ func (op im2colOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err
 	}
 
 	if _, err = diffOp.UsePreallocDo(imv.d, colv.d); err != nil {
-		return errors.Wrapf(err, doFail, diffOp)
+		return fmt.Errorf(doFail+": %w", diffOp, err)
 	}
 	return
 }
@@ -339,7 +338,7 @@ func (op im2colOp) do(prealloc, input Value) (retVal Value, err error) {
 		imData := input.Data().([]float64)
 		colData := prealloc.Data().([]float64)
 
-		for i := 0; i < b; i++ {
+		for i := range b {
 			imStart := i * batchStrideIm
 			colStart := i * batchStrideCol
 			imEnd := imStart + batchStrideIm
@@ -358,7 +357,7 @@ func (op im2colOp) do(prealloc, input Value) (retVal Value, err error) {
 	case tensor.Float32:
 		imData := input.Data().([]float32)
 		colData := prealloc.Data().([]float32)
-		for i := 0; i < b; i++ {
+		for i := range b {
 			imStart := i * batchStrideIm
 			colStart := i * batchStrideCol
 			imEnd := imStart + batchStrideIm
@@ -375,7 +374,7 @@ func (op im2colOp) do(prealloc, input Value) (retVal Value, err error) {
 			go op.f32s(c, h, w, chanStride, inRowStride, retHeight, retWidth, imData[imStart:imEnd], colData[colStart:colEnd], &wg, workers)
 		}
 	default:
-		return nil, errors.Errorf(nyiFail, "im2col", input.Dtype())
+		return nil, fmt.Errorf(nyiFail, "im2col", input.Dtype())
 	}
 	wg.Wait()
 	return prealloc, nil
@@ -384,9 +383,9 @@ func (op im2colOp) do(prealloc, input Value) (retVal Value, err error) {
 func (op im2colOp) f64s(chans, height, width, chanStride, inRowStride, retHeight, retWidth int, im, col []float64, wg *sync.WaitGroup, workers chan struct{}) {
 	workers <- struct{}{}
 	var colIdx, inputRow, inputCol int
-	for outputRow := 0; outputRow < retHeight; outputRow++ {
-		for outputCol := 0; outputCol < retWidth; outputCol++ {
-			for ch := 0; ch < chans; ch++ {
+	for outputRow := range retHeight {
+		for outputCol := range retWidth {
+			for ch := range chans {
 				for kernelRow := 0; kernelRow < op.h; kernelRow++ {
 					inputRow = -op.padH + kernelRow*op.dilationH + outputRow*op.strideH
 					for kernelCol := 0; kernelCol < op.w; kernelCol++ {
@@ -415,9 +414,9 @@ func (op im2colOp) f64s(chans, height, width, chanStride, inRowStride, retHeight
 func (op im2colOp) f32s(chans, height, width, chanStride, inRowStride, retHeight, retWidth int, im, col []float32, wg *sync.WaitGroup, workers chan struct{}) {
 	workers <- struct{}{}
 	var colIdx, inputRow, inputCol int
-	for outputRow := 0; outputRow < retHeight; outputRow++ {
-		for outputCol := 0; outputCol < retWidth; outputCol++ {
-			for ch := 0; ch < chans; ch++ {
+	for outputRow := range retHeight {
+		for outputCol := range retWidth {
+			for ch := range chans {
 				for kernelRow := 0; kernelRow < op.h; kernelRow++ {
 					inputRow = -op.padH + kernelRow*op.dilationH + outputRow*op.strideH
 					for kernelCol := 0; kernelCol < op.w; kernelCol++ {
@@ -524,7 +523,7 @@ func (op col2imOp) do(prealloc, input Value) (retVal Value, err error) {
 	case tensor.Float64:
 		colData := input.Data().([]float64)
 		imData := prealloc.Data().([]float64)
-		for i := 0; i < b; i++ {
+		for range b {
 			wg.Add(1)
 			go op.f64s(c, retHeight, retWidth, chanStride, h, w, colData[colStart:colEnd], imData[imStart:imEnd], &wg, workers)
 
@@ -544,7 +543,7 @@ func (op col2imOp) do(prealloc, input Value) (retVal Value, err error) {
 	case tensor.Float32:
 		colData := input.Data().([]float32)
 		imData := prealloc.Data().([]float32)
-		for i := 0; i < b; i++ {
+		for range b {
 			wg.Add(1)
 			go op.f32s(c, retHeight, retWidth, chanStride, h, w, colData[colStart:colEnd], imData[imStart:imEnd], &wg, workers)
 
@@ -562,7 +561,7 @@ func (op col2imOp) do(prealloc, input Value) (retVal Value, err error) {
 			}
 		}
 	default:
-		return nil, errors.Errorf(nyiFail, "col2im", input.Dtype())
+		return nil, fmt.Errorf(nyiFail, "col2im", input.Dtype())
 	}
 	wg.Wait()
 	return prealloc, nil
@@ -571,15 +570,15 @@ func (op col2imOp) do(prealloc, input Value) (retVal Value, err error) {
 func (op col2imOp) f64s(chans, height, width, chanStride, retHeight, retWidth int, col, im []float64, wg *sync.WaitGroup, workers chan struct{}) {
 	workers <- struct{}{}
 	// memset im to 0
-	for i := 0; i < len(im); i++ {
+	for i := range im {
 		im[i] = 0
 	}
 	colIdx := 0
 	var inputRow int
 	var inputCol int
-	for outputRow := 0; outputRow < retHeight; outputRow++ {
-		for outputCol := 0; outputCol < retWidth; outputCol++ {
-			for ch := 0; ch < chans; ch++ {
+	for outputRow := range retHeight {
+		for outputCol := range retWidth {
+			for ch := range chans {
 				for kernelRow := 0; kernelRow < op.h; kernelRow++ {
 					inputRow = -op.padH + kernelRow*op.dilationH + outputRow*op.strideH
 					for kernelCol := 0; kernelCol < op.w; kernelCol++ {
@@ -605,15 +604,15 @@ func (op col2imOp) f64s(chans, height, width, chanStride, retHeight, retWidth in
 func (op col2imOp) f32s(chans, height, width, chanStride, retHeight, retWidth int, col, im []float32, wg *sync.WaitGroup, workers chan struct{}) {
 	workers <- struct{}{}
 	// memset im to 0
-	for i := 0; i < len(im); i++ {
+	for i := range im {
 		im[i] = 0
 	}
 	colIdx := 0
 	var inputRow int
 	var inputCol int
-	for outputRow := 0; outputRow < retHeight; outputRow++ {
-		for outputCol := 0; outputCol < retWidth; outputCol++ {
-			for ch := 0; ch < chans; ch++ {
+	for outputRow := range retHeight {
+		for outputCol := range retWidth {
+			for ch := range chans {
 				for kernelRow := 0; kernelRow < op.h; kernelRow++ {
 					inputRow = -op.padH + kernelRow*op.dilationH + outputRow*op.strideH
 					for kernelCol := 0; kernelCol < op.w; kernelCol++ {
@@ -697,7 +696,8 @@ func newMaxPoolOp(inputShape, kernel tensor.Shape, pad, stride []int) *maxPoolOp
 func (op *maxPoolOp) Arity() int { return 1 }
 
 // maxPoolOp has this type:
-// 		op :: (...) → (...)
+//
+//	op :: (...) → (...)
 func (op *maxPoolOp) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	t := newTensorType(4, a)
@@ -707,7 +707,7 @@ func (op *maxPoolOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
 	if s, ok := inputs[0].(tensor.Shape); ok {
 		return op.calcShape(s), nil
 	}
-	return nil, errors.Errorf("Expected a shape")
+	return nil, fmt.Errorf("Expected a shape")
 }
 
 func (op *maxPoolOp) Do(inputs ...Value) (retVal Value, err error) {
@@ -750,7 +750,7 @@ func (op *maxPoolOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, erro
 		op.do(p, in)
 		return p, nil
 	}
-	return nil, errors.Errorf("Expected prealloc to be a tensor")
+	return nil, fmt.Errorf("Expected prealloc to be a tensor")
 }
 
 func (op *maxPoolOp) DiffWRT(inputs int) []bool { return []bool{true} }
@@ -784,7 +784,7 @@ func (op *maxPoolOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (e
 	diff := &maxPoolDiffOp{op2}
 
 	if _, err = diff.UsePreallocDo(inputDV.d, inputDV.Value, outDV.Value, outDV.d); err != nil {
-		return errors.Wrapf(err, doFail, diff)
+		return fmt.Errorf(doFail+": %w", diff, err)
 	}
 	return
 }
@@ -797,11 +797,11 @@ func (op *maxPoolOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	var in tensor.Tensor
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Expected input to be a tensor")
+		return nil, fmt.Errorf("Expected input to be a tensor")
 	}
 
 	if in.Shape().Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have 4 dimensions")
+		return nil, fmt.Errorf("Expected input to have 4 dimensions")
 	}
 	return in, nil
 }
@@ -874,10 +874,10 @@ func (op *maxPoolOp) f32s(batches, channels, outH, outW, inH, inW,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < outH; ph++ {
-				for pw := 0; pw < outW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range outH {
+				for pw := range outW {
 
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
@@ -923,10 +923,10 @@ func (op *maxPoolOp) f64s(batches, channels, outH, outW, inH, inW,
 		padW = op.padEast
 	}
 
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < outH; ph++ {
-				for pw := 0; pw < outW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range outH {
+				for pw := range outW {
 					hStart := ph*op.strideH - padH
 					wStart := pw*op.strideW - padW
 					hEnd := minInt(hStart+op.h, inH)
@@ -1010,7 +1010,7 @@ func (op *maxPoolDiffOp) UsePreallocDo(prealloc Value, inputs ...Value) (Value, 
 		op.do(p, in, pooled, pooledGrad)
 		return prealloc, nil
 	}
-	return nil, errors.Errorf("Cannot do with PreallocDo - expected PreAlloc to be tensor")
+	return nil, fmt.Errorf("Cannot do with PreallocDo - expected PreAlloc to be tensor")
 }
 
 func (op *maxPoolDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad tensor.Tensor, err error) {
@@ -1020,20 +1020,20 @@ func (op *maxPoolDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad ten
 
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected input to be a tensor")
+		err = fmt.Errorf("Expected input to be a tensor")
 		return
 	}
 	if in.Shape().Dims() != 4 {
-		err = errors.Errorf("Expected input to have 4 dimensions")
+		err = fmt.Errorf("Expected input to have 4 dimensions")
 		return
 	}
 
 	if pooled, ok = inputs[1].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooled to be a tensor")
+		err = fmt.Errorf("Expected pooled to be a tensor")
 		return
 	}
 	if pooledGrad, ok = inputs[2].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooledGrad to be a tensor")
+		err = fmt.Errorf("Expected pooledGrad to be a tensor")
 		return
 	}
 	return
@@ -1075,10 +1075,10 @@ func (op *maxPoolDiffOp) f32s(batches, channels, pooledH, pooledW int,
 	}
 
 	// this loop can be goroutine'd
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < pooledH; ph++ {
-				for pw := 0; pw < pooledW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range pooledH {
+				for pw := range pooledW {
 					index := ph*pooledW + pw
 					inIndex := maskData[index]
 					inDiffData[inIndex] += outDiffData[index]
@@ -1103,10 +1103,10 @@ func (op *maxPoolDiffOp) f64s(batches, channels, pooledH, pooledW int,
 	}
 
 	// this loop can be goroutine'd
-	for b := 0; b < batches; b++ {
-		for c := 0; c < channels; c++ {
-			for ph := 0; ph < pooledH; ph++ {
-				for pw := 0; pw < pooledW; pw++ {
+	for range batches {
+		for range channels {
+			for ph := range pooledH {
+				for pw := range pooledW {
 					index := ph*pooledW + pw
 					inIndex := maskData[index]
 					inDiffData[inIndex] += outDiffData[index]
@@ -1153,7 +1153,9 @@ func (op *clampOp) String() string   { return fmt.Sprintf("ConstClamp{%f, %f}()"
 // http://arxiv.org/abs/1502.03167
 //
 // Normalization is done as:
-// 	γ(x - μ) / σ + β
+//
+//	γ(x - μ) / σ + β
+//
 // γ is the scaling factor and β is the offset factor. These are created by BatchNorm()
 type BatchNormOp struct {
 	momentum float64 // momentum for the moving average
@@ -1188,7 +1190,7 @@ func (op *BatchNormOp) Type() hm.Type {
 // InferShape from the input values
 func (op *BatchNormOp) InferShape(ns ...DimSizer) (tensor.Shape, error) {
 	if err := checkArity(op, len(ns)); err != nil {
-		return nil, errors.Wrapf(err, "batchNorm")
+		return nil, fmt.Errorf("batchNorm: %w", err)
 	}
 
 	return ns[0].(tensor.Shape).Clone(), nil
@@ -1197,7 +1199,7 @@ func (op *BatchNormOp) InferShape(ns ...DimSizer) (tensor.Shape, error) {
 // Do performs the batchnorm computation on the values
 func (op *BatchNormOp) Do(values ...Value) (retVal Value, err error) {
 	if err := checkArity(op, len(values)); err != nil {
-		return nil, errors.Wrapf(err, "batchNorm Do")
+		return nil, fmt.Errorf("batchNorm Do: %w", err)
 	}
 
 	var v, out Value
@@ -1327,7 +1329,7 @@ func (op *BatchNormOp) SetTraining(isTraining bool) error {
 // Reset the operator by zeroing the internals scratch spaces
 func (op *BatchNormOp) Reset() error {
 	dt := op.runningMean.Dtype()
-	var uno interface{}
+	var uno any
 	switch dt {
 	case Float64:
 		uno = float64(1)
@@ -1360,7 +1362,7 @@ func (op *BatchNormOp) updateStatsF64(batchSize, channels, spatialDim int, input
 
 	if spatialDim == 1 { // image size = 1
 		runInParallel(0, channels, func(c int) {
-			for s := 0; s < batchSize; s++ {
+			for s := range batchSize {
 				i := s*channels + c
 
 				saveMean[c] += inputA[i]
@@ -1368,7 +1370,7 @@ func (op *BatchNormOp) updateStatsF64(batchSize, channels, spatialDim int, input
 
 			saveMean[c] /= float64(n)
 
-			for s := 0; s < batchSize; s++ {
+			for s := range batchSize {
 				i := s*channels + c
 
 				saveVar[c] += (inputA[i] - saveMean[c]) * (inputA[i] - saveMean[c])
@@ -1381,8 +1383,8 @@ func (op *BatchNormOp) updateStatsF64(batchSize, channels, spatialDim int, input
 		})
 	} else { // image size > 1
 		runInParallel(0, channels, func(c int) {
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					saveMean[c] += inputA[i]
@@ -1391,8 +1393,8 @@ func (op *BatchNormOp) updateStatsF64(batchSize, channels, spatialDim int, input
 
 			saveMean[c] /= float64(n)
 
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					x := inputA[i]
@@ -1465,7 +1467,7 @@ func (op *BatchNormOp) f64s(input, output *tensor.Dense) (err error) {
 
 	if spatialDim == 1 {
 		runInParallel(0, batchSize, func(s int) {
-			for c := 0; c < channels; c++ {
+			for c := range channels {
 				i := s*channels + c
 
 				outputF64s[i] = outputF64s[i]*alpha[c] + beta[c]
@@ -1473,8 +1475,8 @@ func (op *BatchNormOp) f64s(input, output *tensor.Dense) (err error) {
 		})
 	} else {
 		runInParallel(0, channels, func(c int) {
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					outputF64s[i] = outputF64s[i]*alpha[c] + beta[c]
@@ -1503,7 +1505,7 @@ func (op *BatchNormOp) updateStatsF32(batchSize, channels, spatialDim int, input
 
 	if spatialDim == 1 { // image size = 1
 		runInParallel(0, channels, func(c int) {
-			for s := 0; s < batchSize; s++ {
+			for s := range batchSize {
 				i := s*channels + c
 
 				saveMean[c] += inputA[i]
@@ -1511,7 +1513,7 @@ func (op *BatchNormOp) updateStatsF32(batchSize, channels, spatialDim int, input
 
 			saveMean[c] /= float32(n)
 
-			for s := 0; s < batchSize; s++ {
+			for s := range batchSize {
 				i := s*channels + c
 
 				saveVar[c] += (inputA[i] - saveMean[c]) * (inputA[i] - saveMean[c])
@@ -1524,8 +1526,8 @@ func (op *BatchNormOp) updateStatsF32(batchSize, channels, spatialDim int, input
 		})
 	} else { // image size > 1
 		runInParallel(0, channels, func(c int) {
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					saveMean[c] += inputA[i]
@@ -1534,8 +1536,8 @@ func (op *BatchNormOp) updateStatsF32(batchSize, channels, spatialDim int, input
 
 			saveMean[c] /= float32(n)
 
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					x := inputA[i]
@@ -1612,7 +1614,7 @@ func (op *BatchNormOp) f32s(input, output *tensor.Dense) (err error) {
 
 	if spatialDim == 1 {
 		runInParallel(0, batchSize, func(s int) {
-			for c := 0; c < channels; c++ {
+			for c := range channels {
 				i := s*channels + c
 
 				outputF32s[i] = outputF32s[i]*alpha[c] + beta[c]
@@ -1621,8 +1623,8 @@ func (op *BatchNormOp) f32s(input, output *tensor.Dense) (err error) {
 
 	} else {
 		runInParallel(0, channels, func(c int) {
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					outputF32s[i] = outputF32s[i]*alpha[c] + beta[c]
@@ -1650,7 +1652,7 @@ func (op *batchnormDiffOp) Type() hm.Type {
 
 func (op *batchnormDiffOp) InferShape(ns ...DimSizer) (tensor.Shape, error) {
 	if err := checkArity(op, len(ns)); err != nil {
-		return nil, errors.Wrapf(err, "batchNorm")
+		return nil, fmt.Errorf("batchNorm: %w", err)
 	}
 
 	originalShape := ns[0].(tensor.Shape).Clone()
@@ -1751,7 +1753,7 @@ func (op *batchnormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 				invstd = 1 / math.Sqrt(runningVar[c]+op.epsilon)
 			}
 
-			for s := 0; s < n; s++ {
+			for s := range n {
 				i := s*channels + c
 
 				sum += dy[i]
@@ -1765,7 +1767,7 @@ func (op *batchnormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 			if op.training {
 				k := float64(dotp*invstd*invstd) / float64(n)
 
-				for s := 0; s < n; s++ {
+				for s := range n {
 					i := s*channels + c
 
 					// dx = (x - mean) * k
@@ -1775,7 +1777,7 @@ func (op *batchnormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 					ig[i] = (float64(dy[i]-ig[i]-gradMean) * invstd)
 				}
 			} else {
-				for s := 0; s < n; s++ {
+				for s := range n {
 					i := s*channels + c
 
 					ig[i] = dy[i] * invstd
@@ -1787,8 +1789,8 @@ func (op *batchnormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 			dotp := float64(0.0)
 			sum := 0.0
 
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					sum += dy[i]
@@ -1805,8 +1807,8 @@ func (op *batchnormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 			gradMean := sum / float64(n)
 
 			if op.training {
-				for s := 0; s < batchSize; s++ {
-					for d := 0; d < spatialDim; d++ {
+				for s := range batchSize {
+					for d := range spatialDim {
 						i := s*channels*spatialDim + c*spatialDim + d
 
 						// dx = (x - mean) * k
@@ -1817,8 +1819,8 @@ func (op *batchnormDiffOp) f64s(input, prealloc, outGrad *tensor.Dense) (err err
 					}
 				}
 			} else {
-				for s := 0; s < batchSize; s++ {
-					for d := 0; d < spatialDim; d++ {
+				for s := range batchSize {
+					for d := range spatialDim {
 						i := s*channels*spatialDim + c*spatialDim + d
 
 						ig[i] = dy[i] * invstd
@@ -1862,7 +1864,7 @@ func (op *batchnormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 				invstd = 1 / math32.Sqrt(runningVar[c]+float32(op.epsilon))
 			}
 
-			for s := 0; s < n; s++ {
+			for s := range n {
 				i := s*channels + c
 
 				sum += dy[i]
@@ -1876,7 +1878,7 @@ func (op *batchnormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 			if op.training {
 				k := float32(dotp*invstd*invstd) / float32(n)
 
-				for s := 0; s < n; s++ {
+				for s := range n {
 					i := s*channels + c
 
 					// dx = (x - mean) * k
@@ -1886,7 +1888,7 @@ func (op *batchnormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 					ig[i] = (dy[i] - ig[i] - gradMean) * invstd
 				}
 			} else {
-				for s := 0; s < n; s++ {
+				for s := range n {
 					i := s*channels + c
 
 					ig[i] = dy[i] * invstd
@@ -1898,8 +1900,8 @@ func (op *batchnormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 			dotp := float32(0.0)
 			sum := float32(0.0)
 
-			for s := 0; s < batchSize; s++ {
-				for d := 0; d < spatialDim; d++ {
+			for s := range batchSize {
+				for d := range spatialDim {
 					i := s*channels*spatialDim + c*spatialDim + d
 
 					sum += dy[i]
@@ -1916,8 +1918,8 @@ func (op *batchnormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 			gradMean := sum / float32(n)
 
 			if op.training {
-				for s := 0; s < batchSize; s++ {
-					for d := 0; d < spatialDim; d++ {
+				for s := range batchSize {
+					for d := range spatialDim {
 						i := s*channels*spatialDim + c*spatialDim + d
 
 						// dx = (x - mean) * k
@@ -1928,8 +1930,8 @@ func (op *batchnormDiffOp) f32s(input, prealloc, outGrad *tensor.Dense) (err err
 					}
 				}
 			} else {
-				for s := 0; s < batchSize; s++ {
-					for d := 0; d < spatialDim; d++ {
+				for s := range batchSize {
+					for d := range spatialDim {
 						i := s*channels*spatialDim + c*spatialDim + d
 
 						ig[i] = dy[i] * invstd
@@ -1986,11 +1988,11 @@ func (g *globalAveragePoolOp) Do(inputs ...Value) (Value, error) {
 		output := tensor.New(tensor.Of(v.Dtype()), tensor.WithShape(s...))
 		switch v.Dtype() {
 		case tensor.Float64:
-			for b := 0; b < B; b++ {
-				for c := 0; c < C; c++ {
+			for b := range B {
+				for c := range C {
 					var sum float64
-					for h := 0; h < H; h++ {
-						for w := 0; w < W; w++ {
+					for h := range H {
+						for w := range W {
 							val, err := v.At(b, c, h, w)
 							if err != nil {
 								return nil, err
@@ -2005,11 +2007,11 @@ func (g *globalAveragePoolOp) Do(inputs ...Value) (Value, error) {
 				}
 			}
 		case tensor.Float32:
-			for b := 0; b < B; b++ {
-				for c := 0; c < C; c++ {
+			for b := range B {
+				for c := range C {
 					var sum float32
-					for h := 0; h < H; h++ {
-						for w := 0; w < W; w++ {
+					for h := range H {
+						for w := range W {
 							val, err := v.At(b, c, h, w)
 							if err != nil {
 								return nil, err

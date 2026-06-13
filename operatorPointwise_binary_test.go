@@ -2,12 +2,12 @@ package gorgonia
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+
 	"math/rand"
 	"runtime"
 	"testing"
 
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"gorgonia.org/tensor"
 )
@@ -15,7 +15,7 @@ import (
 func ssBinOpTest(t *testing.T, op ʘBinaryOperatorType, dt tensor.Dtype) (err error) {
 	defer runtime.GC()
 	assert := assert.New(t)
-	var randX, randY interface{}
+	var randX, randY any
 	switch dt {
 	case Float64:
 		randX = rand.ExpFloat64()
@@ -24,7 +24,7 @@ func ssBinOpTest(t *testing.T, op ʘBinaryOperatorType, dt tensor.Dtype) (err er
 		randX = float32(rand.ExpFloat64())
 		randY = float32(rand.ExpFloat64())
 	default:
-		return errors.Errorf("op %v Test not yet implemented for %v ", op, dt)
+		return fmt.Errorf("op %v Test not yet implemented for %v ", op, dt)
 	}
 
 	binOp := newEBOByType(op, dt, dt)
@@ -135,7 +135,7 @@ func ttBinOpTest(t *testing.T, op ʘBinaryOperatorType, dt tensor.Dtype) (err er
 	var x, y, z, a, b, c, cost *Node
 	var g, g2 *ExprGraph
 
-	var randX, randY interface{}
+	var randX, randY any
 	switch dt {
 	case Float32:
 		randX = []float32{1, 2, 3, 4}
@@ -234,14 +234,14 @@ func ttBinOpTest(t *testing.T, op ʘBinaryOperatorType, dt tensor.Dtype) (err er
 	assert.True(ValueClose(z.Value(), c.Value()), "Test tt op %v. Values are different: z: %+v\n c %+v", op, z.Value(), c.Value())
 
 	if t.Failed() {
-		ioutil.WriteFile(fmt.Sprintf("Test_%v_tt.dot", op), []byte(g2.ToDot()), 0644)
+		os.WriteFile(fmt.Sprintf("Test_%v_tt.dot", op), []byte(g2.ToDot()), 0644)
 	}
 
 	return nil
 }
 
 func TestBinOps(t *testing.T) {
-	for op := addOpType; op < maxʘBinaryOpType; op++ {
+	for op := range maxʘBinaryOpType {
 		t.Logf("OP: %v", op)
 
 		// if op != addOpType {

@@ -8,7 +8,7 @@ import (
 )
 
 var nodePool = &sync.Pool{
-	New: func() interface{} { return new(Node) },
+	New: func() any { return new(Node) },
 }
 
 func borrowNode() *Node { return nodePool.Get().(*Node) }
@@ -53,7 +53,7 @@ func ReturnNode(n *Node) {
 // handles Returning of Values
 
 var dvpool = &sync.Pool{
-	New: func() interface{} { return new(dualValue) },
+	New: func() any { return new(dualValue) },
 }
 
 func borrowDV() *dualValue { return dvpool.Get().(*dualValue) }
@@ -92,7 +92,7 @@ func borrowDimSizers(size int) []DimSizer {
 	if !ok {
 		s := size
 		pool = &sync.Pool{
-			New: func() interface{} { return make([]DimSizer, s, s) },
+			New: func() any { return make([]DimSizer, s, s) },
 		}
 		dimSizerPool.Store(size, pool)
 	} else {
@@ -114,7 +114,7 @@ func returnDimSizers(ds []DimSizer) {
 }
 
 var tensorTypePool = &sync.Pool{
-	New: func() interface{} { return new(TensorType) },
+	New: func() any { return new(TensorType) },
 }
 
 func borrowTensorType() *TensorType {

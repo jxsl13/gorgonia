@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
+	"github.com/jxsl13/gorgonia"
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
 )
 
 type routeLayer struct {

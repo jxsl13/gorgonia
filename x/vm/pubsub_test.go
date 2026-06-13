@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 )
 
 func Test_merge(t *testing.T) {
@@ -65,7 +65,7 @@ func Test_merge(t *testing.T) {
 		c0 <- &fortyTwo
 		missFortyTwo := true
 		missFortyThree := true
-		for i := 0; i < lenChan; i++ {
+		for range lenChan {
 			out := <-output
 			switch {
 			case out.pos == 0 && out.v.Data().(float32) == 42.0:

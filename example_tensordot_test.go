@@ -5,26 +5,26 @@ import (
 )
 
 /*
-func ExampleTensordot_scalar() {
-	// Scalars
-	g := NewGraph()
-	a := NewScalar(g, Float64, WithValue(2.0), WithName("a"))
-	b := NewScalar(g, Float64, WithValue(21.0), WithName("b"))
-	c, err := Tensordot([]int{0}, []int{0}, a, b)
-	if err != nil {
-		fmt.Printf("Cannot call Tensordot. Error: %v\n", err)
-		return
-	}
+	func ExampleTensordot_scalar() {
+		// Scalars
+		g := NewGraph()
+		a := NewScalar(g, Float64, WithValue(2.0), WithName("a"))
+		b := NewScalar(g, Float64, WithValue(21.0), WithName("b"))
+		c, err := Tensordot([]int{0}, []int{0}, a, b)
+		if err != nil {
+			fmt.Printf("Cannot call Tensordot. Error: %v\n", err)
+			return
+		}
 
-	vm := NewTapeMachine(g)
-	if err := vm.RunAll(); err != nil {
-		fmt.Printf("Cannot perform scalars. Error %v\n", err)
-	}
-	fmt.Printf("c: %v (%v) of %v", c.Value(), c.Value().Dtype(), c.Value().Shape())
+		vm := NewTapeMachine(g)
+		if err := vm.RunAll(); err != nil {
+			fmt.Printf("Cannot perform scalars. Error %v\n", err)
+		}
+		fmt.Printf("c: %v (%v) of %v", c.Value(), c.Value().Dtype(), c.Value().Shape())
 
-	// Output:
-	//...
-}
+		// Output:
+		//...
+	}
 */
 func ExampleTensordot_vectors() {
 	g := NewGraph()

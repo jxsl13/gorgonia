@@ -1,8 +1,9 @@
 package gorgonia
 
 import (
+	"fmt"
+
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -59,42 +60,42 @@ func matMulDiffExpr(transA, transB bool, x, y, z, gradZ *Node) (retVal Nodes, er
 		op.transA = transA
 		op.transB = transB
 		if dzdx, err = binOpNode(op, y, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 		if dzdy, err = binOpNode(op, gradZ, x); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	case !transA && transB:
 		if dzdx, err = binOpNode(op, gradZ, y); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 
 		op.transA = true
 		if dzdy, err = binOpNode(op, gradZ, x); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	case transA && !transB:
 		op.transB = true
 		if dzdx, err = binOpNode(op, y, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 
 		op.transB = false
 		if dzdy, err = binOpNode(op, x, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	case !transA && !transB:
 		// dzdy
 		op.transA = false
 		op.transB = true
 		if dzdx, err = binOpNode(op, gradZ, y); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 		// do dzdx
 		op.transA = true
 		op.transB = false
 		if dzdy, err = binOpNode(op, x, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	}
 	retVal = Nodes{dzdx, dzdy}
@@ -116,13 +117,13 @@ func matMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (err e
 		// dzdx
 		err = op.IncrDo(xdv.d, ydv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		// dzdy
 		err = op.IncrDo(ydv.d, zdv.d, xdv.Value)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, y)
+			return fmt.Errorf(autodiffFail+": %w", y, err)
 		}
 
 		return
@@ -131,14 +132,14 @@ func matMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (err e
 		// dzdx
 		err = op.IncrDo(xdv.d, zdv.d, ydv.Value)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		// dzdy
 		op.transA = true
 		err = op.IncrDo(ydv.d, zdv.d, xdv.Value)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		return
@@ -148,7 +149,7 @@ func matMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (err e
 		op.transB = true
 		err = op.IncrDo(xdv.d, ydv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		// dzdy
@@ -156,21 +157,21 @@ func matMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (err e
 		op.transB = false
 		err = op.IncrDo(ydv.d, xdv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 		return
 	case !transA && !transB:
 		op.transB = true
 		err = op.IncrDo(xdv.d, zdv.d, ydv.Value)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		op.transA = true
 		op.transB = false
 		err = op.IncrDo(ydv.d, xdv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 		return
 	}
@@ -187,7 +188,7 @@ func matVecMulDiffExpr(transA, transB bool, x, y, z, gradZ *Node) (retVal Nodes,
 	}
 
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed to carry outper product")
+		return nil, fmt.Errorf("%s: %w", "Failed to carry outper product", err)
 	}
 
 	op := linAlgBinOp{
@@ -196,7 +197,7 @@ func matVecMulDiffExpr(transA, transB bool, x, y, z, gradZ *Node) (retVal Nodes,
 	}
 
 	if dzdy, err = binOpNode(op, x, gradZ); err != nil {
-		return nil, errors.Wrapf(err, binOpNodeFail, op)
+		return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 	}
 	return Nodes{dzdx, dzdy}, nil
 }
@@ -214,7 +215,7 @@ func matVecMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (er
 		err = op.IncrDo(xdv.d, zdv.d, ydv.Value)
 	}
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 
 	op = linAlgBinOp{
@@ -224,7 +225,7 @@ func matVecMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (er
 
 	err = op.IncrDo(ydv.d, xdv.Value, zdv.d)
 	if err = checkErrSetDeriv(err, ydv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -235,10 +236,10 @@ func vecDotDiffExpr(transA, transB bool, x, y, z, gradZ *Node) (retVal Nodes, er
 		if dzdy, err = HadamardProd(x, gradZ); err == nil {
 			retVal = Nodes{dzdx, dzdy}
 		} else {
-			return nil, errors.Wrap(err, "Failed to carry HadamardProd()")
+			return nil, fmt.Errorf("%s: %w", "Failed to carry HadamardProd()", err)
 		}
 	} else {
-		return nil, errors.Wrap(err, "Failed to carry HadamardProd()")
+		return nil, fmt.Errorf("%s: %w", "Failed to carry HadamardProd()", err)
 	}
 	return
 }
@@ -249,12 +250,12 @@ func vecDotDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (err e
 	mul := newElemBinOp(mulOpType, x, z)
 	err = mul.IncrDo(xdv.d, ydv.Value, zdv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 
 	err = mul.IncrDo(ydv.d, xdv.Value, zdv.d)
 	if err = checkErrSetDeriv(err, ydv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -265,10 +266,10 @@ func outerProdDiffExpr(transA, transB bool, x, y, z, gradZ *Node) (retVal Nodes,
 		if dzdy, err = Mul(y, gradZ); err == nil {
 			retVal = Nodes{dzdx, dzdy}
 		} else {
-			return nil, errors.Wrap(err, "Failed to carry Mul()")
+			return nil, fmt.Errorf("%s: %w", "Failed to carry Mul()", err)
 		}
 	} else {
-		return nil, errors.Wrap(err, "Failed to carry Mul()")
+		return nil, fmt.Errorf("%s: %w", "Failed to carry Mul()", err)
 	}
 	return
 }
@@ -280,12 +281,12 @@ func outerProdDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node) (er
 	err = mul.IncrDo(xdv.d, xdv.Value, zdv.d)
 	err = mul.IncrDo(xdv.d, ydv.Value, zdv.d)
 	if err = checkErrSetDeriv(err, xdv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 
 	err = mul.IncrDo(ydv.d, ydv.Value, zdv.d)
 	if err = checkErrSetDeriv(err, ydv); err != nil {
-		return errors.Wrapf(err, autodiffFail, x)
+		return fmt.Errorf(autodiffFail+": %w", x, err)
 	}
 	return
 }
@@ -301,42 +302,42 @@ func batchedMatMulDiffExpr(transA, transB bool, x, y, z, gradZ *Node) (retVal No
 		op.transA = transA
 		op.transB = transB
 		if dzdx, err = binOpNode(op, y, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 		if dzdy, err = binOpNode(op, gradZ, x); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	case !transA && transB:
 		if dzdx, err = binOpNode(op, gradZ, y); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 
 		op.transA = true
 		if dzdy, err = binOpNode(op, gradZ, x); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	case transA && !transB:
 		op.transB = true
 		if dzdx, err = binOpNode(op, y, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 
 		op.transB = false
 		if dzdy, err = binOpNode(op, x, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	case !transA && !transB:
 		// dzdy
 		op.transA = false
 		op.transB = true
 		if dzdx, err = binOpNode(op, gradZ, y); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 		// do dzdx
 		op.transA = true
 		op.transB = false
 		if dzdy, err = binOpNode(op, x, gradZ); err != nil {
-			return nil, errors.Wrapf(err, binOpNodeFail, op)
+			return nil, fmt.Errorf(binOpNodeFail+": %w", op, err)
 		}
 	}
 	retVal = Nodes{dzdx, dzdy}
@@ -358,13 +359,13 @@ func batchedMatMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node)
 		// dzdx
 		err = op.IncrDo(xdv.d, ydv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		// dzdy
 		err = op.IncrDo(ydv.d, zdv.d, xdv.Value)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, y)
+			return fmt.Errorf(autodiffFail+": %w", y, err)
 		}
 
 		return
@@ -373,14 +374,14 @@ func batchedMatMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node)
 		// dzdx
 		err = op.IncrDo(xdv.d, zdv.d, ydv.Value)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		// dzdy
 		op.transA = true
 		err = op.IncrDo(ydv.d, zdv.d, xdv.Value)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		return
@@ -390,7 +391,7 @@ func batchedMatMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node)
 		op.transB = true
 		err = op.IncrDo(xdv.d, ydv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		// dzdy
@@ -398,21 +399,21 @@ func batchedMatMulDiff(ctx ExecutionContext, transA, transB bool, x, y, z *Node)
 		op.transB = false
 		err = op.IncrDo(ydv.d, xdv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 		return
 	case !transA && !transB:
 		op.transB = true
 		err = op.IncrDo(xdv.d, zdv.d, ydv.Value)
 		if err = checkErrSetDeriv(err, xdv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 
 		op.transA = true
 		op.transB = false
 		err = op.IncrDo(ydv.d, xdv.Value, zdv.d)
 		if err = checkErrSetDeriv(err, ydv); err != nil {
-			return errors.Wrapf(err, autodiffFail, x)
+			return fmt.Errorf(autodiffFail+": %w", x, err)
 		}
 		return
 	}
@@ -426,7 +427,7 @@ func reshape(name string, t tensor.Tensor, shape ...int) error {
 	}
 	if t.DataOrder().IsContiguous() {
 		if err := t.Reshape(shape...); err != nil {
-			return errors.Wrapf(err, "Reshaping slice for %s failed", name)
+			return fmt.Errorf("Reshaping slice for %s failed: %w", name, err)
 		}
 	}
 	return nil
@@ -460,13 +461,13 @@ func batchedMatMul(a, b, c tensor.Tensor, transA, transB, incr bool) (retVal ten
 	var as, bs, cs tensor.Tensor
 	for halt := false; !halt; halt = incrSlices(slices, outer) {
 		if as, err = a.Slice(ss...); err != nil {
-			return nil, errors.Wrapf(err, "Slicing %v from a failed", ss)
+			return nil, fmt.Errorf("Slicing %v from a failed: %w", ss, err)
 		}
 		if bs, err = b.Slice(ss...); err != nil {
-			return nil, errors.Wrapf(err, "Slicing %v from b failed", ss)
+			return nil, fmt.Errorf("Slicing %v from b failed: %w", ss, err)
 		}
 		if cs, err = c.Slice(ss...); err != nil {
-			return nil, errors.Wrapf(err, "Slicing %v from c failed", ss)
+			return nil, fmt.Errorf("Slicing %v from c failed: %w", ss, err)
 		}
 
 		if transA {
@@ -493,7 +494,7 @@ func batchedMatMul(a, b, c tensor.Tensor, transA, transB, incr bool) (retVal ten
 		}
 
 		if _, err = tensor.MatMul(as, bs, fo); err != nil {
-			return nil, errors.Wrapf(err, "MatMul on batch %v failed.", ss)
+			return nil, fmt.Errorf("MatMul on batch %v failed.: %w", ss, err)
 		}
 
 	}

@@ -40,11 +40,11 @@ func MinInt(a, b int) int {
 func Softmax(a []float32) []float32 {
 	sum := float32(0.0)
 	output := make([]float32, len(a))
-	for i := 0; i < len(a); i++ {
+	for i := range a {
 		output[i] = math32.Exp(a[i])
 		sum += output[i]
 	}
-	for i := 0; i < len(output); i++ {
+	for i := range output {
 		output[i] = output[i] / sum
 	}
 	return output

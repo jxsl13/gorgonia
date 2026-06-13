@@ -1,3 +1,6 @@
+//go:build cuda
+// +build cuda
+
 package main
 
 import (
@@ -136,7 +139,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	gorgoniaLoc, err := packageLoc("gorgonia.org/gorgonia")
+	gorgoniaLoc, err := packageLoc("github.com/jxsl13/gorgonia")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -173,13 +176,13 @@ func main() {
 package %v
 `, packageName)
 	buf.WriteString(header)
-	if ! *sameModule {
-		buf.WriteString("import \"gorgonia.org/gorgonia\"\n")
+	if !*sameModule {
+		buf.WriteString("import \"github.com/jxsl13/gorgonia\"\n")
 	}
 
 	buf.WriteString("func init() {\n")
 	for name := range m {
-		if ! *sameModule {
+		if !*sameModule {
 			buf.WriteString("gorgonia.")
 		}
 		buf.WriteString(fmt.Sprintf("AddToStdLib(%q, %sPTX, []string{\"%s\"})\n", name, name, strings.Join(funcs[name], "\", \"")))

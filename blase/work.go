@@ -1,3 +1,6 @@
+//go:build blas
+// +build blas
+
 package blase
 
 /*
@@ -47,7 +50,7 @@ func Implementation() *context { return impl }
 
 const workbufLen int = 3
 
-//A Worker is a BLAS implementation that reports back if there is anything in the queue (WorkAvailable())
+// A Worker is a BLAS implementation that reports back if there is anything in the queue (WorkAvailable())
 // and a way to flush that queue
 type Worker interface {
 	WorkAvailable() <-chan struct{}

@@ -1,4 +1,4 @@
-// +build cuda
+//go:build cuda
 
 package nnops
 
@@ -7,9 +7,9 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
+	G "github.com/jxsl13/gorgonia"
 	cudnn "gorgonia.org/cu/dnn"
 	t2cudnn "gorgonia.org/cu/dnn/interop"
-	G "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
 

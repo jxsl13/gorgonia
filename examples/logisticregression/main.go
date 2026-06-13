@@ -9,7 +9,7 @@ import (
 	"runtime/pprof"
 	"time"
 
-	G "gorgonia.org/gorgonia"
+	G "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -37,7 +37,7 @@ var Float = tensor.Float64
 func init() {
 	xBacking := tensor.Random(Float, N*feats)
 	wBacking := tensor.Random(Float, feats)
-	var yBacking interface{}
+	var yBacking any
 	switch Float {
 	case tensor.Float64:
 		backing := make([]float64, N)
@@ -176,7 +176,7 @@ func main() {
 
 	// Now that we have our graph, program, and machine, we can start training
 	start := time.Now()
-	for i := 0; i < trainIter; i++ {
+	for i := range trainIter {
 		// move the pointer back to the beginning of the prog. Reset() does not delete any values
 		machine.Reset()
 		// We should reinitialize the values {x,y}. This is a good practice.

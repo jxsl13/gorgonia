@@ -136,7 +136,7 @@ func TestRepeatOp(t *testing.T) {
 	}
 }
 
-func repeatOpDiff(repeatOn int, shape tensor.Shape, xV, yV interface{}) (g *ExprGraph, x, y *Node, err error) {
+func repeatOpDiff(repeatOn int, shape tensor.Shape, xV, yV any) (g *ExprGraph, x, y *Node, err error) {
 	g = NewGraph()
 	switch shape.Dims() {
 	case 0:

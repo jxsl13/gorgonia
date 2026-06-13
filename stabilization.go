@@ -1,6 +1,6 @@
 package gorgonia
 
-import "github.com/pkg/errors"
+import "fmt"
 
 var unaryOpStabilizationFns = make(map[ʘUnaryOperatorType][]func(*Node) (*Node, error))
 var binOpStabilizationFns = make(map[ʘBinaryOperatorType][]func(*Node, *Node) (*Node, error))
@@ -23,8 +23,10 @@ func init() {
 }
 
 // logStabilization converts
-// 	log(1+a) or log(a+1) to log1p(a)
+//
+//	log(1+a) or log(a+1) to log1p(a)
 //	log(1-a) to log1p(-a)
+//
 // place before log; a should be positive.
 func logStabilization(a *Node) (retVal *Node, err error) {
 	stabLogf("Stabilizing log(1+a) of %v", a)
@@ -79,7 +81,7 @@ func logStabilization(a *Node) (retVal *Node, err error) {
 		if retVal, err = Neg(x); err == nil {
 			return Log1p(retVal)
 		}
-		return nil, errors.Wrap(err, negFail)
+		return nil, fmt.Errorf("%s: %w", negFail, err)
 	}
 	return Log1p(x)
 }
@@ -122,7 +124,7 @@ func oneMinusSigmoidStabilization(a, b *Node) (retVal *Node, err error) {
 	if retVal, err = Neg(x); err == nil {
 		return Sigmoid(retVal)
 	}
-	return nil, errors.Wrap(err, negFail)
+	return nil, fmt.Errorf("%s: %w", negFail, err)
 }
 
 // logSigmoidStabilization stabilizes log(sigmoid(x)) by replacing it with -softplus(-x)
@@ -143,13 +145,13 @@ func logSigmoidStabilization(a *Node) (retVal *Node, err error) {
 		if retVal, err = Softplus(retVal); err == nil {
 			retVal, err = Neg(retVal)
 			if err != nil {
-				return nil, errors.Wrap(err, negFail)
+				return nil, fmt.Errorf("%s: %w", negFail, err)
 			}
 			return retVal, nil
 		}
-		return nil, errors.Wrap(err, softplusFail)
+		return nil, fmt.Errorf("%s: %w", softplusFail, err)
 	}
-	return nil, errors.Wrap(err, negFail)
+	return nil, fmt.Errorf("%s: %w", negFail, err)
 }
 
 // log1pExpStabilization stabilizes log1p(exp(x)) by substituting it with softplus(x)
@@ -191,15 +193,16 @@ func log1pNegSigmoidStabilization(a *Node) (retVal *Node, err error) {
 	if retVal, err = Softplus(x); err == nil {
 		retVal, err = Neg(retVal)
 		if err != nil {
-			return nil, errors.Wrap(err, negFail)
+			return nil, fmt.Errorf("%s: %w", negFail, err)
 		}
 		return retVal, nil
 	}
-	return nil, errors.Wrap(err, softplusFail)
+	return nil, fmt.Errorf("%s: %w", softplusFail, err)
 }
 
 // logSoftmaxStabilization converts
-// 	log(softmax(a)) to softmax{isLog: true}(a)
+//
+//	log(softmax(a)) to softmax{isLog: true}(a)
 //	log(a * softmax(b)) to log(a) + softmax{isLog: true}(b)
 func logSoftmaxStabilization(a *Node) (retVal *Node, err error) {
 	stabLogf("Stabilizing log(softmax) of %v", a)

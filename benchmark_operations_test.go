@@ -13,7 +13,7 @@ func BenchmarkReshape_Dense(b *testing.B) {
 			g := NewGraph()
 			tT := tensor.New(tensor.Of(tensor.Float64), tensor.WithShape(rst.input.Clone()...))
 			T := NodeFromAny(g, tT)
-			for i := 0; i < b.N; i++ {
+			for b.Loop() {
 				T2, err := Reshape(T, rst.to.Clone())
 				switch {
 				case rst.err && err == nil:

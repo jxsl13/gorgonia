@@ -1,3 +1,6 @@
+//go:build cuda
+// +build cuda
+
 package cuda
 
 import "C"
@@ -7,10 +10,9 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/pkg/errors"
 	"gorgonia.org/cu"
-	"gorgonia.org/cu/blas"
-	"gorgonia.org/cu/dnn"
+	cublas "gorgonia.org/cu/blas"
+	cudnn "gorgonia.org/cu/dnn"
 	"gorgonia.org/tensor"
 )
 
@@ -90,7 +92,7 @@ func (e *Engine) Free(mem tensor.Memory, size int64) error {
 	return nil
 }
 
-func (e *Engine) Memset(mem tensor.Memory, val interface{}) error {
+func (e *Engine) Memset(mem tensor.Memory, val any) error {
 	panic("not implemented")
 }
 
@@ -146,7 +148,7 @@ func (e *Engine) HasNaN(a tensor.Tensor) (bool, error) {
 	name := fmt.Sprintf("misc.hasNaN_f%v", int(dt.Size()*8))
 
 	if !e.HasFunc(name) {
-		return false, errors.Errorf("Unable to perform HasNaN(). The tensor engine does not have the function %q", name)
+		return false, fmt.Errorf("Unable to perform HasNaN(). The tensor engine does not have the function %q", name)
 	}
 
 	mem := cu.DevicePtr(a.Uintptr())
@@ -171,7 +173,7 @@ func (e *Engine) HasInf(a tensor.Tensor) (bool, error) {
 	name := fmt.Sprintf("misc.hasInf_f%v", int(dt.Size()*8))
 
 	if !e.HasFunc(name) {
-		return false, errors.Errorf("Unable to perform HasInf(). The tensor engine does not have the function %q", name)
+		return false, fmt.Errorf("Unable to perform HasInf(). The tensor engine does not have the function %q", name)
 	}
 
 	mem := cu.DevicePtr(a.Uintptr())

@@ -8,7 +8,6 @@ import (
 	"gorgonia.org/tensor"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 )
 
 type upsampleOp struct {
@@ -34,7 +33,7 @@ func newUpsampleOp(inputShape tensor.Shape, stride int) *upsampleOp {
 */
 func Upsample2D(x *Node, scale int) (*Node, error) {
 	if scale < 1 {
-		return nil, errors.Errorf("Upsample scale %v does not make sense", scale)
+		return nil, fmt.Errorf("Upsample scale %v does not make sense", scale)
 	}
 	xShape := x.Shape()
 	op := newUpsampleOp(xShape, scale-1)
@@ -82,11 +81,11 @@ func (op *upsampleOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	var in tensor.Tensor
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Expected input to be a tensor")
+		return nil, fmt.Errorf("Expected input to be a tensor")
 	}
 
 	if in.Shape().Dims() != 4 {
-		return nil, errors.Errorf("Expected input to have 4 dimensions")
+		return nil, fmt.Errorf("Expected input to have 4 dimensions")
 	}
 	return in, nil
 }
@@ -100,13 +99,13 @@ func (op *upsampleOp) Do(inputs ...Value) (retVal Value, err error) {
 	b, c, h, w := inShp[0], inShp[1], inShp[2], inShp[3]
 
 	out := tensor.New(tensor.Of(in.Dtype()), tensor.WithShape(b, c, h*(1+op.stride), w*(1+op.stride)), tensor.WithEngine(in.Engine()))
-	for bi := 0; bi < b; bi++ {
-		for ci := 0; ci < c; ci++ {
-			for hi := 0; hi < h; hi++ {
-				for wi := 0; wi < w; wi++ {
+	for bi := range b {
+		for ci := range c {
+			for hi := range h {
+				for wi := range w {
 					val, err := in.At(bi, ci, hi, wi)
 					if err != nil {
-						return nil, errors.Errorf("Error accessing input data at [%v, %v, %v, %v]", bi, ci, hi, wi)
+						return nil, fmt.Errorf("Error accessing input data at [%v, %v, %v, %v]", bi, ci, hi, wi)
 					}
 					hout := hi * (op.stride + 1)
 					wout := wi * (op.stride + 1)
@@ -165,21 +164,21 @@ func (op *upsampleDiffOp) checkInput(inputs ...Value) (in, pooled, pooledGrad te
 
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected input to be a tensor")
+		err = fmt.Errorf("Expected input to be a tensor")
 		return
 	}
 	if in.Shape().Dims() != 4 {
-		err = errors.Errorf("Expected input to have 4 dimensions")
+		err = fmt.Errorf("Expected input to have 4 dimensions")
 		return
 	}
 
 	if pooled, ok = inputs[1].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooled to be a tensor")
+		err = fmt.Errorf("Expected pooled to be a tensor")
 		return
 	}
 
 	if pooledGrad, ok = inputs[2].(tensor.Tensor); !ok {
-		err = errors.Errorf("Expected pooledGrad to be a tensor")
+		err = fmt.Errorf("Expected pooledGrad to be a tensor")
 		return
 	}
 	return
@@ -194,16 +193,16 @@ func (op *upsampleDiffOp) Do(inputs ...Value) (retVal Value, err error) {
 	insh := in.Shape()
 	gradIn = tensor.New(tensor.Of(in.Dtype()), tensor.WithShape(in.Shape().Clone()...), tensor.WithEngine(in.Engine()))
 	b, c, h, w := insh[0], insh[1], insh[2], insh[3]
-	for bi := 0; bi < b; bi++ {
-		for ci := 0; ci < c; ci++ {
-			for hi := 0; hi < h; hi++ {
-				for wi := 0; wi < w; wi++ {
+	for bi := range b {
+		for ci := range c {
+			for hi := range h {
+				for wi := range w {
 					summ := 0.
 					for sh := 0; sh <= op.stride; sh++ {
 						for sw := 0; sw <= op.stride; sw++ {
 							val, err := pooledGrad.At(bi, ci, hi*(op.stride+1)+sh, wi*(op.stride+1)+sw)
 							if err != nil {
-								return nil, errors.Errorf("Error accessing input data at [%v, %v, %v, %v]", bi, ci, hi, wi)
+								return nil, fmt.Errorf("Error accessing input data at [%v, %v, %v, %v]", bi, ci, hi, wi)
 							}
 							if pooled.Dtype() == tensor.Float32 {
 								summ += float64(val.(float32))

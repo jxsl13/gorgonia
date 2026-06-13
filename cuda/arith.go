@@ -1,9 +1,14 @@
+//go:build cuda
+// +build cuda
+
 package cuda
 
 import (
+	"fmt"
 	"unsafe"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"gorgonia.org/cu"
 	"gorgonia.org/tensor"
 )
@@ -15,17 +20,17 @@ func (e *Engine) Add(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "add")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Add(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Add(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Add")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Add", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -64,26 +69,26 @@ func (e *Engine) Add(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // AddScalar implements tensor.Adder. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) AddScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) AddScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "add")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform AddScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform AddScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for AddScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for AddScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -130,17 +135,17 @@ func (e *Engine) Sub(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "sub")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Sub(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Sub(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Sub")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Sub", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -179,26 +184,26 @@ func (e *Engine) Sub(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // SubScalar implements tensor.Suber. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) SubScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) SubScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "sub")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform SubScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform SubScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for SubScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for SubScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -245,17 +250,17 @@ func (e *Engine) Mul(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "mul")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Mul(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Mul(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Mul")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Mul", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -294,26 +299,26 @@ func (e *Engine) Mul(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // MulScalar implements tensor.Muler. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) MulScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) MulScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "mul")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform MulScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform MulScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for MulScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for MulScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -360,17 +365,17 @@ func (e *Engine) Div(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "div")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Div(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Div(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Div")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Div", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -409,26 +414,26 @@ func (e *Engine) Div(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // DivScalar implements tensor.Diver. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) DivScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) DivScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "div")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform DivScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform DivScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for DivScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for DivScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -475,17 +480,17 @@ func (e *Engine) Pow(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "pow")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Pow(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Pow(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Pow")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Pow", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -524,26 +529,26 @@ func (e *Engine) Pow(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // PowScalar implements tensor.Power. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) PowScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) PowScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "pow")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform PowScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform PowScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for PowScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for PowScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -590,17 +595,17 @@ func (e *Engine) Mod(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 	name := constructName2(a, b, "mod")
 
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform Mod(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform Mod(). The tensor engine does not have the function %q", name)
 	}
 
 	if err = binaryCheck(a, b); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for Mod")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for Mod", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr
@@ -639,26 +644,26 @@ func (e *Engine) Mod(a tensor.Tensor, b tensor.Tensor, opts ...tensor.FuncOpt) (
 }
 
 // ModScalar implements tensor.Moder. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) ModScalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) ModScalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "mod")
 	if !e.HasFunc(name) {
-		return nil, errors.Errorf("Unable to perform ModScalar(). The tensor engine does not have the function %q", name)
+		return nil, fmt.Errorf("Unable to perform ModScalar(). The tensor engine does not have the function %q", name)
 	}
 
 	var bMem tensor.Memory
 	var ok bool
 	if bMem, ok = b.(tensor.Memory); !ok {
-		return nil, errors.Errorf("b has to be a tensor.Memory. Got %T instead", b)
+		return nil, fmt.Errorf("b has to be a tensor.Memory. Got %T instead", b)
 	}
 
 	if err = unaryCheck(a); err != nil {
-		return nil, errors.Wrap(err, "Basic checks failed for ModScalar")
+		return nil, fmt.Errorf("%s: %w", "Basic checks failed for ModScalar", err)
 	}
 
 	var reuse tensor.DenseTensor
 	var safe, toReuse bool
 	if reuse, safe, toReuse, _, _, err = handleFuncOpts(a.Shape(), a.Dtype(), a.DataOrder(), true, opts...); err != nil {
-		return nil, errors.Wrap(err, "Unable to handle funcOpts")
+		return nil, fmt.Errorf("%s: %w", "Unable to handle funcOpts", err)
 	}
 
 	var mem, memB cu.DevicePtr

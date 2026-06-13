@@ -3,6 +3,7 @@ package gorgonia
 import (
 	"bytes"
 	"fmt"
+	"slices"
 
 	"github.com/awalterschulze/gographviz"
 	"gonum.org/v1/gonum/graph"
@@ -58,7 +59,7 @@ func NewGraph(opts ...graphconopt) *ExprGraph {
 }
 
 // Clone clones the graph. All nodes gets cloned, and their values are cloned as well.
-func (g *ExprGraph) Clone() interface{} {
+func (g *ExprGraph) Clone() any {
 	g2 := new(ExprGraph)
 	g2.name = g.name
 
@@ -654,11 +655,8 @@ func (g *ExprGraph) subgraph(ns Nodes, findMissing bool, opts ...Nodes) *ExprGra
 			}
 
 			var hasParent bool
-			for _, parent := range g.to[n] {
-				if allset.Contains(parent) {
-					hasParent = true
-					break
-				}
+			if slices.ContainsFunc(g.to[n], allset.Contains) {
+				hasParent = true
 			}
 			if !hasParent {
 				roots = append(roots, n)
@@ -723,8 +721,9 @@ func (g *ExprGraph) SubgraphRoots(ns ...*Node) *ExprGraph {
 // will not attempt to discover if any nodes are missing.
 //
 // Given a function like the following:
-//		z = x + y
-//		set(x, -x.Grad) // setting the value of x to the negative of the gradient
+//
+//	z = x + y
+//	set(x, -x.Grad) // setting the value of x to the negative of the gradient
 //
 // When SubgraphRoots is used on z, the `-x.Grad` will be included.
 // When using ExactSubgraphRoots, only `x` and `y` are included in the subgraph

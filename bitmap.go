@@ -67,7 +67,7 @@ func (bm *bitmap) BlocksWithZero(atleast int) int {
 			}
 
 			var consecutive int
-			for j := 0; j < bitmapBits; j++ {
+			for j := range bitmapBits {
 				if b>>uint64(j)&uint64(1) == 0 {
 					consecutive++
 				} else {

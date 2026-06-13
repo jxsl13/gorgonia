@@ -92,7 +92,7 @@ func TestGraphSort(t *testing.T) {
 	var err error
 
 	// stability tests
-	for i := 0; i < 100; i++ {
+	for range 100 {
 		if sortedNodes, err = topo.Sort(g); err != nil {
 			t.Error(err)
 		}

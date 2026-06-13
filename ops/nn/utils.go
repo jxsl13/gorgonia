@@ -1,12 +1,12 @@
 package nnops
 
 import (
+	"fmt"
 	"hash/fnv"
 	"unsafe"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -18,7 +18,7 @@ func simpleHash(op gorgonia.Op) uint32 {
 
 func checkArity(op gorgonia.Op, inputs int) error {
 	if inputs != op.Arity() && op.Arity() >= 0 {
-		return errors.Errorf("%v has an arity of %d. Got %d instead", op, op.Arity(), inputs)
+		return fmt.Errorf("%v has an arity of %d. Got %d instead", op, op.Arity(), inputs)
 	}
 	return nil
 }
@@ -50,9 +50,9 @@ func dtypeOf(t hm.Type) (retVal tensor.Dtype, err error) {
 	case gorgonia.TensorType:
 		return dtypeOf(p.Of)
 	case hm.TypeVariable:
-		err = errors.Errorf("instance %v does not have a dtype", p)
+		err = fmt.Errorf("instance %v does not have a dtype", p)
 	default:
-		err = errors.Errorf("Not yet implemented: %v %v", "dtypeOf", p)
+		err = fmt.Errorf("Not yet implemented: %v %v", "dtypeOf", p)
 		return
 	}
 
@@ -63,19 +63,19 @@ func CheckConvolutionParams(pad, stride, dilation []int) error {
 	// checks
 	for _, s := range stride {
 		if s <= 0 {
-			return errors.Errorf("Cannot use strides of less than or equal 0: %v", stride)
+			return fmt.Errorf("Cannot use strides of less than or equal 0: %v", stride)
 		}
 	}
 
 	for _, p := range pad {
 		if p < 0 {
-			return errors.Errorf("Cannot use padding of less than 0: %v", pad)
+			return fmt.Errorf("Cannot use padding of less than 0: %v", pad)
 		}
 	}
 
 	for _, d := range dilation {
 		if d <= 0 {
-			return errors.Errorf("Cannot use dilation less than or eq 0 %v", dilation)
+			return fmt.Errorf("Cannot use dilation less than or eq 0 %v", dilation)
 		}
 	}
 	return nil

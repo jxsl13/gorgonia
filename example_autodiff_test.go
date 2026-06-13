@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 )
 
 // Autodiff showcases automatic differentiation

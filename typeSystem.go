@@ -1,13 +1,14 @@
 package gorgonia
 
 import (
+	"fmt"
+
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
 // inferType infers the type of the expression
-func inferType(expr interface{}) (retVal hm.Type, err error) {
+func inferType(expr any) (retVal hm.Type, err error) {
 	switch e := expr.(type) {
 	case *Node:
 		if e.isInput() || e.isConstant() {
@@ -36,7 +37,7 @@ func inferType(expr interface{}) (retVal hm.Type, err error) {
 	case bool:
 		return Bool, nil
 	default:
-		err = errors.Errorf(nyiTypeFail, "inferType", expr)
+		err = fmt.Errorf(nyiTypeFail, "inferType", expr)
 		return
 	}
 }
@@ -52,7 +53,7 @@ func inferNodeType(op Op, children ...*Node) (retVal hm.Type, err error) {
 	defer hm.ReturnTypes(argTypes)
 	for i, child := range children {
 		if argTypes[i], err = inferType(child); err != nil {
-			return nil, errors.Wrapf(err, "Failed to infer type of %v", child)
+			return nil, fmt.Errorf("Failed to infer type of %v: %w", child, err)
 		}
 	}
 
@@ -65,12 +66,12 @@ func inferNodeType(op Op, children ...*Node) (retVal hm.Type, err error) {
 	// var t0 hm.Type
 	var sub hm.Subs
 	if sub, err = hm.Unify(fn, fnType); err != nil {
-		return nil, errors.Wrapf(err, "Unable to unify while inferring type of %v", op)
+		return nil, fmt.Errorf("Unable to unify while inferring type of %v: %w", op, err)
 	}
 
 	var ok bool
 	if retVal, ok = sub.Get(b); !ok {
-		return nil, errors.Errorf("Expected a replacement for %v", b)
+		return nil, fmt.Errorf("Expected a replacement for %v", b)
 	}
 
 	// return pruneReturn(t0.(*hm.FunctionType).ReturnType()), nil
@@ -100,9 +101,9 @@ func dtypeOf(t hm.Type) (retVal tensor.Dtype, err error) {
 	case TensorType:
 		return dtypeOf(p.Of)
 	case hm.TypeVariable:
-		err = errors.Errorf("instance %v does not have a dtype", p)
+		err = fmt.Errorf("instance %v does not have a dtype", p)
 	default:
-		err = errors.Errorf(nyiFail, "dtypeOf", p)
+		err = fmt.Errorf(nyiFail, "dtypeOf", p)
 		return
 	}
 

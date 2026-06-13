@@ -3,6 +3,7 @@ package main
 import (
 	"image"
 	"math"
+	"slices"
 )
 
 type sli struct {
@@ -22,12 +23,7 @@ func s(start int) sli {
 }
 
 func hasOne(a []float64) bool {
-	for _, v := range a {
-		if v == 1.0 {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(a, 1.0)
 }
 
 func avgF64s(a []float64) (retVal float64) {

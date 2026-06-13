@@ -1,7 +1,8 @@
 package gorgonia
 
 import (
-	"github.com/pkg/errors"
+	"fmt"
+
 	"gorgonia.org/tensor"
 )
 
@@ -91,18 +92,18 @@ func KeepDims(a *Node, expandLeft bool, fn func(a *Node) (*Node, error)) (*Node,
 	bdims := newShape.Dims()
 	diff := adims - bdims
 	if diff < 0 {
-		return b, errors.Errorf("Unable to KeepDims for a result with shape %v. It has more dimensions than input %v", newShape, oshape)
+		return b, fmt.Errorf("Unable to KeepDims for a result with shape %v. It has more dimensions than input %v", newShape, oshape)
 	}
 	var retShape tensor.Shape
 	if expandLeft {
 		retShape = tensor.BorrowInts(diff + newShape.Dims())
-		for i := 0; i < diff; i++ {
+		for i := range diff {
 			retShape[i] = 1
 		}
 		copy(retShape[diff:], newShape)
 	} else {
 		retShape = newShape.Clone()
-		for i := 0; i < diff; i++ {
+		for range diff {
 			retShape = append(retShape, 1)
 		}
 

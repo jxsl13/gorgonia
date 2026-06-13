@@ -43,7 +43,7 @@ func TestMapFormat(t *testing.T) {
 	m3 := make(map[*Node]Nodes)
 	m3[x] = Nodes{x, y}
 	s = fmt.Sprintf("%-v", FmtNodeMap(m3))
-	expected0 = fmt.Sprintf("map[Node.Name]gorgonia.Nodes {\n\tx :: Vector float64: [x, y]\n}")
+	expected0 = "map[Node.Name]gorgonia.Nodes {\n\tx :: Vector float64: [x, y]\n}"
 	if s != expected0 {
 		t.Errorf("Case 4 failed. Expected : %q. Got %q instead", expected0, s)
 	}

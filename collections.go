@@ -2,6 +2,7 @@ package gorgonia
 
 import (
 	"fmt"
+	"slices"
 	"sort"
 	"unsafe"
 
@@ -41,10 +42,8 @@ func (ns Nodes) Set() Nodes {
 
 // Add adds to set
 func (ns Nodes) Add(n *Node) Nodes {
-	for _, node := range ns {
-		if node == n {
-			return ns
-		}
+	if slices.Contains(ns, n) {
+		return ns
 	}
 	ns = append(ns, n)
 	return ns
@@ -52,12 +51,7 @@ func (ns Nodes) Add(n *Node) Nodes {
 
 // Contains checks if the wanted node is in the set
 func (ns Nodes) Contains(want *Node) bool {
-	for _, n := range ns {
-		if n == want {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ns, want)
 }
 
 // Format implements fmt.Formatter, which allows Nodes to be differently formatted depending on the verbs

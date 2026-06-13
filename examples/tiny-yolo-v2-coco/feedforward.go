@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/jxsl13/gorgonia"
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
 

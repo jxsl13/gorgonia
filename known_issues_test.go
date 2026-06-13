@@ -43,7 +43,7 @@ func TestIssue182(t *testing.T) {
 
 	machine.Let(x, xT)
 	machine.Let(b, -0.5)
-	for turns := 0; turns < 4; turns++ {
+	for turns := range 4 {
 		if err := machine.RunAll(); err != nil {
 			t.Fatalf("Machine failed to run at turn %v", turns)
 		}

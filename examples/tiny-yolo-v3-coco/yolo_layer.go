@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
+	"github.com/jxsl13/gorgonia"
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
 )
 
 type yoloLayer struct {
@@ -17,14 +18,15 @@ type yoloLayer struct {
 }
 
 func (l *yoloLayer) String() string {
-	str := "YOLO layer: "
+	var str strings.Builder
+	str.WriteString("YOLO layer: ")
 	for m := range l.masks {
-		str += fmt.Sprintf("Mask->%[1]d Anchors->[%[2]d, %[3]d]", l.masks[m], l.anchors[m][0], l.anchors[m][1])
+		str.WriteString(fmt.Sprintf("Mask->%[1]d Anchors->[%[2]d, %[3]d]", l.masks[m], l.anchors[m][0], l.anchors[m][1]))
 		if m != len(l.masks)-1 {
-			str += "\t|\t"
+			str.WriteString("\t|\t")
 		}
 	}
-	return str
+	return str.String()
 }
 
 func (l *yoloLayer) Type() string {

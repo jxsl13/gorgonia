@@ -1,8 +1,8 @@
 package dot
 
 import (
+	"github.com/jxsl13/gorgonia"
 	gonumDot "gonum.org/v1/gonum/graph/encoding/dot"
-	"gorgonia.org/gorgonia"
 )
 
 // Marshal the graph in a dot (graphviz)

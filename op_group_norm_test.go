@@ -11,7 +11,7 @@ import (
 
 var groupNormTestCases = []struct {
 	Dtype  tensor.Dtype
-	X      interface{}
+	X      any
 	XShape tensor.Shape
 
 	Groups, Channels int
@@ -22,8 +22,8 @@ var groupNormTestCases = []struct {
 	BiasInit  InitWFn
 	BiasShape tensor.Shape
 
-	ExpectedTrainResult, ExpectedCost                      interface{}
-	ExpectedBiasGrad, ExpectedScaleGrad, ExpectedInputGrad interface{}
+	ExpectedTrainResult, ExpectedCost                      any
+	ExpectedBiasGrad, ExpectedScaleGrad, ExpectedInputGrad any
 }{
 	{
 		Dtype:               tensor.Float64,

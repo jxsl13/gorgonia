@@ -1,4 +1,4 @@
-// +build cuda
+//go:build cuda
 
 package gorgonia
 
@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"unsafe"
 
-	"github.com/pkg/errors"
+	"errors"
+
+	"github.com/jxsl13/gorgonia/cuda"
 	"gorgonia.org/cu"
-	"gorgonia.org/gorgonia/cuda"
 	"gorgonia.org/tensor"
 )
 
@@ -133,7 +134,7 @@ func (op elemBinOp) CUDADo(extern External, dev Device, prealloc Value, inputs .
 		return (*fn)(a, b, tensor.UseUnsafe())
 	}
 
-	return nil, errors.Errorf("op %v cannot be done by CUDA", op)
+	return nil, fmt.Errorf("op %v cannot be done by CUDA", op)
 }
 
 func (op elemBinOp) ssop(a, b, prealloc Value, e *cuda.Engine) (retVal Value, err error) {
@@ -192,16 +193,16 @@ func (op linAlgBinOp) CUDADo(extern External, dev Device, prealloc Value, inputs
 
 	aT, ok := a.(tensor.Tensor)
 	if !ok {
-		return nil, errors.Errorf("Expected a a to be a Tensor. Got %T instead", a)
+		return nil, fmt.Errorf("Expected a a to be a Tensor. Got %T instead", a)
 	}
 	bT, ok := b.(tensor.Tensor)
 	if !ok {
-		return nil, errors.Errorf("Expected a b to be a Tensor. Got %T instead", b)
+		return nil, fmt.Errorf("Expected a b to be a Tensor. Got %T instead", b)
 	}
 
 	pT, ok := prealloc.(tensor.Tensor)
 	if !ok {
-		return nil, errors.Errorf("Expected a prealloc to be a Tensor. Got %T instead", prealloc)
+		return nil, fmt.Errorf("Expected a prealloc to be a Tensor. Got %T instead", prealloc)
 	}
 	tensor.WithEngine(e)(bT)
 	tensor.WithEngine(e)(aT)
@@ -209,7 +210,7 @@ func (op linAlgBinOp) CUDADo(extern External, dev Device, prealloc Value, inputs
 
 	if op.transA && op.āBinaryOperator != batchedMatMulOperator {
 		if err = aT.T(); err != nil {
-			return nil, errors.Wrap(err, tFail)
+			return nil, fmt.Errorf("%s: %w", tFail, err)
 		}
 		// untranspose
 		defer aT.T()
@@ -217,7 +218,7 @@ func (op linAlgBinOp) CUDADo(extern External, dev Device, prealloc Value, inputs
 
 	if op.transB && op.āBinaryOperator != batchedMatMulOperator {
 		if err = bT.T(); err != nil {
-			return nil, errors.Wrap(err, tFail)
+			return nil, fmt.Errorf("%s: %w", tFail, err)
 		}
 		// untranspose
 		defer bT.T()

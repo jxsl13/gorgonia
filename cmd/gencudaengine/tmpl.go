@@ -56,7 +56,7 @@ func (e *Engine) {{.Method}}(a tensor.Tensor, b tensor.Tensor, opts ...tensor.Fu
 }
 
 // {{.ScalarMethod}}Scalar implements tensor.{{.Method}}er. It does not support safe or increment operation options and will return an error if those options are passed in
-func (e *Engine) {{.ScalarMethod}}Scalar(a tensor.Tensor, b interface{}, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
+func (e *Engine) {{.ScalarMethod}}Scalar(a tensor.Tensor, b any, leftTensor bool, opts ...tensor.FuncOpt) (retVal tensor.Tensor, err error) {
 	name := constructName1(a, leftTensor, "{{.ScalarMethod | lower}}")
 	if !e.HasFunc(name) {
 		return nil, errors.Errorf("Unable to perform {{.ScalarMethod}}Scalar(). The tensor engine does not have the function %q", name)

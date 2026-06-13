@@ -1,7 +1,7 @@
 package main
 
 import (
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

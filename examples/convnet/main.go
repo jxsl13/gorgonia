@@ -13,9 +13,9 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
+	G "github.com/jxsl13/gorgonia"
+	"github.com/jxsl13/gorgonia/examples/mnist"
 	"github.com/pkg/errors"
-	G "gorgonia.org/gorgonia"
-	"gorgonia.org/gorgonia/examples/mnist"
 	"gorgonia.org/tensor"
 
 	"time"
@@ -258,7 +258,7 @@ func main() {
 		bar.Prefix(fmt.Sprintf("Epoch %d", i))
 		bar.Set(0)
 		bar.Start()
-		for b := 0; b < batches; b++ {
+		for b := range batches {
 			start := b * bs
 			end := start + bs
 			if start >= numExamples {

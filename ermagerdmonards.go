@@ -1,8 +1,6 @@
 package gorgonia
 
-import (
-	"github.com/pkg/errors"
-)
+import "fmt"
 
 var (
 	_ Result = (*Node)(nil)
@@ -36,7 +34,7 @@ type Mker interface {
 func Lift1(fn func(a *Node) (*Node, error)) func(a Input) Result {
 	return func(a Input) Result {
 		if err := CheckOne(a); err != nil {
-			return Err(errors.WithStack(err))
+			return Err(err)
 		}
 		return TransformResult(a)(fn(a.Node()))
 	}
@@ -46,7 +44,7 @@ func Lift1(fn func(a *Node) (*Node, error)) func(a Input) Result {
 func Lift1Axial(fn func(a *Node, axes ...int) (*Node, error)) func(a Input, axes ...int) Result {
 	return func(a Input, axes ...int) Result {
 		if err := CheckOne(a); err != nil {
-			return Err(errors.WithStack(err))
+			return Err(err)
 		}
 		return TransformResult(a)(fn(a.Node(), axes...))
 	}
@@ -56,10 +54,10 @@ func Lift1Axial(fn func(a *Node, axes ...int) (*Node, error)) func(a Input, axes
 func Lift2(fn func(a, b *Node) (*Node, error)) func(a, b Input) Result {
 	return func(a, b Input) Result {
 		if err := CheckOne(a); err != nil {
-			return Err(errors.WithStack(err))
+			return Err(err)
 		}
 		if err := CheckOne(b); err != nil {
-			return Err(errors.WithStack(err))
+			return Err(err)
 		}
 		return TransformResult(a, b)(fn(a.Node(), b.Node()))
 	}
@@ -69,10 +67,10 @@ func Lift2(fn func(a, b *Node) (*Node, error)) func(a, b Input) Result {
 func Lift2Broadcast(fn func(a, b *Node, pat1, pat2 []byte) (*Node, error)) func(a, b Input, pat1, pat2 []byte) Result {
 	return func(a, b Input, pat1, pat2 []byte) Result {
 		if err := CheckOne(a); err != nil {
-			return Err(errors.WithStack(err))
+			return Err(err)
 		}
 		if err := CheckOne(b); err != nil {
-			return Err(errors.WithStack(err))
+			return Err(err)
 		}
 		return TransformResult(a, b)(fn(a.Node(), b.Node(), pat1, pat2))
 	}
@@ -84,7 +82,7 @@ type gErr struct{ error }
 // Err is a function that returns a gErr. It wraps errors with stack information.
 // A gErr implements Result, as well as error.
 // This way, the Err() method acts as an unwrapper.
-func Err(e error) gErr { return gErr{errors.WithStack(e)} }
+func Err(e error) gErr { return gErr{e} }
 
 func (err gErr) Node() *Node  { return nil }
 func (err gErr) Nodes() Nodes { return nil }
@@ -144,11 +142,11 @@ func CheckOne(in Input) error {
 func NodesFromInputs(xs ...Input) (Nodes, error) {
 	for i := range xs {
 		if err := CheckOne(xs[i]); err != nil {
-			return nil, errors.Wrapf(err, "NodesFromInputs %dth input", i)
+			return nil, fmt.Errorf("NodesFromInputs %dth input: %w", i, err)
 		}
 		// check if the Input is a *Node
 		if xs[i].Node() == nil {
-			return nil, errors.Errorf("Input %d is not a *Node", i)
+			return nil, fmt.Errorf("Input %d is not a *Node", i)
 		}
 	}
 

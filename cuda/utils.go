@@ -1,10 +1,14 @@
+//go:build cuda
+// +build cuda
+
 package cuda
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/pkg/errors"
+	"errors"
+
 	"gorgonia.org/tensor"
 )
 
@@ -15,7 +19,7 @@ func getDenseTensor(t tensor.Tensor) (tensor.DenseTensor, error) {
 	case tensor.Densor:
 		return tt.Dense(), nil
 	default:
-		return nil, errors.Errorf("Tensor %T is not a DenseTensor", t)
+		return nil, fmt.Errorf("Tensor %T is not a DenseTensor", t)
 	}
 }
 
@@ -29,20 +33,20 @@ func handleFuncOpts(expShape tensor.Shape, expType tensor.Dtype, o tensor.DataOr
 
 	if toReuse {
 		if reuse, err = getDenseTensor(reuseT); err != nil {
-			err = errors.Wrapf(err, "Expected a tensor.DenseTensor")
+			err = fmt.Errorf("Expected a tensor.DenseTensor: %w", err)
 			return
 		}
 
 		if (strict || same) && reuse.Dtype() != expType {
-			err = errors.Errorf(typeMismatch, expType, reuse.Dtype())
-			err = errors.Wrapf(err, "Cannot use reuse")
+			err = fmt.Errorf(typeMismatch, expType, reuse.Dtype())
+			err = fmt.Errorf("Cannot use reuse: %w", err)
 			return
 		}
 
 		if reuse.DataSize() != expShape.TotalSize() && !expShape.IsScalar() {
 			log.Printf("REUSE CHECK reuse shape %v, expected Shape %v", reuse.Shape(), expShape)
-			err = errors.Errorf(shapeMismatch, reuse.Shape(), expShape)
-			err = errors.Wrapf(err, "Cannot use reuse: shape mismatch - reuse.len() %v, expShape.TotalSize() %v", reuse.DataSize(), expShape.TotalSize())
+			err = fmt.Errorf(shapeMismatch, reuse.Shape(), expShape)
+			err = fmt.Errorf("Cannot use reuse: shape mismatch - reuse.len() %v, expShape.TotalSize() %v: %w", reuse.DataSize(), expShape.TotalSize(), err)
 			return
 		}
 
@@ -62,22 +66,22 @@ func binaryCheck(a, b tensor.Tensor) (err error) {
 	switch at {
 	case tensor.Float32, tensor.Float64:
 	default:
-		return errors.Errorf("Unsupported Dtype for a: %v", at)
+		return fmt.Errorf("Unsupported Dtype for a: %v", at)
 	}
 
 	switch bt {
 	case tensor.Float32, tensor.Float64:
 	default:
-		return errors.Errorf("Unsupported Dtype for b: %v", bt)
+		return fmt.Errorf("Unsupported Dtype for b: %v", bt)
 	}
 
 	if at.Kind() != bt.Kind() {
-		return errors.Errorf(typeMismatch, at, bt)
+		return fmt.Errorf(typeMismatch, at, bt)
 	}
 
 	if !a.Shape().Eq(b.Shape()) {
 		log.Printf("BINARY CHECK %v %v", a.Shape(), b.Shape())
-		return errors.Errorf(shapeMismatch, b.Shape(), a.Shape())
+		return fmt.Errorf(shapeMismatch, b.Shape(), a.Shape())
 	}
 
 	if a.RequiresIterator() {
@@ -95,7 +99,7 @@ func unaryCheck(a tensor.Tensor) error {
 	switch at {
 	case tensor.Float32, tensor.Float64:
 	default:
-		return errors.Errorf("Unsupported Dtype for a: %v", at)
+		return fmt.Errorf("Unsupported Dtype for a: %v", at)
 	}
 
 	if a.RequiresIterator() {

@@ -21,8 +21,8 @@ var (
 	tne  = denseCmpOp(tensor.ElNe)
 )
 
-type denseBinOp func(a, b interface{}, opts ...tensor.FuncOpt) (tensor.Tensor, error)
-type denseCmpOp func(a, b interface{}, opts ...tensor.FuncOpt) (tensor.Tensor, error)
+type denseBinOp func(a, b any, opts ...tensor.FuncOpt) (tensor.Tensor, error)
+type denseCmpOp func(a, b any, opts ...tensor.FuncOpt) (tensor.Tensor, error)
 
 type ʘBinaryOperatorType byte
 
@@ -106,9 +106,13 @@ var ʘBinOpDiffFns = [maxʘBinaryOpType]func(ctx ExecutionContext, x, y, z *Node
 
 // isCommutative gives info about whether the operator is commutative
 // For example:
-//		a + b == b + a
+//
+//	a + b == b + a
+//
 // will ALWAYS evaluate to true. The same cannot be said about subtraction:
-// 		a - b != b - a
+//
+//	a - b != b - a
+//
 // While a-b *may* be equal to b-a, it is not guaranteed. Therefore subtraction
 // is not commutative
 func (op ʘBinaryOperatorType) isCommutative() bool {

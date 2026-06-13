@@ -11,7 +11,7 @@ import (
 func BenchmarkTrainingConcurrent(b *testing.B) {
 	xV, yV, bs := prep()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		concurrentTraining(xV, yV, bs, 10)
 	}
 
@@ -21,7 +21,7 @@ func BenchmarkTrainingConcurrent(b *testing.B) {
 func BenchmarkTrainingNonConcurrent(b *testing.B) {
 	xV, yV, _ := prep()
 
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		nonConcurrentTraining(xV, yV, 10)
 	}
 
@@ -30,7 +30,7 @@ func BenchmarkTrainingNonConcurrent(b *testing.B) {
 
 func BenchmarkTapeMachineExecution(b *testing.B) {
 	m, c, machine := linregSetup(tensor.Float64)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		linregRun(m, c, machine, 100, false)
 	}
 	machine.(io.Closer).Close()

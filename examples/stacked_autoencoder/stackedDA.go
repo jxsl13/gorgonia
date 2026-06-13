@@ -7,7 +7,7 @@ import (
 	"io"
 	"os"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -35,7 +35,7 @@ func NewStackedDA(g *ExprGraph, batchSize, size, inputs, outputs, layers int, hi
 	}
 	firstInput := input
 
-	for i := 0; i < layers; i++ {
+	for i := range layers {
 		var inputSize, outputSize int
 		if i > 0 {
 			outputSize = hiddenSizes[i]
@@ -124,7 +124,7 @@ func (sda *StackedDA) Pretrain(x tensor.Tensor, epoch int) (err error) {
 	var start int
 	for i, da := range sda.autoencoders {
 		var layerCosts []float64
-		for batch := 0; batch < batches; batch++ {
+		for range batches {
 			var input tensor.Tensor
 			if input, err = x.Slice(S(start, start+sda.BatchSize)); err != nil {
 				return
@@ -191,7 +191,7 @@ func (sda *StackedDA) Finetune(x tensor.Tensor, y []int, epoch int) (err error) 
 	losses = losses[:0]
 	cvs := make([]float64, batches)
 	cvs = cvs[:0]
-	for batch := 0; batch < batches; batch++ {
+	for batch := range batches {
 		losses = losses[:0]
 		start := batch * sda.BatchSize
 		end := start + sda.BatchSize

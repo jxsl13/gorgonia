@@ -5,7 +5,6 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -37,7 +36,7 @@ func (op *byIndicesOp) ReturnsPtr() bool { return false }
 
 func (op *byIndicesOp) CallsExtern() bool { return false }
 
-func (op *byIndicesOp) WriteHash(h hash.Hash) { fmt.Fprintf(h, op.String()) }
+func (op *byIndicesOp) WriteHash(h hash.Hash) { fmt.Fprintf(h, "%s", op.String()) }
 
 func (op *byIndicesOp) Hashcode() uint32 { return simpleHash(op) }
 
@@ -49,7 +48,7 @@ func (op *byIndicesOp) InferShape(inputs ...DimSizer) (tensor.Shape, error) {
 	s := inputs[0].(tensor.Shape).Clone()
 	i := inputs[1].(tensor.Shape).Clone()
 	if !i.IsVectorLike() {
-		return nil, errors.Errorf("Expected indices to be a vector-like. Got %v instead", i)
+		return nil, fmt.Errorf("Expected indices to be a vector-like. Got %v instead", i)
 	}
 
 	s[op.axis] = i.TotalSize()
@@ -73,14 +72,14 @@ func (op *byIndicesOp) checkInput(inputs ...Value) (x, indices tensor.Tensor, er
 
 	var ok bool
 	if x, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, nil, errors.Errorf("Expected input to be a tensor, got %T", inputs[0])
+		return nil, nil, fmt.Errorf("Expected input to be a tensor, got %T", inputs[0])
 	}
 	if indices, ok = inputs[1].(tensor.Tensor); !ok {
-		return nil, nil, errors.Errorf("Expected indices to be a tensor. Got %T instead", inputs[1])
+		return nil, nil, fmt.Errorf("Expected indices to be a tensor. Got %T instead", inputs[1])
 	}
 
 	if indices.Dtype() != tensor.Int {
-		return nil, nil, errors.Errorf("Expected indices to have tensor.Int as a Dtype. Got %T instead", indices.Dtype())
+		return nil, nil, fmt.Errorf("Expected indices to have tensor.Int as a Dtype. Got %T instead", indices.Dtype())
 	}
 
 	return x, indices, nil
@@ -164,7 +163,7 @@ func (op *byIndicesOpDiffOp) ReturnsPtr() bool { return false }
 func (op *byIndicesOpDiffOp) CallsExtern() bool { return false }
 
 func (op *byIndicesOpDiffOp) WriteHash(h hash.Hash) {
-	fmt.Fprintf(h, op.String())
+	fmt.Fprintf(h, "%s", op.String())
 }
 
 func (op *byIndicesOpDiffOp) Hashcode() uint32 { return simpleHash(op) }
@@ -200,30 +199,30 @@ func (op *byIndicesOpDiffOp) checkInput(inputs ...Value) (in, indices, gradient 
 	switch t := inputs[0].(type) {
 	case *dualValue:
 		if in, ok = t.Value.(*tensor.Dense); !ok {
-			return nil, nil, nil, errors.Errorf("input should be a tensor.Tensor, got %T", inputs[0])
+			return nil, nil, nil, fmt.Errorf("input should be a tensor.Tensor, got %T", inputs[0])
 		}
 	case *tensor.Dense:
 		in = t
 	default:
-		return nil, nil, nil, errors.Errorf("input type is not supported, got %T", inputs[0])
+		return nil, nil, nil, fmt.Errorf("input type is not supported, got %T", inputs[0])
 	}
 
 	switch t := inputs[2].(type) {
 	case *dualValue:
 		if gradient, ok = t.Value.(*tensor.Dense); !ok {
-			return nil, nil, nil, errors.Errorf("gradient should be a tensor, got %T", inputs[2])
+			return nil, nil, nil, fmt.Errorf("gradient should be a tensor, got %T", inputs[2])
 		}
 	case *tensor.Dense:
 		gradient = t
 	default:
-		return nil, nil, nil, errors.Errorf("gradient type is not supported, got %T", inputs[2])
+		return nil, nil, nil, fmt.Errorf("gradient type is not supported, got %T", inputs[2])
 	}
 
 	switch t := inputs[1].(type) {
 	case *tensor.Dense:
 		indices = t
 	default:
-		return nil, nil, nil, errors.Errorf("indices type %T is not supported", inputs[1])
+		return nil, nil, nil, fmt.Errorf("indices type %T is not supported", inputs[1])
 	}
 
 	return in, indices, gradient, nil

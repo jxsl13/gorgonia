@@ -10,9 +10,9 @@ import (
 var testCasesSparseMaxDo = []struct {
 	desc     string
 	size     tensor.Shape
-	input    interface{}
-	weights  interface{}
-	expected interface{}
+	input    any
+	weights  any
+	expected any
 	axis     int
 }{
 	{

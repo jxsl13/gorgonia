@@ -1,7 +1,12 @@
+//go:build cuda
+// +build cuda
+
 package cuda
 
 import (
-	"github.com/pkg/errors"
+	"errors"
+	"fmt"
+
 	"gonum.org/v1/gonum/blas"
 	"gorgonia.org/tensor"
 )
@@ -47,7 +52,7 @@ func (e *Engine) checkThreeFloat(a, b, ret tensor.Tensor) (ad, bd, retVal *tenso
 func (e *Engine) MatVecMul(a, b, prealloc tensor.Tensor) (err error) {
 	var ad, bd, pd *tensor.Dense
 	if ad, bd, pd, err = e.checkThreeFloat(a, b, prealloc); err != nil {
-		return errors.Wrapf(err, "MatVecMul failed pre check")
+		return fmt.Errorf("MatVecMul failed pre check: %w", err)
 	}
 
 	tA := blas.Trans
@@ -110,13 +115,13 @@ func (e *Engine) MatVecMul(a, b, prealloc tensor.Tensor) (err error) {
 func (e *Engine) MatMul(a, b, prealloc tensor.Tensor) (err error) {
 	var ad, bd, pd *tensor.Dense
 	if ad, bd, pd, err = e.checkThreeFloat(a, b, prealloc); err != nil {
-		return errors.Wrapf(err, "MatVecMul failed pre check")
+		return fmt.Errorf("MatVecMul failed pre check: %w", err)
 	}
 
 	ado := a.DataOrder()
 	bdo := b.DataOrder()
 	if !ado.HasSameOrder(bdo) {
-		return errors.Errorf("a does not have the same data order as b. a is %v. b is %v", a.DataOrder(), b.DataOrder())
+		return fmt.Errorf("a does not have the same data order as b. a is %v. b is %v", a.DataOrder(), b.DataOrder())
 	}
 
 	// get result shapes. k is the shared dimension
@@ -222,7 +227,7 @@ func (e *Engine) MatMul(a, b, prealloc tensor.Tensor) (err error) {
 		alpha, beta := float32(1), float32(0)
 		e.c.Do(func() error { e.b.Sgemm(tA, tB, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc); return nil })
 	default:
-		return errors.Errorf("Unsupported Dtype %v", ad.Dtype())
+		return fmt.Errorf("Unsupported Dtype %v", ad.Dtype())
 	}
 
 	return e.b.Err()
@@ -232,7 +237,7 @@ func (e *Engine) MatMul(a, b, prealloc tensor.Tensor) (err error) {
 func (e *Engine) Outer(a, b, prealloc tensor.Tensor) (err error) {
 	var ad, bd, pd *tensor.Dense
 	if ad, bd, pd, err = e.checkThreeFloat(a, b, prealloc); err != nil {
-		return errors.Wrapf(err, "MatVecMul failed pre check")
+		return fmt.Errorf("MatVecMul failed pre check: %w", err)
 	}
 	m := ad.Size()
 	n := bd.Size()

@@ -1,5 +1,4 @@
 //go:build debug
-// +build debug
 
 package gorgonia
 
@@ -65,7 +64,7 @@ func leaveLogScope() {
 	replacement = "\n" + strings.Repeat("\t", tabcount)
 }
 
-func logf(format string, others ...interface{}) {
+func logf(format string, others ...any) {
 	if DEBUG {
 		// format = strings.Replace(format, "\n", replacement, -1)
 		s := fmt.Sprintf(format, others...)
@@ -75,67 +74,67 @@ func logf(format string, others ...interface{}) {
 	}
 }
 
-func compileLogf(format string, attrs ...interface{}) {
+func compileLogf(format string, attrs ...any) {
 	if compileDev {
 		logf(format, attrs...)
 	}
 }
 
-func shapeLogf(format string, attrs ...interface{}) {
+func shapeLogf(format string, attrs ...any) {
 	if shapeInferenceDev {
 		logf(format, attrs...)
 	}
 }
 
-func typeSysLogf(format string, attrs ...interface{}) {
+func typeSysLogf(format string, attrs ...any) {
 	if typeSystemDev {
 		logf(format, attrs...)
 	}
 }
 
-func symdiffLogf(format string, attrs ...interface{}) {
+func symdiffLogf(format string, attrs ...any) {
 	if symdiffDev {
 		logf(format, attrs...)
 	}
 }
 
-func autodiffLogf(format string, attrs ...interface{}) {
+func autodiffLogf(format string, attrs ...any) {
 	if autodiffDev {
 		logf(format, attrs...)
 	}
 }
 
-func machineLogf(format string, attrs ...interface{}) {
+func machineLogf(format string, attrs ...any) {
 	if machineDev {
 		logf(format, attrs...)
 	}
 }
 
-func stabLogf(format string, attrs ...interface{}) {
+func stabLogf(format string, attrs ...any) {
 	if stabilizationDev {
 		logf(format, attrs...)
 	}
 }
 
-func solverLogf(format string, attrs ...interface{}) {
+func solverLogf(format string, attrs ...any) {
 	if solverDev {
 		logf(format, attrs...)
 	}
 }
 
-func cudaLogf(format string, attrs ...interface{}) {
+func cudaLogf(format string, attrs ...any) {
 	if cudaDev {
 		logf(format, attrs...)
 	}
 }
 
-func allocatorLogf(format string, attrs ...interface{}) {
+func allocatorLogf(format string, attrs ...any) {
 	if allocatorDev {
 		logf(format, attrs...)
 	}
 }
 
-func recoverFrom(format string, attrs ...interface{}) {
+func recoverFrom(format string, attrs ...any) {
 	if r := recover(); r != nil {
 		logger.Printf(format, attrs...)
 		panic(r)

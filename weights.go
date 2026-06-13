@@ -7,7 +7,6 @@ import (
 	"time"
 
 	rng "github.com/leesper/go_rng"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -18,11 +17,11 @@ import (
 // It generates the backing required for the tensors.
 //
 // It's typically used in closures
-type InitWFn func(dt tensor.Dtype, s ...int) interface{}
+type InitWFn func(dt tensor.Dtype, s ...int) any
 
 // Zeroes creates an InitWfn that populates a Value with... zeroes. I don't know what you expected.
 func Zeroes() InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		size := tensor.Shape(s).TotalSize()
 		switch dt {
 		case tensor.Float64:
@@ -40,12 +39,12 @@ func Zeroes() InitWFn {
 
 // Ones creates an InitWfn that populates a Value with ones. See Zeroes() for more explanation.
 func Ones() InitWFn {
-	return func(dt tensor.Dtype, s ...int) interface{} { return ones(dt, s...).Data() }
+	return func(dt tensor.Dtype, s ...int) any { return ones(dt, s...).Data() }
 }
 
 // RangedFrom creates an InitWFn that populates a Value starting with the provided start, increamenting the number for each element in the value by 1
 func RangedFrom(start int) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		size := tensor.Shape(s).TotalSize()
 		return tensor.Range(dt, start, start+size)
 	}
@@ -53,8 +52,8 @@ func RangedFrom(start int) InitWFn {
 }
 
 // RangedFromWithStep creates an InitWFn that populates a value starting with the provided start, and incrementing the number for each element by the provided increment.
-func RangedFromWithStep(start, increment interface{}) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+func RangedFromWithStep(start, increment any) InitWFn {
+	f := func(dt tensor.Dtype, s ...int) any {
 		totalSize := tensor.Shape(s).TotalSize()
 
 		switch dt {
@@ -79,7 +78,7 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 			}
 
 			result := make([]float64, totalSize)
-			for i := 0; i < totalSize; i++ {
+			for i := range totalSize {
 				result[i] = st
 				st += incr
 			}
@@ -110,7 +109,7 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 			}
 
 			result := make([]float32, totalSize)
-			for i := 0; i < totalSize; i++ {
+			for i := range totalSize {
 				result[i] = st
 				st += incr
 			}
@@ -119,7 +118,7 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 			st := start.(int)
 			incr := increment.(int)
 			result := make([]int, totalSize)
-			for i := 0; i < totalSize; i++ {
+			for i := range totalSize {
 				result[i] = st
 				st += incr
 			}
@@ -133,8 +132,8 @@ func RangedFromWithStep(start, increment interface{}) InitWFn {
 }
 
 // ValuesOf creates an InitWrn that populates a value with val. This function will cause a panic if val's type is incompatible with the values type.
-func ValuesOf(val interface{}) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+func ValuesOf(val any) InitWFn {
+	f := func(dt tensor.Dtype, s ...int) any {
 		size := tensor.Shape(s).TotalSize()
 
 		switch dt {
@@ -160,7 +159,7 @@ func ValuesOf(val interface{}) InitWFn {
 			}
 			return retVal
 		default:
-			err := errors.Errorf(nyiTypeFail, "Zeroes", dt)
+			err := fmt.Errorf(nyiTypeFail, "Zeroes", dt)
 			panic(err)
 		}
 	}
@@ -169,17 +168,19 @@ func ValuesOf(val interface{}) InitWFn {
 
 // Gaussian creates a InitWFn with the specified parameters.
 // Example Usage:
-//		w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Gaussian(0, 1)))
+//
+//	w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Gaussian(0, 1)))
+//
 // This will create a backing slice of []float64, with the length of 4, and its values are drawn from a gaussian distro
 func Gaussian(mean, stdev float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return Gaussian64(mean, stdev, s...)
 		case tensor.Float32:
 			return Gaussian32(mean, stdev, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "Gaussian init", dt)
+			err := fmt.Errorf(nyiTypeFail, "Gaussian init", dt)
 			panic(err)
 		}
 	}
@@ -188,17 +189,19 @@ func Gaussian(mean, stdev float64) InitWFn {
 
 // Uniform creates a InitWFn with the specified parameters.
 // Example Usage:
-//		w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Uniform(-1, 1)))
+//
+//	w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Uniform(-1, 1)))
+//
 // This will create a backing slice of []float64, with the length of 4, and its values are drawn from a uniform distro
 func Uniform(low, high float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return Uniform64(low, high, s...)
 		case tensor.Float32:
 			return Uniform32(low, high, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "Uniform init", dt)
+			err := fmt.Errorf(nyiTypeFail, "Uniform init", dt)
 			panic(err)
 		}
 	}
@@ -207,14 +210,14 @@ func Uniform(low, high float64) InitWFn {
 
 // GlorotN creates a InitWFn that populates a Value with weights normally sampled using Glorot et al.'s algorithm
 func GlorotN(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return GlorotEtAlN64(gain, s...)
 		case tensor.Float32:
 			return GlorotEtAlN32(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "GlorotN", dt)
+			err := fmt.Errorf(nyiTypeFail, "GlorotN", dt)
 			panic(err)
 		}
 	}
@@ -223,14 +226,14 @@ func GlorotN(gain float64) InitWFn {
 
 // GlorotU creates a InitWFn that populates a Value with weights uniformly sampled using Glorot et al.'s algorithm
 func GlorotU(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return GlorotEtAlU64(gain, s...)
 		case tensor.Float32:
 			return GlorotEtAlU32(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "GlorotU", dt)
+			err := fmt.Errorf(nyiTypeFail, "GlorotU", dt)
 			panic(err)
 		}
 	}
@@ -238,12 +241,12 @@ func GlorotU(gain float64) InitWFn {
 }
 
 func HeN(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return HeEtAlN64(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "HeNormal", dt)
+			err := fmt.Errorf(nyiTypeFail, "HeNormal", dt)
 			panic(err)
 		}
 	}
@@ -251,12 +254,12 @@ func HeN(gain float64) InitWFn {
 }
 
 func HeU(gain float64) InitWFn {
-	f := func(dt tensor.Dtype, s ...int) interface{} {
+	f := func(dt tensor.Dtype, s ...int) any {
 		switch dt {
 		case tensor.Float64:
 			return HeEtAlU64(gain, s...)
 		default:
-			err := errors.Errorf(nyiTypeFail, "HeUniform", dt)
+			err := fmt.Errorf(nyiTypeFail, "HeUniform", dt)
 			panic(err)
 		}
 	}
@@ -391,9 +394,10 @@ func GlorotEtAlN32(gain float64, s ...int) []float32 {
 // See also: http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func GlorotEtAlU64(gain float64, s ...int) []float64 {
 	var n1, n2 int
 	fieldSize := 1
@@ -431,9 +435,10 @@ func GlorotEtAlU64(gain float64, s ...int) []float64 {
 // See also: http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func GlorotEtAlU32(gain float64, s ...int) []float32 {
 	f64 := GlorotEtAlN64(gain, s...)
 	retVal := make([]float32, len(f64))
@@ -445,13 +450,16 @@ func GlorotEtAlU32(gain float64, s ...int) []float32 {
 
 // HeEtAlN64 returns float64 weights sampled from a normal distro, using the methods
 // described in He et al (2015). The formula is:
-//		randn(n) * sqrt(2/n)
+//
+//	randn(n) * sqrt(2/n)
+//
 // See also https://arxiv.org/abs/1502.01852
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func HeEtAlN64(gain float64, s ...int) []float64 {
 	var fanIn float64
 
@@ -480,13 +488,16 @@ func HeEtAlN64(gain float64, s ...int) []float64 {
 
 // HeEtAlU64 returns float64 weights sampled from a uniform distro, using the methods
 // described in He et al (2015). The formula is:
-//		randn(n) * sqrt(2/n)
+//
+//	randn(n) * sqrt(2/n)
+//
 // See also https://arxiv.org/abs/1502.01852
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func HeEtAlU64(gain float64, s ...int) []float64 {
 	var fanIn float64
 

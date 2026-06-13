@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"runtime"
 
-	. "gorgonia.org/gorgonia"
+	. "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -16,14 +16,18 @@ const (
 
 // manually generate a fake dataset which is y=2x+random
 func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
-	var xBack, yBack interface{}
+	// Local source seeded deterministically. A local *rand.Rand is required
+	// (not the global rand.Float*) so the dataset is reproducible even if an
+	// imported package consumes the global math/rand source from a goroutine.
+	rng := rand.New(rand.NewSource(1))
+	var xBack, yBack any
 	switch dt {
 	case Float32:
 		xBack = tensor.Range(tensor.Float32, 1, vecSize+1).([]float32)
 		yBackC := tensor.Range(tensor.Float32, 1, vecSize+1).([]float32)
 
 		for i, v := range yBackC {
-			yBackC[i] = v*2 + rand.Float32()
+			yBackC[i] = v*2 + rng.Float32()
 		}
 		yBack = yBackC
 	case Float64:
@@ -31,7 +35,7 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 		yBackC := tensor.Range(tensor.Float64, 1, vecSize+1).([]float64)
 
 		for i, v := range yBackC {
-			yBackC[i] = v*2 + rand.Float64()
+			yBackC[i] = v*2 + rng.Float64()
 		}
 		yBack = yBackC
 	}
@@ -41,13 +45,14 @@ func xy(dt tensor.Dtype) (x tensor.Tensor, y tensor.Tensor) {
 	return
 }
 
-func random(dt tensor.Dtype) interface{} {
-	rand.Seed(13370)
+func random(dt tensor.Dtype) any {
+	// Local deterministic source — see xy() for why the global rand is avoided.
+	rng := rand.New(rand.NewSource(13370))
 	switch dt {
 	case tensor.Float32:
-		return rand.Float32()
+		return rng.Float32()
 	case tensor.Float64:
-		return rand.Float64()
+		return rng.Float64()
 	default:
 		panic("Unhandled dtype")
 	}
@@ -88,7 +93,7 @@ func linregRun(m, c *Node, machine VM, iter int, autoCleanup bool) (retM, retC V
 		defer runtime.UnlockOSThread()
 	}
 	var err error
-	for i := 0; i < iter; i++ {
+	for i := range iter {
 		if err = machine.RunAll(); err != nil {
 			fmt.Printf("Error during iteration: %v: %v\n", i, err)
 			break
@@ -113,7 +118,9 @@ func linearRegression(Float tensor.Dtype, iter int) (retM, retC Value) {
 // Linear Regression Example
 //
 // The formula for a straight line is
-//		y = mx + c
+//
+//	y = mx + c
+//
 // We want to find an `m` and a `c` that fits the equation well. We'll do it in both float32 and float64 to showcase the extensibility of Gorgonia
 func Example_linearRegression() {
 	var m, c Value

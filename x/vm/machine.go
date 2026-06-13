@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
 )
 
 // Machine is a top-level struture that will coordinate the execution of a graph

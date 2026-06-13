@@ -1,3 +1,6 @@
+//go:build blas
+// +build blas
+
 // Package blase is a thin wrapper over Gonum's BLAS interface that provides a queue
 // so that cgo calls are batched. This package was created so MKL usage can be improved.
 //

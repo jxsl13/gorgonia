@@ -1,0 +1,60 @@
+name: pre-check
+
+# Hygiene gate that must pass before the build/test workflows are meaningful.
+# Each mutating command is followed by `git diff --exit-code`: if a command
+# changes a tracked file, CI fails (SPEC §V27).
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pre-check:
+    runs-on: ubuntu-latest
+    env:
+      GOFLAGS: -mod=mod
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.x'
+
+      - name: gofmt (no unformatted files)
+        # Vendored copies (internal/vendor/*) are kept verbatim (SPEC §V20) and
+        # excluded from the format check.
+        run: |
+          unformatted="$(gofmt -l $(find . -name '*.go' -not -path './internal/vendor/*'))"
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: go generate (no diff)
+        # The only //go:generate directives invoke CUDA's cudagen and live in the
+        # cuda-tagged package, so plain `go generate ./...` (no cuda tag) skips
+        # them. Any generated output must already be committed.
+        run: |
+          go generate ./...
+          git diff --exit-code
+
+      - name: go mod tidy (no diff)
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: govulncheck (Go vulnerability scan)
+        # Scoped to library packages (examples are demos, cmd are tools).
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck $(go list ./... | grep -vE '/examples/|/cmd/')
+
+      - name: staticcheck (advisory)
+        # Advisory only (SPEC §V28): the gorgonia library carries ~267
+        # pre-existing issues. Surfaced here but does not fail the build; run
+        # `make lint` locally to see + fix. New packages stay clean.
+        continue-on-error: true
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@latest
+          staticcheck $(go list ./... | grep -vE '/examples/|/cmd/')

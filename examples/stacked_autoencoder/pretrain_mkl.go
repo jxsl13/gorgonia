@@ -1,10 +1,10 @@
-// +build !native
+//go:build blas
 
 package main
 
 import (
-	. "gorgonia.org/gorgonia"
-	"gorgonia.org/gorgonia/blase"
+	. "github.com/jxsl13/gorgonia"
+	"github.com/jxsl13/gorgonia/blase"
 )
 
 func init() {

@@ -1,12 +1,15 @@
+//go:build cuda
+// +build cuda
+
 package cuda
 
 import (
+	"fmt"
 	"runtime"
 
-	"github.com/pkg/errors"
 	"gorgonia.org/cu"
-	"gorgonia.org/cu/blas"
-	"gorgonia.org/cu/dnn"
+	cublas "gorgonia.org/cu/blas"
+	cudnn "gorgonia.org/cu/dnn"
 )
 
 //  this file implements all the methods required to fulfil the External interface
@@ -100,9 +103,9 @@ func (e *Engine) Init(device cu.Device, size int64) (err error) {
 		e.Unlock()
 		err2 := e.Close()
 		if err2 != nil {
-			return errors.Wrapf(err, "Failed to initialize CUDA Engine with size %d for device %v. Additionally, there were errors that occurred when cleaning up %v", size, device, err)
+			return fmt.Errorf("Failed to initialize CUDA Engine with size %d for device %v. Additionally, there were errors that occurred when cleaning up %v: %w", size, device, err, err)
 		}
-		return errors.Wrapf(err, "Failed to initialize CUDA Engine with size %d for device %v", size, device)
+		return fmt.Errorf("Failed to initialize CUDA Engine with size %d for device %v: %w", size, device, err)
 	}
 	e.initialized = true
 	e.Unlock()
@@ -123,17 +126,17 @@ func (e *Engine) doInit(size int64) (err error) {
 		if err == cu.OutOfMemory {
 			free, total, err2 := cu.MemInfo()
 			if err2 != nil {
-				return errors.Wrapf(err, "Out of memory. Additionally errors were found while retrieving mem info %v", err2)
+				return fmt.Errorf("Out of memory. Additionally errors were found while retrieving mem info %v: %w", err2, err)
 			}
-			return errors.Wrapf(err, "Out of memory. Free: %v, total %v | %v", free, total, cuctx)
+			return fmt.Errorf("Out of memory. Free: %v, total %v | %v: %w", free, total, cuctx, err)
 		}
-		return errors.Wrapf(err, "Failed to make context for device %d", e.d)
+		return fmt.Errorf("Failed to make context for device %d: %w", e.d, err)
 	}
 	e.c = *(cu.NewBatchedContext(cu.CtxFromCUContext(e.d, cuctx, ctxFlag), e.d))
 
 	var attrs []int
 	if attrs, err = e.d.Attributes(cu.WarpSize, cu.MaxThreadsPerBlock, cu.MaxGridDimX, cu.MaxGridDimY, cu.MaxGridDimZ, cu.MaxBlockDimX, cu.MaxBlockDimY, cu.MaxBlockDimZ); err != nil {
-		return errors.Wrapf(err, "Failed to get attributes for device %v.", e.d)
+		return fmt.Errorf("Failed to get attributes for device %v.: %w", e.d, err)
 	}
 
 	e.warp = attrs[0]
@@ -151,17 +154,17 @@ func (e *Engine) doInit(size int64) (err error) {
 	// actual work to allocate from graphics card
 
 	if e.freeMem, e.totalMem, err = cu.MemInfo(); err != nil {
-		return errors.Wrapf(err, "Failed to get free and total mem for device %v", e.d)
+		return fmt.Errorf("Failed to get free and total mem for device %v: %w", e.d, err)
 	}
 
 	// actually reserve memory for the allocator
 	var allocsize int64 = 2*size + (size / 2) + minAllocSize
 	if allocsize >= e.freeMem {
-		return errors.Errorf("Unable to get %v bytes. Free memory available %v", allocsize, e.freeMem)
+		return fmt.Errorf("Unable to get %v bytes. Free memory available %v", allocsize, e.freeMem)
 	}
 	ptr, err := cu.MemAllocManaged(allocsize, cu.AttachGlobal)
 	if err != nil {
-		return errors.Wrapf(err, "Failed to allocate %v bytes of managed memory for %v", allocsize, e.d)
+		return fmt.Errorf("Failed to allocate %v bytes of managed memory for %v: %w", allocsize, e.d, err)
 	}
 	e.a.reserve(uintptr(ptr), allocsize)
 	e.n = *(cudnn.NewContext())
@@ -182,7 +185,7 @@ func (e *Engine) Close() error {
 	// Unload all modules (and consequently all functions)
 	for name, mod := range e.m {
 		if err := mod.Unload(); err != nil {
-			return errors.Wrapf(err, "Failed to unload module %v", name)
+			return fmt.Errorf("Failed to unload module %v: %w", name, err)
 		}
 	}
 
@@ -195,13 +198,13 @@ func (e *Engine) Close() error {
 	closeB := func() error { return e.b.Close() }
 
 	if err := e.c.Do(closeB); err != nil {
-		return errors.Wrap(e.err, "Failed to close cuBLAS context")
+		return fmt.Errorf("%s: %w", "Failed to close cuBLAS context", e.err)
 	}
 
 	closeN := func() error { return e.n.Close() }
 
 	if err := e.c.Do(closeN); err != nil {
-		return errors.Wrap(e.err, "Failed to close cuDNN context")
+		return fmt.Errorf("%s: %w", "Failed to close cuDNN context", e.err)
 	}
 
 	if e.workAvailable != nil {
@@ -209,7 +212,7 @@ func (e *Engine) Close() error {
 	}
 
 	if err := e.c.Close(); err != nil {
-		return errors.Wrapf(err, "Failed to cloes CUDA Context ")
+		return fmt.Errorf("Failed to cloes CUDA Context : %w", err)
 	}
 
 	runtime.Gosched() // make sure everyone has a fair play

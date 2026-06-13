@@ -5,8 +5,8 @@ import (
 	"runtime"
 	"testing"
 
-	"gorgonia.org/gorgonia"
-	G "gorgonia.org/gorgonia"
+	"github.com/jxsl13/gorgonia"
+	G "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -35,7 +35,7 @@ func BenchmarkSample(b *testing.B) {
 
 	tm := G.NewTapeMachine(g)
 	defer tm.Close()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		if err := tm.RunAll(); err != nil {
 			fmt.Printf("Can't run tape machine due the error: %s\n", err.Error())
 			return

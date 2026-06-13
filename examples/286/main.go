@@ -9,8 +9,8 @@ import (
 
 	_ "net/http/pprof"
 
+	"github.com/jxsl13/gorgonia"
 	"github.com/pkg/errors"
-	"gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
 

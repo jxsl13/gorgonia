@@ -11,10 +11,10 @@ import (
 	"encoding/binary"
 	"fmt"
 	"hash"
+	"slices"
 	"strings"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -89,10 +89,10 @@ func reductionDo(op Op, s string, f func(*tensor.Dense, ...int) (*tensor.Dense, 
 				}
 			}
 		} else {
-			return nil, errors.Wrap(err, fmt.Sprintf("failed to apply *tensor.Dense.%s()", strings.Title(s)))
+			return nil, fmt.Errorf("%s: %w", fmt.Sprintf("failed to apply *tensor.Dense.%s()", strings.Title(s)), err)
 		}
 	default:
-		return nil, errors.Errorf(nyiFail, fmt.Sprintf("%sOp.Do()", s), at)
+		return nil, fmt.Errorf(nyiFail, fmt.Sprintf("%sOp.Do()", s), at)
 	}
 	return
 
@@ -118,7 +118,7 @@ func (op maxOp) Type() hm.Type {
 
 func (op maxOp) InferShape(dimsizers ...DimSizer) (tensor.Shape, error) {
 	if len(dimsizers) != 1 {
-		return nil, errors.Errorf("maxOp only takes one input shape to infer ")
+		return nil, fmt.Errorf("maxOp only takes one input shape to infer ")
 	}
 	return reductionInferShape(op.along, dimsizers[0].(tensor.Shape))
 }
@@ -133,30 +133,27 @@ func (op maxOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Nodes, err
 	opDim := len(t.Shape())
 
 	var leftAxes []byte
-	for i := 0; i < opDim; i++ {
-		for _, ax := range op.along {
-			if i == ax {
-				leftAxes = append(leftAxes, byte(i))
-				break
-			}
+	for i := range opDim {
+		if slices.Contains(op.along, i) {
+			leftAxes = append(leftAxes, byte(i))
 		}
 	}
 
 	var a, b, a2, b2, eq *Node
 	bcpat := NewBroadcastPattern(leftAxes, nil)
 	if a, b, err = Broadcast(output, t, bcpat); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	if eq, err = Eq(a, b, true); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 
 	if a2, b2, err = Broadcast(gradNode, eq, bcpat); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	retVal = make(Nodes, 1)
 	if retVal[0], err = HadamardProd(a2, b2); err != nil {
-		return nil, errors.Wrap(err, operationError)
+		return nil, fmt.Errorf("%s: %w", operationError, err)
 	}
 	return
 }
@@ -211,7 +208,8 @@ func newSumOp(along axes, s tensor.Shape, d int) sumOp {
 func (op sumOp) Arity() int { return 1 }
 
 // sumOp is a function with this type:
-//		sumOp :: (Summable a) ⇒ Tensor d a → Tensor d-1 a
+//
+//	sumOp :: (Summable a) ⇒ Tensor d a → Tensor d-1 a
 func (op sumOp) Type() hm.Type {
 	return reductionType(op.d, op.along)
 }
@@ -230,7 +228,7 @@ func (op sumOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Nodes, err
 
 	newShape := calcBroadcastShape(gradNode, op.d, op.along)
 	if gradNode, err = Reshape(gradNode, newShape); err != nil {
-		return nil, errors.Wrapf(err, "Unable to reshape grad node to %v", newShape)
+		return nil, fmt.Errorf("Unable to reshape grad node to %v: %w", newShape, err)
 	}
 	gradNode.setGroup(gradClust)
 
@@ -240,7 +238,7 @@ func (op sumOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Nodes, err
 	for i, a := range op.along {
 		var n *Node
 		if n, err = SizeOf(a, inputs[0]); err != nil {
-			return nil, errors.Wrap(err, operationError)
+			return nil, fmt.Errorf("%s: %w", operationError, err)
 		}
 		WithGroupName(gradClust)(n)
 		children[i+1] = n
@@ -248,7 +246,7 @@ func (op sumOp) SymDiff(inputs Nodes, output, gradNode *Node) (retVal Nodes, err
 
 	retVal = make(Nodes, 1)
 	if retVal[0], err = repeatedApply(op.along, children); err != nil {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	retVal[0].setGroup(gradClust)
 	return
@@ -281,7 +279,7 @@ func (op sumOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err er
 
 		T = ydvd
 	default:
-		err = errors.Errorf(nyiTypeFail, "sumOp.DoDiff()", ydv.d)
+		err = fmt.Errorf(nyiTypeFail, "sumOp.DoDiff()", ydv.d)
 		return
 	}
 
@@ -294,7 +292,7 @@ func (op sumOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err er
 			}
 
 			if T, err = tensor.Repeat(T, a, xShape[a]); err != nil {
-				return errors.Wrapf(err, repFail, a, xShape[a])
+				return fmt.Errorf(repFail+": %w", a, xShape[a], err)
 			}
 		}
 		val = T
@@ -322,13 +320,13 @@ func (op sumOp) DoDiff(ctx ExecutionContext, inputs Nodes, output *Node) (err er
 	var xd, d Value
 	var extra bool
 	if xd, extra, err = x.GradOnDevice(dev, ctx.External); err != nil {
-		return errors.Wrapf(err, gradOnDeviceFail, x, dev)
+		return fmt.Errorf(gradOnDeviceFail+": %w", x, dev, err)
 	}
 	if extra {
 		defer ctx.PutValue(dev, xd)
 	}
 	if d, err = addOp.Do(xd, val); err != nil {
-		return errors.Wrapf(err, unsafeDoFail, add)
+		return fmt.Errorf(unsafeDoFail+": %w", add, err)
 	}
 
 	return xdv.SetDeriv(d)

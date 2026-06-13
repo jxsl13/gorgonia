@@ -1,10 +1,11 @@
+//go:build cuda
+// +build cuda
+
 package cuda
 
 import (
 	"bytes"
 	"fmt"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -71,7 +72,8 @@ func (a *memblock) split(size int64) (b *memblock) {
 }
 
 // we say a memblock is less than another memblock when:
-//		a.address < b.address and they don't both overlap
+//
+//	a.address < b.address and they don't both overlap
 func (a *memblock) lt(b *memblock) bool {
 	if a.address == b.address {
 		return false
@@ -260,9 +262,9 @@ func (l *freelist) splitOrRemove(block *memblock, aligned, size int64) {
 //
 // Why is this needed?
 // This allocator is needed because it's been shown that:
-//	1. allocating and copying data from Host to Device has in fact taken most amount of time.
-//	2. allocating memory on CUDA is a blocking call even on the BatchedContext. This has the effect of making extra cgo calls and is inefficient.
-//	3. It's more efficient to just allocate a large block of memory upfront and then manage it internally.
+//  1. allocating and copying data from Host to Device has in fact taken most amount of time.
+//  2. allocating memory on CUDA is a blocking call even on the BatchedContext. This has the effect of making extra cgo calls and is inefficient.
+//  3. It's more efficient to just allocate a large block of memory upfront and then manage it internally.
 //
 // Why does this allocator allocate aligned memory?
 // For no reason other than performance. CUDA memory are aligned to 32-byte, 64-byte and 128 byte boundaries.
@@ -355,7 +357,7 @@ func (b *bfc) alloc(size int64) (mem uintptr, err error) {
 	enterLogScope()
 	defer leaveLogScope()
 	if size <= 0 {
-		return 0, errors.Errorf("Cannot allocate memory with size 0 or less")
+		return 0, fmt.Errorf("Cannot allocate memory with size 0 or less")
 	}
 	aligned := b.align(size)
 	block := b.bestFit(aligned)
@@ -420,8 +422,8 @@ func (b *bfc) bestFit(size int64) (best *memblock) {
 }
 
 // coalesce coalesces the freelist using these two rules:
-//		- address must be aligned to the alignment
-//		- if two blocks next to each other share a fencepost, then they will be merged
+//   - address must be aligned to the alignment
+//   - if two blocks next to each other share a fencepost, then they will be merged
 func (b *bfc) coalesce() {
 	allocatorLogf("PreCOALESCE: %v", b.freelist)
 	defer allocatorLogf("POSTCOALESCE: %v", b.freelist)

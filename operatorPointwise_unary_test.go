@@ -13,7 +13,7 @@ import (
 
 func unaryOpTest(t *testing.T, dt tensor.Dtype, shape tensor.Shape, fn func(*Node) (*Node, error)) (x, y, a, b *Node, v Value, err error) {
 	var xV, aV Value
-	var any interface{}
+	var any any
 	if shape.IsScalar() {
 		if dt == tensor.Float64 {
 			any = rand.ExpFloat64()

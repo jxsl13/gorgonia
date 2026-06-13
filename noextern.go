@@ -1,8 +1,10 @@
-// +build !cuda
+//go:build !cuda
 
 package gorgonia
 
-import "gorgonia.org/tensor"
+import (
+	"gorgonia.org/tensor"
+)
 
 // CUDA indicates if this build is using CUDA
 const CUDA = false

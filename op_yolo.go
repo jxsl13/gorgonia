@@ -8,7 +8,6 @@ import (
 
 	"github.com/chewxy/hm"
 	"github.com/chewxy/math32"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -38,20 +37,20 @@ func YOLOv3(input *Node, anchors []float32, masks []int, netSize, numClasses int
 	if len(targets) > 0 {
 		inputSlice, err := Slice(input, S(0), nil, nil, nil)
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't prepare YOLOv3 node for training mode due Slice() on input node error")
+			return nil, fmt.Errorf("%s: %w", "Can't prepare YOLOv3 node for training mode due Slice() on input node error", err)
 		}
 		targetsSlice, err := Slice(targets[0], S(0), nil, nil, nil)
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't prepare YOLOv3 node for training mode due Slice() on first node in target nodes slice error")
+			return nil, fmt.Errorf("%s: %w", "Can't prepare YOLOv3 node for training mode due Slice() on first node in target nodes slice error", err)
 		}
 		inputTargetConcat, err := Concat(0, inputSlice, targetsSlice)
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't prepare YOLOv3 node for training mode due Concat() error")
+			return nil, fmt.Errorf("%s: %w", "Can't prepare YOLOv3 node for training mode due Concat() error", err)
 		}
 		concatShp := inputTargetConcat.Shape()
 		inputTargetConcat, err = Reshape(inputTargetConcat, []int{1, concatShp[0], concatShp[1], concatShp[2]})
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't prepare YOLOv3 node for training mode due Reshape() error")
+			return nil, fmt.Errorf("%s: %w", "Can't prepare YOLOv3 node for training mode due Reshape() error", err)
 		}
 		op := newYoloOp(anchors, masks, netSize, numClasses, ignoreTresh, true)
 		return ApplyOp(op, inputTargetConcat)
@@ -99,15 +98,15 @@ func (op *yoloOp) OverwritesInput() int { return -1 }
 
 func (op *yoloOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	if err := checkArity(op, len(inputs)); err != nil {
-		return nil, errors.Wrap(err, "Can't check arity for YOLO operation")
+		return nil, fmt.Errorf("%s: %w", "Can't check arity for YOLO operation", err)
 	}
 	var in tensor.Tensor
 	var ok bool
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Can't check YOLO input: expected input has to be a tensor")
+		return nil, fmt.Errorf("Can't check YOLO input: expected input has to be a tensor")
 	}
 	if in.Shape().Dims() != 4 {
-		return nil, errors.Errorf("Can't check YOLO input: expected input must have 4 dimensions")
+		return nil, fmt.Errorf("Can't check YOLO input: expected input must have 4 dimensions")
 	}
 	return in, nil
 }
@@ -117,12 +116,12 @@ func sigmoidSlice(v tensor.View) error {
 	case Float32:
 		_, err := v.Apply(_sigmoidf32, tensor.UseUnsafe())
 		if err != nil {
-			return errors.Wrap(err, "Can't apply _sigmoidf32 as activation function to YOLO operation")
+			return fmt.Errorf("%s: %w", "Can't apply _sigmoidf32 as activation function to YOLO operation", err)
 		}
 	case Float64:
 		_, err := v.Apply(_sigmoidf64, tensor.UseUnsafe())
 		if err != nil {
-			return errors.Wrap(err, "Can't apply _sigmoidf64 as activation function to YOLO operation")
+			return fmt.Errorf("%s: %w", "Can't apply _sigmoidf64 as activation function to YOLO operation", err)
 		}
 	default:
 		return fmt.Errorf("Unsupported numeric type for YOLO sigmoid function. Please use float64 or float32")
@@ -135,12 +134,12 @@ func expSlice(v tensor.View) error {
 	case Float32:
 		_, err := v.Apply(math32.Exp, tensor.UseUnsafe())
 		if err != nil {
-			return errors.Wrap(err, "Can't apply exp32 to YOLO operation")
+			return fmt.Errorf("%s: %w", "Can't apply exp32 to YOLO operation", err)
 		}
 	case Float64:
 		_, err := v.Apply(math.Exp, tensor.UseUnsafe())
 		if err != nil {
-			return errors.Wrap(err, "Can't apply exp64 to YOLO operation")
+			return fmt.Errorf("%s: %w", "Can't apply exp64 to YOLO operation", err)
 		}
 	default:
 		return fmt.Errorf("Unsupported numeric type for YOLO for exp function. Please use float64 or float32")
@@ -152,7 +151,7 @@ func (op *yoloOp) Do(inputs ...Value) (retVal Value, err error) {
 	if !op.trainMode {
 		inputTensor, err := op.checkInput(inputs...)
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't check YOLO input")
+			return nil, fmt.Errorf("%s: %w", "Can't check YOLO input", err)
 		}
 		batchSize := inputTensor.Shape()[0]
 		stride := op.dimensions / inputTensor.Shape()[2]
@@ -172,15 +171,15 @@ func (op *yoloOp) Do(inputs ...Value) (retVal Value, err error) {
 	// Training mode
 	input, err := op.checkInput(inputs...)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't check YOLO input [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't check YOLO input [Training mode]", err)
 	}
 	inv, err := input.Slice(nil, S(0, input.Shape()[1]-1), nil, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't prepare slice in YOLO (1) [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't prepare slice in YOLO (1) [Training mode]", err)
 	}
 	numTargets, err := input.At(0, input.Shape()[1]-1, 0, 0)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't select targets from YOLO input [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't select targets from YOLO input [Training mode]", err)
 	}
 
 	batchSize := input.Shape()[0]
@@ -230,25 +229,25 @@ func (op *yoloOp) Do(inputs ...Value) (retVal Value, err error) {
 
 	err = input.Reshape(batchSize, bboxAttributes*numAnchors, grid*grid)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't reshape in YOLO (1) [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't reshape in YOLO (1) [Training mode]", err)
 	}
 	err = input.T(0, 2, 1)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't safely transponse in YOLO (1) [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't safely transponse in YOLO (1) [Training mode]", err)
 	}
 	err = input.Transpose()
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't transponse in YOLO (1) [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't transponse in YOLO (1) [Training mode]", err)
 	}
 	err = input.Reshape(batchSize, grid*grid*numAnchors, bboxAttributes)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't reshape in YOLO (2) [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't reshape in YOLO (2) [Training mode]", err)
 	}
 
 	clonedInput := input.Clone().(tensor.Tensor)
 	outyolo, err := op.evaluateYOLO_f32(input, batchSize, stride, grid, bboxAttributes, numAnchors, currentAnchors)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't evaluate YOLO operation [Training mode]")
+		return nil, fmt.Errorf("%s: %w", "Can't evaluate YOLO operation [Training mode]", err)
 	}
 
 	yoloNumericType := outyolo.Dtype()
@@ -260,21 +259,21 @@ func (op *yoloOp) Do(inputs ...Value) (retVal Value, err error) {
 		inputF32 := make([]float32, 0)
 		err = clonedInput.Reshape(input.Shape()[0] * input.Shape()[1] * input.Shape()[2])
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't reshape in YOLO (3) [Training mode]")
+			return nil, fmt.Errorf("%s: %w", "Can't reshape in YOLO (3) [Training mode]", err)
 		}
 		err = outyolo.Reshape(outyolo.Shape()[0] * outyolo.Shape()[1] * outyolo.Shape()[2])
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't reshape in YOLO (3) [Training mode]")
+			return nil, fmt.Errorf("%s: %w", "Can't reshape in YOLO (3) [Training mode]", err)
 		}
 		for i := 0; i < outyolo.Shape()[0]; i++ {
 			buf, err := outyolo.At(i)
 			if err != nil {
-				return nil, errors.Wrap(err, "Can't select value from YOLO output [Training mode]")
+				return nil, fmt.Errorf("%s: %w", "Can't select value from YOLO output [Training mode]", err)
 			}
 			yoloBBoxesF32 = append(yoloBBoxesF32, buf.(float32))
 			buf, err = clonedInput.At(i)
 			if err != nil {
-				return nil, errors.Wrap(err, "Can't select value from YOLO bounding boxes [Training mode]")
+				return nil, fmt.Errorf("%s: %w", "Can't select value from YOLO bounding boxes [Training mode]", err)
 			}
 			inputF32 = append(inputF32, buf.(float32))
 		}
@@ -300,55 +299,55 @@ func (op *yoloOp) evaluateYOLO_f32(input tensor.Tensor, batchSize, stride, grid,
 
 	err = input.Reshape(batchSize, bboxAttrs*numAnchors, grid*grid)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't make reshape grid^2 for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't make reshape grid^2 for YOLO", err)
 	}
 
 	err = input.T(0, 2, 1)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't safely transponse input for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't safely transponse input for YOLO", err)
 	}
 	err = input.Transpose()
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't transponse input for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't transponse input for YOLO", err)
 	}
 	err = input.Reshape(batchSize, grid*grid*numAnchors, bboxAttrs)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't reshape bbox for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't reshape bbox for YOLO", err)
 	}
 
 	// Activation of x, y, and objects via sigmoid function
 	slXY, err := input.Slice(nil, nil, S(0, 2))
 	err = sigmoidSlice(slXY)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't activate XY")
+		return nil, fmt.Errorf("%s: %w", "Can't activate XY", err)
 	}
 	slClasses, err := input.Slice(nil, nil, S(4, 5+op.numClasses))
 	err = sigmoidSlice(slClasses)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't activate classes")
+		return nil, fmt.Errorf("%s: %w", "Can't activate classes", err)
 	}
 
 	step := grid * numAnchors
-	for i := 0; i < grid; i++ {
+	for i := range grid {
 
 		vy, err := input.Slice(nil, S(i*step, i*step+step), S(1))
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't slice while doing steps for grid")
+			return nil, fmt.Errorf("%s: %w", "Can't slice while doing steps for grid", err)
 		}
 
 		_, err = tensor.Add(vy, float32(i), tensor.UseUnsafe())
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't do tensor.Add(...) for float32; (1)")
+			return nil, fmt.Errorf("%s: %w", "Can't do tensor.Add(...) for float32; (1)", err)
 		}
 
-		for n := 0; n < numAnchors; n++ {
+		for n := range numAnchors {
 			anchorsSlice, err := input.Slice(nil, S(i*numAnchors+n, input.Shape()[1], step), S(0))
 			if err != nil {
-				return nil, errors.Wrap(err, "Can't slice anchors while doing steps for grid")
+				return nil, fmt.Errorf("%s: %w", "Can't slice anchors while doing steps for grid", err)
 			}
 			_, err = tensor.Add(anchorsSlice, float32(i), tensor.UseUnsafe())
 			if err != nil {
-				return nil, errors.Wrap(err, "Can't do tensor.Add(...) for float32; (1)")
+				return nil, fmt.Errorf("%s: %w", "Can't do tensor.Add(...) for float32; (1)", err)
 			}
 		}
 
@@ -366,32 +365,32 @@ func (op *yoloOp) evaluateYOLO_f32(input tensor.Tensor, batchSize, stride, grid,
 
 	_, err = tensor.Div(anchorsTensor, float32(stride), tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do tensor.Div(...) for float32")
+		return nil, fmt.Errorf("%s: %w", "Can't do tensor.Div(...) for float32", err)
 	}
 
 	vhw, err := input.Slice(nil, nil, S(2, 4))
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do slice on input S(2,4)")
+		return nil, fmt.Errorf("%s: %w", "Can't do slice on input S(2,4)", err)
 	}
 
 	_, err = vhw.Apply(math32.Exp, tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't apply exp32 to YOLO operation")
+		return nil, fmt.Errorf("%s: %w", "Can't apply exp32 to YOLO operation", err)
 	}
 
 	_, err = tensor.Mul(vhw, anchorsTensor, tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do tensor.Mul(...) for anchors")
+		return nil, fmt.Errorf("%s: %w", "Can't do tensor.Mul(...) for anchors", err)
 	}
 
 	vv, err := input.Slice(nil, nil, S(0, 4))
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do slice on input S(0,4)")
+		return nil, fmt.Errorf("%s: %w", "Can't do slice on input S(0,4)", err)
 	}
 
 	_, err = tensor.Mul(vv, float32(stride), tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do tensor.Mul(...) for float32")
+		return nil, fmt.Errorf("%s: %w", "Can't do tensor.Mul(...) for float32", err)
 	}
 
 	return input, nil
@@ -457,7 +456,7 @@ func prepareOutputYOLO_f32(input, yoloBoxes, target, anchors []float32, masks []
 			yoloBBoxes[i+4] = bceLoss32(0, yoloBoxes[i+4])
 		}
 	}
-	for i := 0; i < len(bestAnchors); i++ {
+	for i := range bestAnchors {
 		if bestAnchors[i][0] != -1 {
 			scale := (2 - target[i*5+3]*target[i*5+4])
 			giInt := bestAnchors[i][1]
@@ -472,7 +471,7 @@ func prepareOutputYOLO_f32(input, yoloBoxes, target, anchors []float32, masks []
 			yoloBBoxes[bboxIdx+2] = mseLoss32(gw, input[bboxIdx+2], scale)
 			yoloBBoxes[bboxIdx+3] = mseLoss32(gh, input[bboxIdx+3], scale)
 			yoloBBoxes[bboxIdx+4] = bceLoss32(1, yoloBoxes[bboxIdx+4])
-			for j := 0; j < numClasses; j++ {
+			for j := range numClasses {
 				if j == int(target[i]) {
 					yoloBBoxes[bboxIdx+5+j] = bceLoss32(1, yoloBoxes[bboxIdx+4])
 				} else {
@@ -519,51 +518,51 @@ func (op *yoloOp) evaluateYOLO_f64(input tensor.Tensor, batchSize, stride, grid,
 	}
 	err = input.Reshape(batchSize, bboxAttrs*numAnchors, grid*grid)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't make reshape grid^2 for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't make reshape grid^2 for YOLO", err)
 	}
 	err = input.T(0, 2, 1)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't safely transponse input for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't safely transponse input for YOLO", err)
 	}
 	err = input.Transpose()
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't transponse input for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't transponse input for YOLO", err)
 	}
 	err = input.Reshape(batchSize, grid*grid*numAnchors, bboxAttrs)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't reshape bbox for YOLO")
+		return nil, fmt.Errorf("%s: %w", "Can't reshape bbox for YOLO", err)
 	}
 
 	// Activation of x, y, and objects via sigmoid function
 	slXY, err := input.Slice(nil, nil, S(0, 2))
 	err = sigmoidSlice(slXY)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't activate XY")
+		return nil, fmt.Errorf("%s: %w", "Can't activate XY", err)
 	}
 	slClasses, err := input.Slice(nil, nil, S(4, 5+op.numClasses))
 	err = sigmoidSlice(slClasses)
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't activate classes")
+		return nil, fmt.Errorf("%s: %w", "Can't activate classes", err)
 	}
 
 	step := grid * numAnchors
-	for i := 0; i < grid; i++ {
+	for i := range grid {
 		vy, err := input.Slice(nil, S(i*step, i*step+step), S(1))
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't slice while doing steps for grid")
+			return nil, fmt.Errorf("%s: %w", "Can't slice while doing steps for grid", err)
 		}
 		_, err = tensor.Add(vy, float64(i), tensor.UseUnsafe())
 		if err != nil {
-			return nil, errors.Wrap(err, "Can't do tensor.Add(...) for float64; (1)")
+			return nil, fmt.Errorf("%s: %w", "Can't do tensor.Add(...) for float64; (1)", err)
 		}
-		for n := 0; n < numAnchors; n++ {
+		for n := range numAnchors {
 			anchorsSlice, err := input.Slice(nil, S(i*numAnchors+n, input.Shape()[1], step), S(0))
 			if err != nil {
-				return nil, errors.Wrap(err, "Can't slice anchors while doing steps for grid")
+				return nil, fmt.Errorf("%s: %w", "Can't slice anchors while doing steps for grid", err)
 			}
 			_, err = tensor.Add(anchorsSlice, float64(i), tensor.UseUnsafe())
 			if err != nil {
-				return nil, errors.Wrap(err, "Can't do tensor.Add(...) for float64; (2)")
+				return nil, fmt.Errorf("%s: %w", "Can't do tensor.Add(...) for float64; (2)", err)
 			}
 		}
 
@@ -581,32 +580,32 @@ func (op *yoloOp) evaluateYOLO_f64(input tensor.Tensor, batchSize, stride, grid,
 
 	_, err = tensor.Div(anchorsTensor, float64(stride), tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do tensor.Div(...) for float64")
+		return nil, fmt.Errorf("%s: %w", "Can't do tensor.Div(...) for float64", err)
 	}
 
 	vhw, err := input.Slice(nil, nil, S(2, 4))
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do slice on input S(2,4)")
+		return nil, fmt.Errorf("%s: %w", "Can't do slice on input S(2,4)", err)
 	}
 
 	_, err = vhw.Apply(math.Exp, tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't apply exp64 to YOLO operation")
+		return nil, fmt.Errorf("%s: %w", "Can't apply exp64 to YOLO operation", err)
 	}
 
 	_, err = tensor.Mul(vhw, anchorsTensor, tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do tensor.Mul(...) for anchors")
+		return nil, fmt.Errorf("%s: %w", "Can't do tensor.Mul(...) for anchors", err)
 	}
 
 	vv, err := input.Slice(nil, nil, S(0, 4))
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do slice on input S(0,4)")
+		return nil, fmt.Errorf("%s: %w", "Can't do slice on input S(0,4)", err)
 	}
 
 	_, err = tensor.Mul(vv, float64(stride), tensor.UseUnsafe())
 	if err != nil {
-		return nil, errors.Wrap(err, "Can't do tensor.Mul(...) for float64")
+		return nil, fmt.Errorf("%s: %w", "Can't do tensor.Mul(...) for float64", err)
 	}
 
 	return input, nil
@@ -672,7 +671,7 @@ func prepareOutputYOLO_f64(input, yoloBoxes, target, anchors []float64, masks []
 			yoloBBoxes[i+4] = bceLoss64(0, yoloBoxes[i+4])
 		}
 	}
-	for i := 0; i < len(bestAnchors); i++ {
+	for i := range bestAnchors {
 		if bestAnchors[i][0] != -1 {
 			scale := (2 - target[i*5+3]*target[i*5+4])
 			giInt := bestAnchors[i][1]
@@ -687,7 +686,7 @@ func prepareOutputYOLO_f64(input, yoloBoxes, target, anchors []float64, masks []
 			yoloBBoxes[bboxIdx+2] = mseLoss64(gw, input[bboxIdx+2], scale)
 			yoloBBoxes[bboxIdx+3] = mseLoss64(gh, input[bboxIdx+3], scale)
 			yoloBBoxes[bboxIdx+4] = bceLoss64(1, yoloBoxes[bboxIdx+4])
-			for j := 0; j < numClasses; j++ {
+			for j := range numClasses {
 				if j == int(target[i]) {
 					yoloBBoxes[bboxIdx+5+j] = bceLoss64(1, yoloBoxes[bboxIdx+4])
 				} else {

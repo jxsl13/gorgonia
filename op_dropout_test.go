@@ -2,7 +2,8 @@ package gorgonia
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+
 	"runtime"
 	"testing"
 
@@ -16,9 +17,9 @@ func TestDropoutAll(t *testing.T) {
 		dt                tensor.Dtype
 		prob              float64
 		rand              []float64
-		expected          interface{}
-		expectedGrad      interface{}
-		expectedInputGrad interface{}
+		expected          any
+		expectedGrad      any
+		expectedInputGrad any
 	}{
 		{Float64, 0.0, []float64{0.0, 0.2, 0.5, 0.8, 1.0}, []float64{1.0, 1.0, 1.0, 1.0, 1.0}, []float64{0.2, 0.2, 0.2, 0.2, 0.2}, []float64{0, 0, 0, 0, 0}},
 		{Float64, 0.2, []float64{0.0, 0.2, 0.5, 0.8, 1.0}, []float64{1.25, 1.25, 1.25, 0.0, 0.0}, []float64{0.2, 0.2, 0.2, 0.2, 0.2}, []float64{1, 1, 1, 0.0, 0.0}},
@@ -83,7 +84,7 @@ func dropoutTest(t *testing.T, dt tensor.Dtype) error {
 	_, err := Grad(cost, x, w, w2)
 
 	if err != nil {
-		ioutil.WriteFile("fullGraph.dot", []byte(g.ToDot()), 0644)
+		os.WriteFile("fullGraph.dot", []byte(g.ToDot()), 0644)
 		// t.Fatalf("%+v", err)
 		return err
 	}

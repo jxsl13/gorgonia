@@ -25,7 +25,7 @@ var (
 	// Bool ...
 	Bool = tensor.Bool
 
-	// Ptr is equivalent to interface{}. Ugh Ugh Ugh
+	// Ptr is equivalent to any. Ugh Ugh Ugh
 	Ptr = tensor.UnsafePointer
 
 	vecF64  = &TensorType{Dims: 1, Of: tensor.Float64}
@@ -47,7 +47,8 @@ var acceptableDtypes = [...]tensor.Dtype{tensor.Float64, tensor.Float32, tensor.
 // TensorType is a type constructor for tensors.
 //
 // Think of it as  something like this:
-//		data Tensor a = Tensor d a
+//
+//	data Tensor a = Tensor d a
 //
 // The shape of the Tensor is not part of TensorType.
 // Shape checking is relegated to the dynamic part of the program run

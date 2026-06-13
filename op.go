@@ -5,8 +5,9 @@ import (
 	"hash"
 	"hash/fnv"
 
+	"errors"
+
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -30,7 +31,7 @@ func DimSizersToShapes(ds []DimSizer) ([]tensor.Shape, error) {
 	var ok bool
 	for i, d := range ds {
 		if retVal[i], ok = d.(tensor.Shape); !ok {
-			return nil, errors.Errorf("Dimsizer %d is not a Shape.", i)
+			return nil, fmt.Errorf("Dimsizer %d is not a Shape.", i)
 		}
 	}
 	return retVal, nil
@@ -40,7 +41,8 @@ func DimSizersToShapes(ds []DimSizer) ([]tensor.Shape, error) {
 // Think of them as functions, taking an input (or multiple), and outputting something
 //
 // All Ops have type signatures that look like this:
-//		OpName :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
+//
+//	OpName :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
 type Op interface {
 	/* Graph Building Related Methods */
 
@@ -190,7 +192,7 @@ func ApplyOp(op Op, children ...*Node) (retVal *Node, err error) {
 	defer leaveLogScope()
 	var retType hm.Type
 	if retType, err = inferNodeType(op, children...); err != nil {
-		return nil, errors.Wrapf(err, "Type inference error. Op: %v. Children: %#Y, OpType:%v", op, Nodes(children), op.Type())
+		return nil, fmt.Errorf("Type inference error. Op: %v. Children: %#Y, OpType:%v: %w", op, Nodes(children), op.Type(), err)
 	}
 	typeSysLogf("Done inferring. Return type is: %#v(%T)", retType, retType)
 
@@ -206,7 +208,7 @@ func ApplyOp(op Op, children ...*Node) (retVal *Node, err error) {
 		shapeLogf("inferred shape %v", s)
 		retVal = NewUniqueNode(WithType(retType), WithOp(op), WithChildren(children), In(g), WithShape(s...))
 	} else {
-		err = errors.Wrapf(err, "Failed to infer shape. Op: %v", op)
+		err = fmt.Errorf("Failed to infer shape. Op: %v: %w", op, err)
 		// retVal = newUniqueNode(withType(retType), withOp(op), withChildren(children), withGraph(g))
 	}
 	returnDimSizers(ds)
@@ -218,7 +220,7 @@ func ApplyOpWithName(op Op, name string, children ...*Node) (retVal *Node, err e
 	if retVal, err = ApplyOp(op, children...); err == nil {
 		WithName(name)(retVal)
 	} else {
-		return nil, errors.Wrap(err, applyOpFail)
+		return nil, fmt.Errorf("%s: %w", applyOpFail, err)
 	}
 	return
 }

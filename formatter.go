@@ -18,15 +18,16 @@ type mapFmt struct {
 //
 // Here's the hack:
 // The "#" flag is used to indicate if the map will use the Node's ID or Name when formatting the map.
-//		%-v 	nodeName:%v
-//		%-#v	nodeID:%v
-//		%-d 	nodeName:%x
-//		%-#d 	nodeID: %x
-//		%-p 	nodeName:%p
-// 		%-#p	nodeID:%p
+//
+//	%-v 	nodeName:%v
+//	%-#v	nodeID:%v
+//	%-d 	nodeName:%x
+//	%-#d 	nodeID: %x
+//	%-p 	nodeName:%p
+//	%-#p	nodeID:%p
 //
 // If the "-" flag is not found, then the formatter returns the default Go format for map[<T>]<T2>
-func FmtNodeMap(m interface{}) mapFmt {
+func FmtNodeMap(m any) mapFmt {
 	refVal := reflect.ValueOf(m)
 	if refVal.Kind() != reflect.Map {
 		panic("Only expect maps in FmtNodeMap")
@@ -35,8 +36,7 @@ func FmtNodeMap(m interface{}) mapFmt {
 	t := refVal.Type()
 	keyType := t.Key()
 
-	var n *Node
-	if keyType != reflect.TypeOf(n) {
+	if keyType != reflect.TypeFor[*Node]() {
 		panic("Only expected map[*Node]<T>")
 	}
 
@@ -48,7 +48,7 @@ func FmtNodeMap(m interface{}) mapFmt {
 func (mf mapFmt) defaultFmt(s fmt.State, c rune) {
 	var buf bytes.Buffer
 	buf.WriteRune('%')
-	for i := 0; i < 128; i++ {
+	for i := range 128 {
 		if s.Flag(i) {
 			buf.WriteByte(byte(i))
 		}
@@ -92,10 +92,9 @@ func (mf mapFmt) format(s fmt.State, c rune) string {
 
 func (mf mapFmt) Format(s fmt.State, c rune) {
 	refVal := mf.m
-	var n *Node
 	t := refVal.Type()
 	keyType := t.Key()
-	if keyType != reflect.TypeOf(n) {
+	if keyType != reflect.TypeFor[*Node]() {
 		panic("Only map[*Node]<T> is expected")
 	}
 
@@ -115,7 +114,7 @@ func (mf mapFmt) Format(s fmt.State, c rune) {
 				id := meth.Call(nil)[0]
 
 				valType := val.Type()
-				if valType == reflect.TypeOf(n) {
+				if valType == reflect.TypeFor[*Node]() {
 					switch c {
 					case 'd':
 						valMeth := val.MethodByName("ID")
@@ -154,7 +153,7 @@ func (mf mapFmt) Format(s fmt.State, c rune) {
 				id := meth.Call(nil)[0]
 
 				valType := val.Type()
-				if valType == reflect.TypeOf(n) {
+				if valType == reflect.TypeFor[*Node]() {
 					switch c {
 					case 'd':
 						valMeth := val.MethodByName("ID")

@@ -5,7 +5,6 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -77,7 +76,7 @@ func (op *softmaxOp) checkInput(inputs ...Value) (tensor.Tensor, error) {
 	)
 
 	if in, ok = inputs[0].(tensor.Tensor); !ok {
-		return nil, errors.Errorf("Expected input to be a tensor")
+		return nil, fmt.Errorf("Expected input to be a tensor")
 	}
 
 	return in, nil
@@ -226,34 +225,34 @@ func (op *softmaxDiffOp) checkInput(inputs ...Value) (tensor.Tensor, tensor.Tens
 	switch t := inputs[0].(type) {
 	case *dualValue:
 		if in, ok = t.Value.(tensor.Tensor); !ok {
-			return nil, nil, nil, errors.Errorf("input should be a tensor, got %T", inputs[0])
+			return nil, nil, nil, fmt.Errorf("input should be a tensor, got %T", inputs[0])
 		}
 	case tensor.Tensor:
 		in = t
 	default:
-		return nil, nil, nil, errors.Errorf("input type is not supported, got %T", inputs[0])
+		return nil, nil, nil, fmt.Errorf("input type is not supported, got %T", inputs[0])
 	}
 
 	switch t := inputs[1].(type) {
 	case *dualValue:
 		if out, ok = t.Value.(tensor.Tensor); !ok {
-			return nil, nil, nil, errors.Errorf("output should be a tensor, got %T", inputs[1])
+			return nil, nil, nil, fmt.Errorf("output should be a tensor, got %T", inputs[1])
 		}
 	case tensor.Tensor:
 		out = t
 	default:
-		return nil, nil, nil, errors.Errorf("output type is not supported, got %T", inputs[1])
+		return nil, nil, nil, fmt.Errorf("output type is not supported, got %T", inputs[1])
 	}
 
 	switch t := inputs[2].(type) {
 	case *dualValue:
 		if grad, ok = t.Value.(tensor.Tensor); !ok {
-			return nil, nil, nil, errors.Errorf("grad should be a tensor, got %T", inputs[1])
+			return nil, nil, nil, fmt.Errorf("grad should be a tensor, got %T", inputs[1])
 		}
 	case tensor.Tensor:
 		grad = t
 	default:
-		return nil, nil, nil, errors.Errorf("grad type is not supported, got %T", inputs[1])
+		return nil, nil, nil, fmt.Errorf("grad type is not supported, got %T", inputs[1])
 	}
 
 	return in, out, grad, nil

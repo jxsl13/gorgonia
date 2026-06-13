@@ -13,9 +13,9 @@ import (
 	"os"
 	"runtime/pprof"
 
+	T "github.com/jxsl13/gorgonia"
+	"github.com/jxsl13/gorgonia/examples/mnist"
 	"gonum.org/v1/gonum/blas/gonum"
-	T "gorgonia.org/gorgonia"
-	"gorgonia.org/gorgonia/examples/mnist"
 	"gorgonia.org/tensor"
 )
 
@@ -73,7 +73,7 @@ func makeTargets(targets tensor.Tensor) []int {
 	return ys
 }
 
-func verboseLog(format string, attrs ...interface{}) {
+func verboseLog(format string, attrs ...any) {
 	if *verbose {
 		log.Printf(format, attrs...)
 	}

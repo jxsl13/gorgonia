@@ -2,17 +2,15 @@ package gorgonia
 
 import (
 	"fmt"
-	"unsafe"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
 // Value represents a value that Gorgonia accepts. At this point it is implemented by:
-//		- all scalar value types (F64, F32... etc)
-// 		- *tensor.Dense
-// 		- *dualValue
+//   - all scalar value types (F64, F32... etc)
+//   - *tensor.Dense
+//   - *dualValue
 //
 // A Value is essentially any thing that knows its own type and shape.
 // Most importantly though, a Value is a pointer - and can be converted into a tensor.Memory.
@@ -22,7 +20,7 @@ import (
 type Value interface {
 	Shape() tensor.Shape // Shape  returns the shape of the Value. Scalar values return ScalarShape()
 	Size() int           // Size represents the number of elements in the Value. Note that in cases such as a *tensor.Dense, the underlying slice MAY have more elements than the Size() reports. This is correct.
-	Data() interface{}   // Data returns the original representation of the Value
+	Data() any           // Data returns the original representation of the Value
 	Dtype() tensor.Dtype // Dtype returns the Dtype of the value
 
 	tensor.Memory
@@ -63,32 +61,32 @@ type ValueEqualer interface {
 
 // ValueCloser represents any type that can perform a close-value check
 type ValueCloser interface {
-	ValueClose(interface{}) bool
+	ValueClose(any) bool
 }
 
 // Cloner represents any type that can clone itself.
 type Cloner interface {
-	Clone() interface{}
+	Clone() any
 }
 
 // CloneErrorer represents any type that can clone itself and return an error if necessary
 type CloneErrorer interface {
-	Clone() (interface{}, error)
+	Clone() (any, error)
 }
 
 // CopierTo represents any type that can copy data to the destination.
 type CopierTo interface {
-	CopyTo(dest interface{}) error
+	CopyTo(dest any) error
 }
 
 // CopierFrom represents any type that can copy data from the source provided.
 type CopierFrom interface {
-	CopyFrom(src interface{}) error
+	CopyFrom(src any) error
 }
 
 // Setter is a any value that can Memset itself to the provided value
 // type Setter interface {
-// 	SetAll(interface{}) error
+// 	SetAll(any) error
 // }
 
 // makeValue creates a value given a type and shape. The default value is the zero value of the type.
@@ -121,11 +119,12 @@ func makeValue(t hm.Type, s tensor.Shape) (retVal Value, err error) {
 	case TensorType:
 		return tensor.New(tensor.Of(dt), tensor.WithShape(s...)), nil
 	default:
-		err = errors.Errorf(nyiTypeFail, "MakeValue", tt)
+		err = fmt.Errorf(nyiTypeFail, "MakeValue", tt)
 		return
 	}
 }
 
+// makeValueFromMem builds a Value backed by external/device memory.
 func makeValueFromMem(t hm.Type, s tensor.Shape, mem tensor.Memory) (retVal Value, err error) {
 	var dt tensor.Dtype
 	if dt, err = dtypeOf(t); err != nil {
@@ -142,29 +141,35 @@ func makeValueFromMem(t hm.Type, s tensor.Shape, mem tensor.Memory) (retVal Valu
 	case tensor.Dtype:
 		return makeScalarFromMem(tt, mem)
 	default:
-		err = errors.Errorf(nyiTypeFail, "MakeValue", tt)
+		err = fmt.Errorf(nyiTypeFail, "MakeValue", tt)
 		return
 	}
 }
 
+// makeScalarFromMem reinterprets mem's address as a scalar Value of dtype dt.
+//
+// It uses tensor.Memory.Pointer() (an unsafe.Pointer) directly, NOT
+// unsafe.Pointer(mem.Uintptr()), so there is no uintptr round-trip and go vet's
+// unsafeptr analyzer is satisfied on every build. The caller keeps the backing
+// Memory alive for the lifetime of the returned Value.
 func makeScalarFromMem(dt tensor.Dtype, mem tensor.Memory) (retVal Value, err error) {
 	switch dt {
 	case tensor.Float64:
-		retVal = (*F64)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*F64)(mem.Pointer())
 	case tensor.Float32:
-		retVal = (*F32)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*F32)(mem.Pointer())
 	case tensor.Int:
-		retVal = (*I)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*I)(mem.Pointer())
 	case tensor.Int64:
-		retVal = (*I64)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*I64)(mem.Pointer())
 	case tensor.Int32:
-		retVal = (*I32)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*I32)(mem.Pointer())
 	case tensor.Byte:
-		retVal = (*U8)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*U8)(mem.Pointer())
 	case tensor.Bool:
-		retVal = (*B)(unsafe.Pointer(mem.Uintptr()))
+		retVal = (*B)(mem.Pointer())
 	default:
-		err = errors.Errorf(nyiTypeFail, "makeScalarFromMem", dt)
+		err = fmt.Errorf(nyiTypeFail, "makeScalarFromMem", dt)
 	}
 	return
 }

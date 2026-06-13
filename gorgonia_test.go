@@ -42,7 +42,7 @@ func TestNewConstant(t *testing.T) {
 
 var anyNodeTest = []struct {
 	name string
-	any  interface{}
+	any  any
 
 	correctType  hm.Type
 	correctShape nd.Shape
@@ -111,7 +111,7 @@ func TestLetErrors(t *testing.T) {
 	testCases := []struct {
 		desc string
 		node *Node
-		val  interface{}
+		val  any
 		err  string
 	}{
 		{
