@@ -210,7 +210,7 @@ T32|.|migrate library github.com/pkg/errors -> stdlib errors + fmt.Errorf(%w); k
 T33|x|benchmarks: for i:=0;i<b.N;i++ -> b.Loop() (go1.24); verify benches run|V32
 T34|x|remaining interface{} -> any in library + staticcheck S1039 (unnecessary fmt.Sprintf) fixes|V32
 T35|x|Metal engine: implement tensor.Adder/Suber/Multiplier (float32) GPU dispatch; parity vs CPU; NewTapeMachine(WithEngine) runs elementwise on GPU|V33,I.metal,I.metal-vm
-T36|.|NEON: add vecf32/vecf64 Scale (s*a) in vendored copies + scalar fallback + bit-exact parity (asmcheck)|V34,V11,I.vendor,I.asm
+T36|x|CLOSED low-value (B9): tensor does not call vecf32.Scale; only Add (T20), IncrAdd, IncrMul. NEON Scale = dead code. Real CPU win is tensor-level (T31)|B9,V34
 T13|x|CI darwin/arm64 runner (GH macos-14): build default + metal tag, run asm parity + metal parity tests; device-bound tests skip when no GPU|V17,I.ci-darwin
 T14|x|Phase3 spike: gomlx/go-coreml hello-world — load/compile .mlpackage, infer, select compute units; pin alpha version|C9,I.coreml
 T15|x|Phase3: coreml/ subpkg + public iface (Export/Model/Predict/compute-unit), build tag coreml&&darwin&&arm64, isolate go-coreml types|V16,C9,I.coreml
@@ -234,6 +234,7 @@ B5|2026-06-13|T14-T18 (CoreML/ANE) blocked on dev machine: gomlx/go-coreml needs
 B6|2026-06-13|B5 reassessed: coremlcompiler only needed for OFFLINE .mlpackage compile. CoreML.framework runtime API [MLModel compileModelAtURL:error:] works with CLT-only (probe confirmed) -> Xcode NOT required|unblock T14-T18 via direct cgo CoreML.framework + runtime compile; C9 amended; C13 added
 B7|2026-06-13|T23 assumed a ~4000-line mirror of cuda device-transfer machinery. WRONG: cuda needs that only because CUDA memory is NOT host-accessible. Metal engine embeds StdEng (host-accessible) -> plugs into gorgonia NewTapeMachine(g, WithEngine(e)). First test got 0 GPU dispatches: machine overrides value engines with m.Engine (default StandardEngine)|pass metal engine via WithEngine; no new VM files; V26
 B8|2026-06-13|PR CI darwin Vet hard-failed on pre-existing legacy: op_tensor.go:438 unreachable dead code + unsafeptr 'misuse of unsafe.Pointer' (uintptr->Pointer from tensor.Memory). Researched: invalid-in-general per go vet rules|removed dead line + unused valueToPointer; makeValueFromMem/makeScalarFromMem (device-memory only, ExternMetadata.Get errors on non-cuda) moved to //go:build cuda file + non-cuda stub -> default vet never sees unsafe -> NO -unsafeptr flag needed; proper long-term fix (Memory.Pointer(), no cuda-gating) tracked in T31
+B9|2026-06-13|T36 specced NEON Scale, but tensor calls only vecf32.Add (T20 done), IncrAdd, IncrMul — NOT Scale. Scale/Incr* live in unconditional arith.go/incr.go (need build-tag surgery) for ops with marginal reach; tensor's real compute is iterator-bound, not vecf primitives|close T36 low-value (measure-first, cf B4/T8); T20 Add captured the used primitive. Real CPU win needs tensor-level work (T31 vendor + iterator opt)
 ```
 
 ## §R refs
