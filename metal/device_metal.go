@@ -218,7 +218,9 @@ func (d *Device) Close() {
 	}
 }
 
-func (d *Device) run(op C.int, a, b []float32) ([]float32, error) {
+// run dispatches elementwise op (0=add,1=sub,2=mul). op is a plain int so
+// callers outside this cgo file (e.g. engine_metal.go) need not import "C".
+func (d *Device) run(op int, a, b []float32) ([]float32, error) {
 	if len(a) != len(b) {
 		return nil, fmt.Errorf("metal: length mismatch %d != %d", len(a), len(b))
 	}
@@ -230,7 +232,7 @@ func (d *Device) run(op C.int, a, b []float32) ([]float32, error) {
 	if n == 0 {
 		return out, nil
 	}
-	C.mtlRun(d.ctx, op,
+	C.mtlRun(d.ctx, C.int(op),
 		(*C.float)(unsafe.Pointer(&a[0])),
 		(*C.float)(unsafe.Pointer(&b[0])),
 		(*C.float)(unsafe.Pointer(&out[0])),
