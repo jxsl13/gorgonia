@@ -179,6 +179,7 @@ Phase 2 — Apple Silicon perf backends:
 - V32: library has no `interface{}` (use `any`); benchmarks use `b.Loop()` not `for i:=0;i<b.N;i++`; staticcheck `S1039` (unnecessary fmt.Sprintf) clear.
 - V33: the Metal engine implements `tensor.Adder`/`Suber`/`Multiplier` (float32) so gorgonia elementwise ops dispatch to the GPU; results match the CPU engine within documented tol (extends V14). Default build (no metal tag) unaffected.
 - V34: each extended NEON op (e.g. Scale) has a pure-Go scalar fallback + bit-exact parity test (extends V11); non-arm64 builds compile + agree.
+- V35: hand-write assembly ONLY for ops the Go compiler does not already optimize. Scalar arithmetic (e.g. divmod) stays pure Go — the compiler emits optimal SDIV/MSUB + a divide-by-zero guard, so an .s adds only call overhead (B10). Hand-NEON is reserved for vector SIMD over slices (vecf32/64), which the compiler does NOT auto-vectorize — that is where the 4.5x came from (T20). Research/measure before adding any .s.
 
 ## §T tasks
 
@@ -235,9 +236,15 @@ B6|2026-06-13|B5 reassessed: coremlcompiler only needed for OFFLINE .mlpackage c
 B7|2026-06-13|T23 assumed a ~4000-line mirror of cuda device-transfer machinery. WRONG: cuda needs that only because CUDA memory is NOT host-accessible. Metal engine embeds StdEng (host-accessible) -> plugs into gorgonia NewTapeMachine(g, WithEngine(e)). First test got 0 GPU dispatches: machine overrides value engines with m.Engine (default StandardEngine)|pass metal engine via WithEngine; no new VM files; V26
 B8|2026-06-13|PR CI darwin Vet hard-failed on pre-existing legacy: op_tensor.go:438 unreachable dead code + unsafeptr 'misuse of unsafe.Pointer' (uintptr->Pointer from tensor.Memory). Researched: invalid-in-general per go vet rules|removed dead line + unused valueToPointer; makeValueFromMem/makeScalarFromMem (device-memory only, ExternMetadata.Get errors on non-cuda) moved to //go:build cuda file + non-cuda stub -> default vet never sees unsafe -> NO -unsafeptr flag needed; proper long-term fix (Memory.Pointer(), no cuda-gating) tracked in T31
 B9|2026-06-13|T36 specced NEON Scale, but tensor calls only vecf32.Add (T20 done), IncrAdd, IncrMul — NOT Scale. Scale/Incr* live in unconditional arith.go/incr.go (need build-tag surgery) for ops with marginal reach; tensor's real compute is iterator-bound, not vecf primitives|close T36 low-value (measure-first, cf B4/T8); T20 Add captured the used primitive. Real CPU win needs tensor-level work (T31 vendor + iterator opt)
+B10|2026-06-13|asm sweep: tried hand-writing arm64 divmod (.s) as an analog to mathutils_amd64.s/divmod_amd64.s. Research: arm64 SDIV does not trap on /0 so the Go COMPILER already inserts a zero-guard + runtime.panicdivide and emits SDIV+MSUB inline for q=a/b;r=a%b; a hand-asm wrapper only adds CALL overhead. amd64 .s is itself legacy|reverted hand-asm; arm64 uses the Go fallback (compiler-optimal); added explicit edge-case contract test TestDivmodEdgeCases; V35
 ```
 
 ## §R refs
+
+asm sweep (B10/V35): ARM64 SDIV/MSUB + no /0 trap —
+[The Old New Thing: AArch64 multiplication/division](https://devblogs.microsoft.com/oldnewthing/20220801-00/?p=106922),
+[golang/go#5805 (ARM /0 check is compiler-inserted)](https://github.com/golang/go/issues/5805).
+
 
 Phase 2 research (2026-06):
 - Metal GPU from Go: [mikecvet/go-mm](https://github.com/mikecvet/go-mm)
