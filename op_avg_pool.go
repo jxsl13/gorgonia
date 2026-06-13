@@ -5,8 +5,8 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"github.com/jxsl13/gorgonia/internal/encoding"
+	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 
@@ -131,7 +131,8 @@ func newAvgPoolOp(inputShape, kernel tensor.Shape, pad, stride []int) *avgPoolOp
 func (op *avgPoolOp) Arity() int { return 1 }
 
 // avgPoolOp has this type:
-// 		op :: (...) → (...)
+//
+//	op :: (...) → (...)
 func (op *avgPoolOp) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	t := newTensorType(4, a)

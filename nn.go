@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jxsl13/gorgonia/internal/encoding"
 	rng "github.com/leesper/go_rng"
 	"github.com/pkg/errors"
-	"github.com/jxsl13/gorgonia/internal/encoding"
 	"gorgonia.org/tensor"
 )
 
 // BinaryXent is a convenience function for doing binary crossentropy stuff.
 // The formula is as below:
-// 		-(y * log(prob)) - (1-y)log(1-prob)
+//
+//	-(y * log(prob)) - (1-y)log(1-prob)
 func BinaryXent(output, target *Node) (retVal *Node, err error) {
 	var one, oneMore *Node
 	var logO, omt, omo, tLogO *Node
@@ -77,8 +78,10 @@ func Dropout(x *Node, dropProb float64) (retVal *Node, err error) {
 }
 
 // LeakyRelu returns a node whose underlying value is:
-//   f(x) = alpha * x if x < 0
-//   f(x) = x for x ⩾ 0
+//
+//	f(x) = alpha * x if x < 0
+//	f(x) = x for x ⩾ 0
+//
 // applied elementwise.
 func LeakyRelu(x *Node, alpha float64) (*Node, error) {
 	var zero *Node
@@ -312,13 +315,13 @@ func Conv1d(in, filter *Node, kernel, pad, stride, dilation int) (*Node, error) 
 // MaxPool2D applies the kernel filter to the input node.
 // The pad slice can have two different lengths.
 //
-// - if len(pad) == 2, padding is assume to be symetric, and a padding is adding up *and* down to each dimension
-//   paddedOutputH = pad[0] + inputH + pad[0]
-//   paddedOutputW = pad[1] + inputW + pad[1]
+//   - if len(pad) == 2, padding is assume to be symetric, and a padding is adding up *and* down to each dimension
+//     paddedOutputH = pad[0] + inputH + pad[0]
+//     paddedOutputW = pad[1] + inputW + pad[1]
 //
-// - if len(pad) == 4, padding is explicit and can be asymmetric.
-//   paddedOutputH = pad[0] + inputH + pad[1]
-//   paddedOutputW = pad[2] + inputW + pad[3]
+//   - if len(pad) == 4, padding is explicit and can be asymmetric.
+//     paddedOutputH = pad[0] + inputH + pad[1]
+//     paddedOutputW = pad[2] + inputW + pad[3]
 func MaxPool2D(x *Node, kernel tensor.Shape, pad, stride []int) (*Node, error) {
 	group := encoding.NewGroup("Maxpool")
 	xShape := x.Shape()

@@ -21,7 +21,7 @@ import (
 // run, and copy back. Not safe for concurrent use.
 type Engine struct {
 	tensor.StdEng
-	dev        *Device
+	dev         *Device
 	matmulOnGPU int // count of MatMul ops dispatched to the GPU (for tests/metrics)
 }
 

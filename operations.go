@@ -119,7 +119,8 @@ func Div(a, b *Node) (retVal *Node, err error) {
 }
 
 // Auto automatically calculates the padding for the given operations, for example:
-// 		gorgonia.Auto(gorgonia.BroadcastHadamardProd, a, b)
+//
+//	gorgonia.Auto(gorgonia.BroadcastHadamardProd, a, b)
 func Auto(op func(a, b *Node, leftPattern, rightPattern []byte) (*Node, error), a, b *Node) (*Node, error) {
 	leftPattern, rightPattern, err := autoBroadcastPattern(a.Shape(), b.Shape())
 	if err != nil {

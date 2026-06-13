@@ -23,8 +23,10 @@ func init() {
 }
 
 // logStabilization converts
-// 	log(1+a) or log(a+1) to log1p(a)
+//
+//	log(1+a) or log(a+1) to log1p(a)
 //	log(1-a) to log1p(-a)
+//
 // place before log; a should be positive.
 func logStabilization(a *Node) (retVal *Node, err error) {
 	stabLogf("Stabilizing log(1+a) of %v", a)
@@ -199,7 +201,8 @@ func log1pNegSigmoidStabilization(a *Node) (retVal *Node, err error) {
 }
 
 // logSoftmaxStabilization converts
-// 	log(softmax(a)) to softmax{isLog: true}(a)
+//
+//	log(softmax(a)) to softmax{isLog: true}(a)
 //	log(a * softmax(b)) to log(a) + softmax{isLog: true}(b)
 func logSoftmaxStabilization(a *Node) (retVal *Node, err error) {
 	stabLogf("Stabilizing log(softmax) of %v", a)

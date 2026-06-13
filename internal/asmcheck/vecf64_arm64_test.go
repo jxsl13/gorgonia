@@ -15,9 +15,21 @@ import (
 	"gorgonia.org/vecf64"
 )
 
-func refAdd64(a, b []float64) { for i := range a { a[i] += b[i] } }
-func refSub64(a, b []float64) { for i := range a { a[i] -= b[i] } }
-func refMul64(a, b []float64) { for i := range a { a[i] *= b[i] } }
+func refAdd64(a, b []float64) {
+	for i := range a {
+		a[i] += b[i]
+	}
+}
+func refSub64(a, b []float64) {
+	for i := range a {
+		a[i] -= b[i]
+	}
+}
+func refMul64(a, b []float64) {
+	for i := range a {
+		a[i] *= b[i]
+	}
+}
 
 func randSlice64(rng *rand.Rand, n int) []float64 {
 	s := make([]float64, n)

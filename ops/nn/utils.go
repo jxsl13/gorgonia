@@ -5,8 +5,8 @@ import (
 	"unsafe"
 
 	"github.com/chewxy/hm"
-	"github.com/pkg/errors"
 	"github.com/jxsl13/gorgonia"
+	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 )
 

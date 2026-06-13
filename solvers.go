@@ -251,9 +251,10 @@ type RMSPropSolver struct {
 }
 
 // NewRMSPropSolver creates an RMSProp solver with these default values:
-//		eta (learn rate)	  : 0.001
-//		eps (smoothing factor): 1e-8
-//		rho (decay factor)    : 0.999
+//
+//	eta (learn rate)	  : 0.001
+//	eps (smoothing factor): 1e-8
+//	rho (decay factor)    : 0.999
 func NewRMSPropSolver(opts ...SolverOpt) *RMSPropSolver {
 	s := &RMSPropSolver{
 		decay: 0.999,
@@ -435,11 +436,12 @@ type AdamSolver struct {
 }
 
 // NewAdamSolver creates an Adam solver with these default values:
-//		eta (learn rate)	  	: 0.001
-//		eps (smoothing factor)		: 1e-8
-//		beta1				: 0.9
-//		beta2 				: 0.999
-//		batch				: 1
+//
+//	eta (learn rate)	  	: 0.001
+//	eps (smoothing factor)		: 1e-8
+//	beta1				: 0.9
+//	beta2 				: 0.999
+//	batch				: 1
 func NewAdamSolver(opts ...SolverOpt) *AdamSolver {
 	s := &AdamSolver{
 		eta:   0.001,
@@ -1374,10 +1376,14 @@ func (s *AdaGradSolver) Step(model []ValueGrad) (err error) {
 
 // BarzilaiBorweinSolver / Barzilai-Borwein performs Gradient Descent in steepest descend direction
 // Solves 0 = F(x), by
-//  xᵢ₊₁ = xᵢ - eta * Grad(F)(xᵢ)
+//
+//	xᵢ₊₁ = xᵢ - eta * Grad(F)(xᵢ)
+//
 // Where the learn rate eta is calculated by the Barzilai-Borwein method:
-//  eta(xᵢ) = <(xᵢ - xᵢ₋₁), (Grad(F)(xᵢ) - Grad(F)(xᵢ₋₁))> /
-//                  ∥(Grad(F)(xᵢ) - Grad(F)(xᵢ₋₁))∥²
+//
+//	eta(xᵢ) = <(xᵢ - xᵢ₋₁), (Grad(F)(xᵢ) - Grad(F)(xᵢ₋₁))> /
+//	                ∥(Grad(F)(xᵢ) - Grad(F)(xᵢ₋₁))∥²
+//
 // The input learn rate is used for the first iteration.
 //
 // TODO: Check out stochastic implementations, e.g. "Barzilai-Borwein Step Size for Stochastic Gradient Descent" https://arxiv.org/abs/1605.04131

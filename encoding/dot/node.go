@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"gonum.org/v1/gonum/graph/encoding"
 	"github.com/jxsl13/gorgonia"
 	internalEncoding "github.com/jxsl13/gorgonia/internal/encoding"
+	"gonum.org/v1/gonum/graph/encoding"
 )
 
 type node struct {

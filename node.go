@@ -9,9 +9,9 @@ import (
 
 	"github.com/awalterschulze/gographviz"
 	"github.com/chewxy/hm"
+	"github.com/jxsl13/gorgonia/internal/encoding"
 	"github.com/pkg/errors"
 	"gonum.org/v1/gonum/graph"
-	"github.com/jxsl13/gorgonia/internal/encoding"
 	"gorgonia.org/tensor"
 )
 
@@ -130,8 +130,8 @@ func WithName(name string) NodeConsOpt {
 }
 
 // WithValue is a node construction option that binds the value to the *Node. This function may panic if:
-//	- Gorgonia was unable to convert interface{} into a Value.
-//	- The type of the Value does not match the type of the nodes.
+//   - Gorgonia was unable to convert interface{} into a Value.
+//   - The type of the Value does not match the type of the nodes.
 func WithValue(any interface{}) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
 	if err != nil {
@@ -164,8 +164,8 @@ func WithValue(any interface{}) NodeConsOpt {
 }
 
 // WithGrad is a node construction option that binds the value to the *Node. This function may panic if:
-//	- There isn't already a value associated with the node (.boundTo == nil)
-//	- The type of the Value does not match the value of the node.
+//   - There isn't already a value associated with the node (.boundTo == nil)
+//   - The type of the Value does not match the value of the node.
 func WithGrad(any interface{}) NodeConsOpt {
 	v, t, _, err := anyToValue(any)
 	if err != nil {
@@ -385,7 +385,7 @@ func (n *Node) Graph() *ExprGraph { return n.g }
 // CloneTo clones the node into a new graph. If CloneTo() is called on the same graph as the n, it will return n. The reason this is done is because
 // at any given time, every node  should be unique in the *ExprGraph.
 //
-//TODO: clone children as well (this means that CloneTo() is only currently suitable fo input nodes)
+// TODO: clone children as well (this means that CloneTo() is only currently suitable fo input nodes)
 func (n *Node) CloneTo(g *ExprGraph) *Node {
 	if n.g != nil && g == n.g {
 		return n
@@ -397,9 +397,9 @@ func (n *Node) CloneTo(g *ExprGraph) *Node {
 }
 
 // Clone clones the node. There are some caveats:
-//		- the graph is not copied over - the node essentially does not belong to a collection
-//		- there is no ID
-// 		- the children are not cloned
+//   - the graph is not copied over - the node essentially does not belong to a collection
+//   - there is no ID
+//   - the children are not cloned
 func (n *Node) Clone() (retVal interface{}) {
 	n2 := newNode(In(n.g), WithOp(n.op), WithName(n.name), WithType(n.t))
 	if n.shape != nil {
@@ -553,7 +553,8 @@ func (n *Node) WriteHash(h hash.Hash32) {
 
 // Hashcode provides the hash for the tree, assuming that the node is the root of the tree.
 // Original implementation was here by Vatine (who's apparently 80 years old and using SO!?!):
-//		http://stackoverflow.com/questions/1988665/hashing-a-tree-structure
+//
+//	http://stackoverflow.com/questions/1988665/hashing-a-tree-structure
 func (n *Node) Hashcode() uint32 {
 	if n.hashed {
 		return n.hash

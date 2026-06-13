@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/pkg/errors"
 	"github.com/jxsl13/gorgonia"
+	"github.com/pkg/errors"
 )
 
 type upsampleLayer struct {

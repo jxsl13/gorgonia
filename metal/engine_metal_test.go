@@ -19,8 +19,8 @@ func TestEngineMatMulDispatch(t *testing.T) {
 	}
 	defer e.Close()
 
-	aData := []float32{1, 2, 3, 4, 5, 6}    // 2x3
-	bData := []float32{1, 0, 0, 1, 1, 1}    // 3x2
+	aData := []float32{1, 2, 3, 4, 5, 6} // 2x3
+	bData := []float32{1, 0, 0, 1, 1, 1} // 3x2
 	a := tensor.New(tensor.WithEngine(e), tensor.WithShape(2, 3), tensor.WithBacking(append([]float32(nil), aData...)))
 	b := tensor.New(tensor.WithEngine(e), tensor.WithShape(3, 2), tensor.WithBacking(append([]float32(nil), bData...)))
 

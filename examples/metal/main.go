@@ -35,9 +35,9 @@ func main() {
 	fmt.Println("a + b =", sum)
 
 	// 2x3 · 3x2 matrix multiply on the GPU.
-	A := []float32{1, 2, 3, 4, 5, 6}       // 2x3
-	B := []float32{7, 8, 9, 10, 11, 12}    // 3x2
-	C, err := d.MatMul(A, B, 2, 2, 3)      // M=2, N=2, K=3
+	A := []float32{1, 2, 3, 4, 5, 6}    // 2x3
+	B := []float32{7, 8, 9, 10, 11, 12} // 3x2
+	C, err := d.MatMul(A, B, 2, 2, 3)   // M=2, N=2, K=3
 	if err != nil {
 		log.Fatal(err)
 	}

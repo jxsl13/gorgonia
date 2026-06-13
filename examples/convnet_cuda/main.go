@@ -1,3 +1,4 @@
+//go:build cuda
 // +build cuda
 
 package main
@@ -15,10 +16,10 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/pkg/errors"
 	G "github.com/jxsl13/gorgonia"
 	"github.com/jxsl13/gorgonia/examples/mnist"
 	nnops "github.com/jxsl13/gorgonia/ops/nn"
+	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
 
 	"time"

@@ -54,9 +54,9 @@ func TestMetalConv2DParity(t *testing.T) {
 		n, h, w, cin, kh, kw, cout, sx, sy, pt, pb, pl, pr int
 	}
 	cases := []tc{
-		{1, 5, 5, 1, 3, 3, 1, 1, 1, 0, 0, 0, 0},  // valid, single channel
-		{1, 7, 7, 3, 3, 3, 4, 1, 1, 1, 1, 1, 1},  // same padding, multi-channel
-		{2, 8, 6, 2, 3, 3, 5, 2, 2, 0, 0, 0, 0},  // stride 2, batch 2
+		{1, 5, 5, 1, 3, 3, 1, 1, 1, 0, 0, 0, 0}, // valid, single channel
+		{1, 7, 7, 3, 3, 3, 4, 1, 1, 1, 1, 1, 1}, // same padding, multi-channel
+		{2, 8, 6, 2, 3, 3, 5, 2, 2, 0, 0, 0, 0}, // stride 2, batch 2
 	}
 	for ci, c := range cases {
 		src := make([]float32, c.n*c.h*c.w*c.cin)

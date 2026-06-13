@@ -1,3 +1,4 @@
+//go:build cuda
 // +build cuda
 
 package nnops
@@ -7,9 +8,9 @@ import (
 	"hash"
 
 	"github.com/chewxy/hm"
+	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/cu/dnn"
 	t2cudnn "gorgonia.org/cu/dnn/interop"
-	"github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -61,7 +62,9 @@ func (op *BatchNormOp) WriteHash(h hash.Hash) {
 	fmt.Fprintf(h, "BatchNorm %v %v", op.momentum, op.epsilon)
 }
 func (op *BatchNormOp) Hashcode() uint32 { return simpleHash(op) }
-func (op *BatchNormOp) String() string   { return fmt.Sprintf("BatchNorm %v %v", op.momentum, op.epsilon) }
+func (op *BatchNormOp) String() string {
+	return fmt.Sprintf("BatchNorm %v %v", op.momentum, op.epsilon)
+}
 
 func (op *BatchNormOp) CUDADo(extern gorgonia.External, dev gorgonia.Device, prealloc gorgonia.Value, inputs ...gorgonia.Value) (retVal gorgonia.Value, err error) {
 	// panic("not implemented")

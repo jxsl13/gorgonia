@@ -40,7 +40,8 @@ func DimSizersToShapes(ds []DimSizer) ([]tensor.Shape, error) {
 // Think of them as functions, taking an input (or multiple), and outputting something
 //
 // All Ops have type signatures that look like this:
-//		OpName :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
+//
+//	OpName :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
 type Op interface {
 	/* Graph Building Related Methods */
 

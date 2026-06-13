@@ -1,3 +1,4 @@
+//go:build cuda
 // +build cuda
 
 package gorgonia
@@ -8,10 +9,10 @@ import (
 	"log"
 	"sync"
 
+	"github.com/jxsl13/gorgonia/cuda"
 	"github.com/pkg/errors"
 	"gorgonia.org/cu"
 	cudnn "gorgonia.org/cu/dnn"
-	"github.com/jxsl13/gorgonia/cuda"
 	"gorgonia.org/tensor"
 )
 

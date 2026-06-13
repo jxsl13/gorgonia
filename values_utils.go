@@ -249,6 +249,6 @@ func setEngine(v Value, e tensor.Engine) {
 }
 
 // I think that all values are supposed to have the pointer method but they don't seem to so to just fix this for now this appears to work
-func valueToPointer(v Value) unsafe.Pointer{
+func valueToPointer(v Value) unsafe.Pointer {
 	return unsafe.Pointer(v.Uintptr())
 }

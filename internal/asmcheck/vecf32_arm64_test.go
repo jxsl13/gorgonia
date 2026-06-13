@@ -15,9 +15,21 @@ import (
 	"gorgonia.org/vecf32"
 )
 
-func refAdd(a, b []float32) { for i := range a { a[i] += b[i] } }
-func refSub(a, b []float32) { for i := range a { a[i] -= b[i] } }
-func refMul(a, b []float32) { for i := range a { a[i] *= b[i] } }
+func refAdd(a, b []float32) {
+	for i := range a {
+		a[i] += b[i]
+	}
+}
+func refSub(a, b []float32) {
+	for i := range a {
+		a[i] -= b[i]
+	}
+}
+func refMul(a, b []float32) {
+	for i := range a {
+		a[i] *= b[i]
+	}
+}
 
 func randSlice(rng *rand.Rand, n int) []float32 {
 	s := make([]float32, n)

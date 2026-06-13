@@ -1,3 +1,4 @@
+//go:build !fastmath
 // +build !fastmath
 
 package gorgonia

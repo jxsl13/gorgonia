@@ -13,9 +13,12 @@ const (
 
 // workersChan creates a channel that is limited by the number of processor cores.
 // To signal that a processor core is being used:
-// 	ch <- struct{}{}
+//
+//	ch <- struct{}{}
+//
 // When done:
-// 	<- ch
+//
+//	<- ch
 func workersChan() chan struct{} { return make(chan struct{}, runtime.GOMAXPROCS(0)) }
 
 // it's just a generic ceiling function. Added here to avoid mixing with any potential ceilInt operation

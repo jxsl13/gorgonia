@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/chewxy/math32"
-	"github.com/pkg/errors"
 	"github.com/jxsl13/gorgonia"
+	"github.com/pkg/errors"
 
 	"gorgonia.org/tensor"
 )

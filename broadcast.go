@@ -13,14 +13,18 @@ const (
 
 // BroadcastPattern is actually a bit array.
 // It's split into 2 nibbles - the left nibble represents the left operand, the right nibble represents the right operand:
-//		xxxx|xxxx
+//
+//	xxxx|xxxx
+//
 // The least significant bit of each nibble is elem 0.
 // Concrete examples:
-//		00000010 (0x02) = broadcast axis 1 of the right operand
-//		00000001 (0x01) = broadcast axis 0 of the right operand
-//		00000101 (0x09) = broadcast axis 0 AND axis 2 of the right operand
-//		00010000 (0x10) = broadcast axis 0 of the left operand
-//		00110000 (0x30) = broadcast axis 0 and axis 1 of the lef operand
+//
+//	00000010 (0x02) = broadcast axis 1 of the right operand
+//	00000001 (0x01) = broadcast axis 0 of the right operand
+//	00000101 (0x09) = broadcast axis 0 AND axis 2 of the right operand
+//	00010000 (0x10) = broadcast axis 0 of the left operand
+//	00110000 (0x30) = broadcast axis 0 and axis 1 of the lef operand
+//
 // You get the drill.
 //
 // Do note that the current limitation of the BroadcastPattern allows only up to 4 dimensions per operand.

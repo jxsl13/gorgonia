@@ -47,7 +47,8 @@ var acceptableDtypes = [...]tensor.Dtype{tensor.Float64, tensor.Float32, tensor.
 // TensorType is a type constructor for tensors.
 //
 // Think of it as  something like this:
-//		data Tensor a = Tensor d a
+//
+//	data Tensor a = Tensor d a
 //
 // The shape of the Tensor is not part of TensorType.
 // Shape checking is relegated to the dynamic part of the program run

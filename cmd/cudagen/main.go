@@ -173,13 +173,13 @@ func main() {
 package %v
 `, packageName)
 	buf.WriteString(header)
-	if ! *sameModule {
+	if !*sameModule {
 		buf.WriteString("import \"github.com/jxsl13/gorgonia\"\n")
 	}
 
 	buf.WriteString("func init() {\n")
 	for name := range m {
-		if ! *sameModule {
+		if !*sameModule {
 			buf.WriteString("gorgonia.")
 		}
 		buf.WriteString(fmt.Sprintf("AddToStdLib(%q, %sPTX, []string{\"%s\"})\n", name, name, strings.Join(funcs[name], "\", \"")))

@@ -10,7 +10,8 @@ import (
 // Basic example of representing mathematical equations as graphs.
 //
 // In this example, we want to represent the following equation
-//		z = x + y
+//
+//	z = x + y
 func Example_basic() {
 	g := NewGraph()
 

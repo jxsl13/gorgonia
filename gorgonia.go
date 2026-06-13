@@ -244,7 +244,8 @@ func Grad(cost *Node, WRTs ...*Node) (retVal Nodes, err error) {
 
 // Let binds a Value to a node that is a variable. A variable is represented as a *Node with no Op.
 // It is equivalent to :
-//		x = 2
+//
+//	x = 2
 func Let(n *Node, be interface{}) error {
 	if !n.isInput() {
 		return errors.New("Cannot bind a value to a non input node")
@@ -297,7 +298,9 @@ func UnsafeLet(n *Node, be interface{}) error {
 }
 
 // Set is the equivalent of doing this:
-//		a = b
+//
+//	a = b
+//
 // where a and b are both variables
 func Set(a, b *Node) (retVal *Node) {
 	op := letOp{}

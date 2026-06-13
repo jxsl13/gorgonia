@@ -10,9 +10,9 @@ import (
 )
 
 // Value represents a value that Gorgonia accepts. At this point it is implemented by:
-//		- all scalar value types (F64, F32... etc)
-// 		- *tensor.Dense
-// 		- *dualValue
+//   - all scalar value types (F64, F32... etc)
+//   - *tensor.Dense
+//   - *dualValue
 //
 // A Value is essentially any thing that knows its own type and shape.
 // Most importantly though, a Value is a pointer - and can be converted into a tensor.Memory.

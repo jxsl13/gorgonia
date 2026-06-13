@@ -125,7 +125,7 @@ func Ne(a, b *Node, retSame bool) (*Node, error) {
 	return binOpNode(op, a, b)
 }
 
-//Add performs a add. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Add performs a add. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastAdd(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -134,7 +134,7 @@ func BroadcastAdd(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	return Add(a2, b2)
 }
 
-//Sub performs a sub. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Sub performs a sub. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastSub(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -143,7 +143,7 @@ func BroadcastSub(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	return Sub(a2, b2)
 }
 
-//HadamardProd performs a hadamardprod. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// HadamardProd performs a hadamardprod. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastHadamardProd(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -152,7 +152,7 @@ func BroadcastHadamardProd(a, b *Node, leftPattern, rightPattern []byte) (*Node,
 	return HadamardProd(a2, b2)
 }
 
-//HadamardDiv performs a hadamarddiv. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// HadamardDiv performs a hadamarddiv. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastHadamardDiv(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -161,7 +161,7 @@ func BroadcastHadamardDiv(a, b *Node, leftPattern, rightPattern []byte) (*Node, 
 	return HadamardDiv(a2, b2)
 }
 
-//Pow performs a pow. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Pow performs a pow. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastPow(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -170,7 +170,7 @@ func BroadcastPow(a, b *Node, leftPattern, rightPattern []byte) (*Node, error) {
 	return Pow(a2, b2)
 }
 
-//Lt performs a lt. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Lt performs a lt. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastLt(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -179,7 +179,7 @@ func BroadcastLt(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*N
 	return Lt(a2, b2, retSame)
 }
 
-//Gt performs a gt. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Gt performs a gt. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastGt(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -188,7 +188,7 @@ func BroadcastGt(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*N
 	return Gt(a2, b2, retSame)
 }
 
-//Lte performs a lte. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Lte performs a lte. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastLte(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -197,7 +197,7 @@ func BroadcastLte(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*
 	return Lte(a2, b2, retSame)
 }
 
-//Gte performs a gte. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Gte performs a gte. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastGte(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -206,7 +206,7 @@ func BroadcastGte(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*
 	return Gte(a2, b2, retSame)
 }
 
-//Eq performs a eq. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Eq performs a eq. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastEq(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {
@@ -215,7 +215,7 @@ func BroadcastEq(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*N
 	return Eq(a2, b2, retSame)
 }
 
-//Ne performs a ne. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
+// Ne performs a ne. The operation is precomposed with a broadcast such that the shapes matches before operations commence.
 func BroadcastNe(a, b *Node, retSame bool, leftPattern, rightPattern []byte) (*Node, error) {
 	a2, b2, err := Broadcast(a, b, NewBroadcastPattern(leftPattern, rightPattern))
 	if err != nil {

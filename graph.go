@@ -723,8 +723,9 @@ func (g *ExprGraph) SubgraphRoots(ns ...*Node) *ExprGraph {
 // will not attempt to discover if any nodes are missing.
 //
 // Given a function like the following:
-//		z = x + y
-//		set(x, -x.Grad) // setting the value of x to the negative of the gradient
+//
+//	z = x + y
+//	set(x, -x.Grad) // setting the value of x to the negative of the gradient
 //
 // When SubgraphRoots is used on z, the `-x.Grad` will be included.
 // When using ExactSubgraphRoots, only `x` and `y` are included in the subgraph

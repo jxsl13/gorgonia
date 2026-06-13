@@ -18,12 +18,13 @@ type mapFmt struct {
 //
 // Here's the hack:
 // The "#" flag is used to indicate if the map will use the Node's ID or Name when formatting the map.
-//		%-v 	nodeName:%v
-//		%-#v	nodeID:%v
-//		%-d 	nodeName:%x
-//		%-#d 	nodeID: %x
-//		%-p 	nodeName:%p
-// 		%-#p	nodeID:%p
+//
+//	%-v 	nodeName:%v
+//	%-#v	nodeID:%v
+//	%-d 	nodeName:%x
+//	%-#d 	nodeID: %x
+//	%-p 	nodeName:%p
+//	%-#p	nodeID:%p
 //
 // If the "-" flag is not found, then the formatter returns the default Go format for map[<T>]<T2>
 func FmtNodeMap(m interface{}) mapFmt {

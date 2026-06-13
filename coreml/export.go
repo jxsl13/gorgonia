@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"strings"
 
-	G "github.com/jxsl13/gorgonia"
 	gcmodel "github.com/gomlx/go-coreml/model"
+	G "github.com/jxsl13/gorgonia"
 	"gorgonia.org/tensor"
 )
 

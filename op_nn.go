@@ -697,7 +697,8 @@ func newMaxPoolOp(inputShape, kernel tensor.Shape, pad, stride []int) *maxPoolOp
 func (op *maxPoolOp) Arity() int { return 1 }
 
 // maxPoolOp has this type:
-// 		op :: (...) → (...)
+//
+//	op :: (...) → (...)
 func (op *maxPoolOp) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	t := newTensorType(4, a)
@@ -1153,7 +1154,9 @@ func (op *clampOp) String() string   { return fmt.Sprintf("ConstClamp{%f, %f}()"
 // http://arxiv.org/abs/1502.03167
 //
 // Normalization is done as:
-// 	γ(x - μ) / σ + β
+//
+//	γ(x - μ) / σ + β
+//
 // γ is the scaling factor and β is the offset factor. These are created by BatchNorm()
 type BatchNormOp struct {
 	momentum float64 // momentum for the moving average

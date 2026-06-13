@@ -1,3 +1,4 @@
+//go:build fastmath
 // +build fastmath
 
 package gorgonia
@@ -27,16 +28,19 @@ so that I may benefit from it.
 */
 
 // magic numbers are acquired from here:
-// 		0x7FDE623822FC16E6 - https://www.pvk.ca/Blog/LowLevel/software-reciprocal.html
-// 		0x7FDE6238DA3C2118 - http://www.hackersdelight.org/hdcodetxt/recip.c.txt
-// Paul Khong's magic number seems to be the best performing for my use case, with 3 newton iterations
+//
+//	0x7FDE623822FC16E6 - https://www.pvk.ca/Blog/LowLevel/software-reciprocal.html
+//	0x7FDE6238DA3C2118 - http://www.hackersdelight.org/hdcodetxt/recip.c.txt
+//
+// # Paul Khong's magic number seems to be the best performing for my use case, with 3 newton iterations
 //
 // On the number of refinement steps required, 4 refinement steps will yield the same
 // results as the naive function for most values. However, the gains in accuracy is offset
 // by the loss in speed gains:
-//		BenchmarkInv64-8    	300000000	         5.99 ns/op
-//		BenchmarkApp4Inv64-8	300000000	         5.09 ns/op
-//		BenchmarkApp3Inv64-8	500000000	         3.70 ns/op
+//
+//	BenchmarkInv64-8    	300000000	         5.99 ns/op
+//	BenchmarkApp4Inv64-8	300000000	         5.09 ns/op
+//	BenchmarkApp3Inv64-8	500000000	         3.70 ns/op
 func _inversef64(x float64) float64 {
 	u := uint64(0x7FDE623822FC16E6) - castFU64(x)
 	// u := uint64(0x7FDE6238DA3C2118) - castFU64(x)
@@ -51,11 +55,14 @@ func _inversef64(x float64) float64 {
 }
 
 // magic numbers acquired from here:
-//		http://bits.stephan-brumme.com/inverse.html
+//
+//	http://bits.stephan-brumme.com/inverse.html
+//
 // On the number of refinement steps:
-// 		BenchmarkInv32-8    	500000000	         3.85 ns/op
-//		BenchmarkApp3Inv32-8	500000000	         3.69 ns/op
-// 		BenchmarkApp2Inv32-8	1000000000	         2.47 ns/op
+//
+//	BenchmarkInv32-8    	500000000	         3.85 ns/op
+//	BenchmarkApp3Inv32-8	500000000	         3.69 ns/op
+//	BenchmarkApp2Inv32-8	1000000000	         2.47 ns/op
 //
 // I have also found that 2 refinement steps are more than sufficient to get decent results. No funny gradient explosions for sure
 // TODO: use RCPSS when available

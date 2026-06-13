@@ -8,8 +8,8 @@ import (
 )
 
 // VM represents a structure that can execute a graph or program. There are two VMs (both unexported):
-//		- *tapeMachine
-//		- *lispMachine
+//   - *tapeMachine
+//   - *lispMachine
 //
 // The *tapeMachine pre-compiles a graph into a list of instructions, then executes the instructions linearly and sequentially.
 // The main tradeoff is dynamism. Graphs cannot be dynamically created on the fly as a re-compilation process is required
@@ -95,8 +95,9 @@ func WithValueFmt(format string) VMOpt {
 // execution object.
 //
 // The watchlist allows for different things to be watched, depending on VM type:
-//		*lispMachine will ONLY take *Node
-//		*tapeMachine will take int (for register IDs) or *Node.
+//
+//	*lispMachine will ONLY take *Node
+//	*tapeMachine will take int (for register IDs) or *Node.
 func WithWatchlist(list ...interface{}) VMOpt {
 	f := func(m VM) {
 		switch v := m.(type) {

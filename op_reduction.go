@@ -211,7 +211,8 @@ func newSumOp(along axes, s tensor.Shape, d int) sumOp {
 func (op sumOp) Arity() int { return 1 }
 
 // sumOp is a function with this type:
-//		sumOp :: (Summable a) ⇒ Tensor d a → Tensor d-1 a
+//
+//	sumOp :: (Summable a) ⇒ Tensor d a → Tensor d-1 a
 func (op sumOp) Type() hm.Type {
 	return reductionType(op.d, op.along)
 }

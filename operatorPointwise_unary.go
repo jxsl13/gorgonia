@@ -10,8 +10,9 @@ import (
 // cons : no overloading = a lot of extra code
 //
 // There are TWO ʘUnaryOperator types so far:
-//		sf32UnaryOperator - scalar float32 unary operator
-//		sf64UnaryOperator - scalar float64 unary operator
+//
+//	sf32UnaryOperator - scalar float32 unary operator
+//	sf64UnaryOperator - scalar float64 unary operator
 //
 // Because TensorTypes are parameterized by a scalar type, it isn't necessary to create operators
 // that will work on TensorTypes. A simple type switch will do.

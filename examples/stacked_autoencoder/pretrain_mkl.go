@@ -1,3 +1,4 @@
+//go:build !native
 // +build !native
 
 package main

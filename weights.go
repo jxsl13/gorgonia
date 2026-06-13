@@ -169,7 +169,9 @@ func ValuesOf(val interface{}) InitWFn {
 
 // Gaussian creates a InitWFn with the specified parameters.
 // Example Usage:
-//		w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Gaussian(0, 1)))
+//
+//	w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Gaussian(0, 1)))
+//
 // This will create a backing slice of []float64, with the length of 4, and its values are drawn from a gaussian distro
 func Gaussian(mean, stdev float64) InitWFn {
 	f := func(dt tensor.Dtype, s ...int) interface{} {
@@ -188,7 +190,9 @@ func Gaussian(mean, stdev float64) InitWFn {
 
 // Uniform creates a InitWFn with the specified parameters.
 // Example Usage:
-//		w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Uniform(-1, 1)))
+//
+//	w := NewMatrix(g, Float64, WithName("w"), WithShape(2,2), WithInit(Uniform(-1, 1)))
+//
 // This will create a backing slice of []float64, with the length of 4, and its values are drawn from a uniform distro
 func Uniform(low, high float64) InitWFn {
 	f := func(dt tensor.Dtype, s ...int) interface{} {
@@ -391,9 +395,10 @@ func GlorotEtAlN32(gain float64, s ...int) []float32 {
 // See also: http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func GlorotEtAlU64(gain float64, s ...int) []float64 {
 	var n1, n2 int
 	fieldSize := 1
@@ -431,9 +436,10 @@ func GlorotEtAlU64(gain float64, s ...int) []float64 {
 // See also: http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func GlorotEtAlU32(gain float64, s ...int) []float32 {
 	f64 := GlorotEtAlN64(gain, s...)
 	retVal := make([]float32, len(f64))
@@ -445,13 +451,16 @@ func GlorotEtAlU32(gain float64, s ...int) []float32 {
 
 // HeEtAlN64 returns float64 weights sampled from a normal distro, using the methods
 // described in He et al (2015). The formula is:
-//		randn(n) * sqrt(2/n)
+//
+//	randn(n) * sqrt(2/n)
+//
 // See also https://arxiv.org/abs/1502.01852
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func HeEtAlN64(gain float64, s ...int) []float64 {
 	var fanIn float64
 
@@ -480,13 +489,16 @@ func HeEtAlN64(gain float64, s ...int) []float64 {
 
 // HeEtAlU64 returns float64 weights sampled from a uniform distro, using the methods
 // described in He et al (2015). The formula is:
-//		randn(n) * sqrt(2/n)
+//
+//	randn(n) * sqrt(2/n)
+//
 // See also https://arxiv.org/abs/1502.01852
 //
 // For best results, use:
-// 		1.0 for gain for weights that will be used in linear and/or sigmoid units
-//		math.Sqrt(2.0) for gain for weights that will be used in ReLU units
-//		math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
+//
+//	1.0 for gain for weights that will be used in linear and/or sigmoid units
+//	math.Sqrt(2.0) for gain for weights that will be used in ReLU units
+//	math.Sqrt(2.0 / (1+alpha*alpha)) for ReLU that are leaky with alpha
 func HeEtAlU64(gain float64, s ...int) []float64 {
 	var fanIn float64
 

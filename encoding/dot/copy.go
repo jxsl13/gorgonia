@@ -1,8 +1,8 @@
 package dot
 
 import (
-	"gonum.org/v1/gonum/graph"
 	"github.com/jxsl13/gorgonia"
+	"gonum.org/v1/gonum/graph"
 )
 
 func copyGraph(dst graph.Builder, src graph.Graph) {

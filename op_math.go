@@ -76,14 +76,15 @@ func newElemBinOp(ot ʘBinaryOperatorType, a, b *Node) elemBinOp {
 func (op elemBinOp) Arity() int { return 2 }
 
 // elemBinOp has either of these types:
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor a
-//		elemBinOp :: (Floats a) ⇒ a → Tensor a → a
-//		elemBinOp :: (Floats a) ⇒ a → a → a
-//		elemBinOp :: (Floats a) ⇒ a → a → Bool
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor Bool
-// 		elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor Bool
-//		elemBinOp :: (Floats a) ⇒ a → Tensor a → Bool
+//
+//	elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor a
+//	elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor a
+//	elemBinOp :: (Floats a) ⇒ a → Tensor a → a
+//	elemBinOp :: (Floats a) ⇒ a → a → a
+//	elemBinOp :: (Floats a) ⇒ a → a → Bool
+//	elemBinOp :: (Floats a) ⇒ Tensor a → Tensor a → Tensor Bool
+//	elemBinOp :: (Floats a) ⇒ Tensor a → a → Tensor Bool
+//	elemBinOp :: (Floats a) ⇒ a → Tensor a → Bool
 //
 // To make things clearer, it helps to consider elemBinOp to be the representation of
 // a dispatch table for different functions. In a sense it's "overloading" functions.
@@ -131,9 +132,10 @@ func (op elemBinOp) Type() hm.Type {
 }
 
 // elemBinOp has these allowed shapes:
-// 		op :: () → () → ()
-//		op :: () → (...) → (...)
-//		op :: (...) → () → (...)
+//
+//	op :: () → () → ()
+//	op :: () → (...) → (...)
+//	op :: (...) → () → (...)
 func (op elemBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err error) {
 	shapeLogf("Inferring shape of %v", op)
 	enterLogScope()
@@ -190,10 +192,13 @@ func (op elemBinOp) InferShape(inputs ...DimSizer) (retVal tensor.Shape, err err
 
 // DiffWRT gives info on whether or not the operation is actually differentiable
 // For example, this is differentiable:
-//		c = a ** b
+//
+//	c = a ** b
+//
 // The result of the differentiation wrt to a and b would be:
-// 		dc/da = b * a ** (b-1)
-// 		dc/db = a ** b * ln(a)
+//
+//	dc/da = b * a ** (b-1)
+//	dc/db = a ** b * ln(a)
 //
 // However, operators like < and > are NOT differentiable
 //
@@ -410,7 +415,8 @@ func newElemUnaryOp(op ʘUnaryOperatorType, a *Node) elemUnaryOp {
 func (op elemUnaryOp) Arity() int { return 1 }
 
 // all pointwise unary operations have this type:
-//		op :: (Arithable a) ⇒ a → a
+//
+//	op :: (Arithable a) ⇒ a → a
 func (op elemUnaryOp) Type() hm.Type {
 	a := hm.TypeVariable('a')
 	return hm.NewFnType(a, a)
