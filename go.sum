@@ -386,12 +386,6 @@ gorgonia.org/tensor v0.9.20/go.mod h1:75SMdLLhZ+2oB0/EE8lFEIt1Caoykdd4bz1mAe59de
 gorgonia.org/tensor v0.9.23/go.mod h1:ZaFaLqBTKTzTbTzfnfbW8gDxFP2mXScMzjffUkSsK5Y=
 gorgonia.org/tensor v0.9.24 h1:8ahrfwO4iby+1ILObIqfjJa+wyA2RoCfJSS3LVERSRE=
 gorgonia.org/tensor v0.9.24/go.mod h1:1dsOegMm2n1obs69YnVJdp2oPSKx9Q9Tco5i7GEaXRg=
-gorgonia.org/vecf32 v0.7.0/go.mod h1:iHG+kvTMqGYA0SgahfO2k62WRnxmHsqAREGbayRDzy8=
-gorgonia.org/vecf32 v0.9.0 h1:PClazic1r+JVJ1dEzRXgeiVl4g1/Hf/w+wUSqnco1Xg=
-gorgonia.org/vecf32 v0.9.0/go.mod h1:NCc+5D2oxddRL11hd+pCB1PEyXWOyiQxfZ/1wwhOXCA=
-gorgonia.org/vecf64 v0.7.0/go.mod h1:1y4pmcSd+wh3phG+InwWQjYrqwyrtN9h27WLFVQfV1Q=
-gorgonia.org/vecf64 v0.9.0 h1:bgZDP5x0OzBF64PjMGC3EvTdOoMEcmfAh1VCUnZFm1A=
-gorgonia.org/vecf64 v0.9.0/go.mod h1:hp7IOWCnRiVQKON73kkC/AUMtEXyf9kGlVrtPQ9ccVA=
 honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 honnef.co/go/tools v0.1.3/go.mod h1:NgwopIslSNH47DimFoV78dnkksY2EFtX0ajyb3K/las=

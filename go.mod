@@ -41,3 +41,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorgonia.org/gorgonia v0.9.18 // indirect
 )
+
+replace gorgonia.org/vecf32 => ./internal/vendor/vecf32
+
+replace gorgonia.org/vecf64 => ./internal/vendor/vecf64
