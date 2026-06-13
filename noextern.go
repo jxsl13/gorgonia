@@ -3,20 +3,11 @@
 package gorgonia
 
 import (
-	"github.com/chewxy/hm"
 	"gorgonia.org/tensor"
 )
 
 // CUDA indicates if this build is using CUDA
 const CUDA = false
-
-// makeValueFromMem is unreachable in this (non-cuda) build: ExternMetadata.Get
-// always returns noopError before any caller reaches it. The real, unsafe
-// implementation (external/device memory) lives in values_extern_cuda.go, which
-// keeps the uintptr->unsafe.Pointer reconstruction out of the default build.
-func makeValueFromMem(t hm.Type, s tensor.Shape, mem tensor.Memory) (Value, error) {
-	return nil, noopError{}
-}
 
 var _ tensor.Engine = ExternMetadata{}
 

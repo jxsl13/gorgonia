@@ -205,7 +205,7 @@ T27|x|//go:build blas on blase/ + examples/stacked_autoencoder; drop /blase$ gre
 T28|x|delete workflow generator (.github/workflows/main.go + job-template.go) + runner-self-hosted.yml + runner-github-{macos,ubuntu}-amd64.yml|V30,C15,I.ci
 T29|x|add static linux.yaml (ubuntu-latest: cross-build arm/amd64/darwin + go test -race + avx/sse tag builds); modernize coverage->coverage.yaml (ubuntu-latest, checkout@v5/setup-go@v5/codecov@v5); darwin on macos-latest; all actions @latest|V30,C15,I.ci
 T30|x|rename all .yml -> .yaml (pre-check, darwin-arm64, coverage, .github/dependabot); verify grep -r self-hosted .github empty|V30,C15,I.ci
-T31|.|proper fix for B8 unsafeptr: vendor gorgonia.org/tensor (C12) + add Memory.Pointer() unsafe.Pointer; rewrite makeScalarFromMem to use mem.Pointer() instead of unsafe.Pointer(mem.Uintptr()) -> no uintptr round-trip, vet-clean on ALL builds, drop the cuda-gating workaround (values_extern_cuda.go) + noextern stub|C12,B8,I.vendor
+T31|x|proper fix for B8 unsafeptr: vendor gorgonia.org/tensor (C12) + add Memory.Pointer() unsafe.Pointer; rewrite makeScalarFromMem to use mem.Pointer() instead of unsafe.Pointer(mem.Uintptr()) -> no uintptr round-trip, vet-clean on ALL builds, drop the cuda-gating workaround (values_extern_cuda.go) + noextern stub|C12,B8,I.vendor
 T32|x|migrate library github.com/pkg/errors -> stdlib errors + fmt.Errorf(%w); keep public error behavior; build+test green; zero pkg/errors in lib|V31,I.imports
 T33|x|benchmarks: for i:=0;i<b.N;i++ -> b.Loop() (go1.24); verify benches run|V32
 T34|x|remaining interface{} -> any in library + staticcheck S1039 (unnecessary fmt.Sprintf) fixes|V32
